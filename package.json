@@ -3,12 +3,10 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vp build",
-        "build:ssr": "vp build && vp build --ssr",
+        "build": "vp build && vp build --ssr",
+        "build:ssr": "bun run build",
         "dev": "vp dev",
-        "check": "vp check",
-        "check:fix": "vp check --fix",
-        "types:check": "tsc --noEmit"
+        "test:calculator": "bun test tests/calculator.test.mjs"
     },
     "dependencies": {
         "@emotion/react": "^11.14.0",
@@ -23,6 +21,7 @@
         "concurrently": "^10.0.7",
         "dayjs": "^1.11.23",
         "laravel-vite-plugin": "^3.2.1",
+        "lz-string": "^1.5.0",
         "react": "^19.3.1",
         "react-dom": "^19.3.1",
         "typescript": "^5.9.3",
