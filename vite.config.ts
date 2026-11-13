@@ -17,7 +17,7 @@ export default defineConfig({
                 }),
             ],
         }),
-        inertia(),
+        inertia({ ssr: 'resources/js/app.tsx' }),
         react(),
         babel({
             presets: [reactCompilerPreset()],
