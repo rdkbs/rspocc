@@ -69,7 +69,8 @@
         ],
         "lint:fix": [
             "pint --parallel",
-            "rector"
+            "rector",
+            "bunx vp check --fix"
         ],
         "lint:check": [
             "rector --dry-run",
@@ -77,13 +78,13 @@
         ],
         "ci:check": [
             "Composer\\Config::disableProcessTimeout",
-            "bun run check",
-            "bun run types:check",
+            "bun run test:calculator",
             "@php artisan checkpoint:scan",
             "@test"
         ],
         "types:check": [
-            "phpstan analyse"
+            "phpstan analyse",
+            "bunx vp check"
         ],
         "test": [
             "@php artisan config:clear --ansi",
