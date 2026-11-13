@@ -64,11 +64,15 @@
             "@php artisan dev"
         ],
         "lint": [
+            "@lint:check",
+            "@types:check"
+        ],
+        "lint:fix": [
             "pint --parallel",
-            "phpstan",
             "rector"
         ],
         "lint:check": [
+            "rector --dry-run",
             "pint --parallel --test"
         ],
         "ci:check": [
