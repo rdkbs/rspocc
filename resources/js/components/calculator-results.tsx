@@ -29,7 +29,6 @@ export default function CalculatorResults({
     valid: boolean;
     shareUrl: () => string;
 }) {
-    const [message, setMessage] = useState('');
     const locale = inputs.language === 'id' ? 'id-ID' : 'en-US';
     const number = (value: number) =>
         new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(
@@ -37,6 +36,7 @@ export default function CalculatorResults({
         );
     const money = (value: number, currency: string) =>
         formatCurrency(value, currency, inputs.language);
+    const [shareMessage, setShareMessage] = useState('');
 
     return (
         <Stack
@@ -58,7 +58,10 @@ export default function CalculatorResults({
                             '& .MuiTypography-root': { color: 'inherit' },
                         }}
                     >
-                        <Typography component="h2" sx={{ fontSize: 17 }}>
+                        <Typography
+                            component="h2"
+                            sx={{ fontSize: 24, fontWeight: 600 }}
+                        >
                             {text.total}
                         </Typography>
                         <Typography
@@ -75,6 +78,53 @@ export default function CalculatorResults({
                         </Typography>
                         <Typography color="text.secondary" sx={{ mt: 1 }}>
                             {money(result.usd, 'USD')}
+                        </Typography>
+                        <Stack
+                            direction={{ xs: 'column', sm: 'row' }}
+                            sx={{ gap: 1.5, mt: 3 }}
+                        >
+                            <Button
+                                disabled={!valid}
+                                variant="contained"
+                                onClick={() => {
+                                    void navigator.clipboard
+                                        .writeText(shareUrl())
+                                        .then(() =>
+                                            setShareMessage(text.copied),
+                                        )
+                                        .catch(() =>
+                                            setShareMessage(
+                                                inputs.language === 'id'
+                                                    ? 'Tidak dapat menyalin. Salin URL dari bilah alamat.'
+                                                    : 'Unable to copy. Copy the URL from the address bar.',
+                                            ),
+                                        );
+                                }}
+                            >
+                                {text.copy}
+                            </Button>
+                            <Button
+                                disabled={!valid}
+                                variant="outlined"
+                                color="inherit"
+                                onClick={() =>
+                                    window.open(
+                                        'https://wa.me/?text=' +
+                                            encodeURIComponent(shareUrl()),
+                                        '_blank',
+                                        'noopener,noreferrer',
+                                    )
+                                }
+                            >
+                                {text.whatsapp}
+                            </Button>
+                        </Stack>
+                        <Typography
+                            role="status"
+                            aria-live="polite"
+                            sx={{ mt: 1 }}
+                        >
+                            {shareMessage}
                         </Typography>
                         <Box
                             sx={{
@@ -109,12 +159,22 @@ export default function CalculatorResults({
                         </Box>
                     </Paper>
                     <Paper variant="outlined" sx={{ p: { xs: 3, md: 4 } }}>
-                        <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
+                        <Typography
+                            component="h2"
+                            sx={{ mb: 2, fontSize: 24, fontWeight: 600 }}
+                        >
                             {text.outputs}
                         </Typography>
                         <Box
-                            aria-hidden="true"
+                            component="figure"
+                            role="img"
+                            aria-label={
+                                inputs.language === 'id'
+                                    ? 'Perbandingan volume produk CSPO, CSPKO, dan CSPKE'
+                                    : 'Comparison of CSPO, CSPKO, and CSPKE product volumes'
+                            }
                             sx={{
+                                m: 0,
                                 display: 'flex',
                                 height: 8,
                                 gap: 0.5,
@@ -178,42 +238,6 @@ export default function CalculatorResults({
                     {text.disclaimer}
                 </GlossaryText>
             </Typography>
-            <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ gap: 2 }}>
-                <Button
-                    disabled={!valid}
-                    variant="contained"
-                    onClick={() => {
-                        void navigator.clipboard
-                            .writeText(shareUrl())
-                            .then(() => setMessage(text.copied))
-                            .catch(() =>
-                                setMessage(
-                                    inputs.language === 'id'
-                                        ? 'Tidak dapat menyalin. Salin URL dari bilah alamat.'
-                                        : 'Unable to copy. Copy the URL from the address bar.',
-                                ),
-                            );
-                    }}
-                >
-                    {text.copy}
-                </Button>
-                <Button
-                    disabled={!valid}
-                    variant="outlined"
-                    color="secondary"
-                    onClick={() =>
-                        window.open(
-                            'https://wa.me/?text=' +
-                                encodeURIComponent(shareUrl()),
-                            '_blank',
-                            'noopener,noreferrer',
-                        )
-                    }
-                >
-                    {text.whatsapp}
-                </Button>
-            </Stack>
-            <Typography role="status">{message}</Typography>
         </Stack>
     );
 }
