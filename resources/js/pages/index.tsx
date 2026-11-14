@@ -1,9 +1,6 @@
 import { Head } from '@inertiajs/react';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
-import MenuItem from '@mui/material/MenuItem';
-import Stack from '@mui/material/Stack';
-import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import CalculatorInputs from '@/components/calculator-inputs';
 import CalculatorResults from '@/components/calculator-results';
@@ -35,7 +32,11 @@ export default function Index({
         ).href;
 
     return (
-        <Layout title="RSPO Credit Calculator" language={inputs.language}>
+        <Layout
+            title="RSPO Credit Calculator"
+            language={inputs.language}
+            onLanguageChange={(language) => update('language', language)}
+        >
             <Box data-enter>
                 <Head>
                     <script type="application/ld+json">
@@ -49,31 +50,6 @@ export default function Index({
                         })}
                     </script>
                 </Head>
-                <Stack
-                    direction="row"
-                    sx={{
-                        justifyContent: 'flex-end',
-                        alignItems: 'center',
-                        gap: 2,
-                    }}
-                >
-                    <TextField
-                        select
-                        label="Language / Bahasa"
-                        sx={{ minWidth: 200 }}
-                        value={inputs.language}
-                        onChange={(event) =>
-                            update(
-                                'language',
-                                event.target.value as Inputs['language'],
-                            )
-                        }
-                        size="small"
-                    >
-                        <MenuItem value="id">Indonesia</MenuItem>
-                        <MenuItem value="en">English</MenuItem>
-                    </TextField>
-                </Stack>
                 <Typography
                     variant="h1"
                     sx={{
