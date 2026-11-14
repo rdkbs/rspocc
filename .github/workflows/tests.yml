@@ -32,5 +32,12 @@ jobs:
       - name: Setup Application
         run: composer setup
 
+      - name: Setup Playwright
+        run: |
+          bunx --package playwright@1.63.0 playwright install --with-deps chromium
+          mkdir -p node_modules/.bin
+          printf '%s\n' '#!/usr/bin/env sh' 'exec bunx --no-install --package playwright@1.63.0 playwright "$@"' > node_modules/.bin/playwright
+          chmod +x node_modules/.bin/playwright
+
       - name: Run CI Checks
         run: composer ci:check
