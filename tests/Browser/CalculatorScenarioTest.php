@@ -44,12 +44,12 @@ it('keeps canonical URLs language-specific and displays the cooperative mission'
         ->assertScript('JSON.parse(document.querySelector(`script[type="application/ld+json"]`).textContent).url', 'https://rspocc.belayansejahtera.org/about');
 
     $page->navigate('/?lang=en')
-        ->assertPresent('header img[src="/kbs-wordmark.png"]')
+        ->assertPresent('header img[src="/logo-white-green.svg"]')
         ->assertScript('document.querySelector("header [role=combobox]") === null', true)
         ->assertScript('document.querySelector("footer [role=combobox]") !== null', true)
         ->assertScript('[...document.querySelectorAll("footer button")].some((button) => button.innerText.includes("Dark mode"))', true)
         ->assertScript('document.body.innerText.includes("before costs and taxes")', false)
-        ->assertScript('document.querySelector("link[rel=icon]").href.endsWith("/favicon.ico")', true)
+        ->assertScript('document.querySelector("link[rel=icon]").href.endsWith("/logo-white-green.svg")', true)
         ->assertNoJavaScriptErrors();
 
     $page->navigate('/?lang=id')

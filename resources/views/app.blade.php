@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="color-scheme" content="light dark">
 
-        <link rel="icon" href="/favicon.ico" type="image/x-icon" sizes="32x32">
+        <link rel="icon" href="/logo-white-green.svg" type="image/svg+xml" sizes="any">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
         @fonts
