@@ -42,6 +42,7 @@ export function formatCurrency(
     return new Intl.NumberFormat(language === 'id' ? 'id-ID' : 'en-US', {
         style: 'currency',
         currency,
+        currencyDisplay: 'code',
         maximumFractionDigits: currency === 'IDR' ? 0 : 2,
     }).format(value);
 }
