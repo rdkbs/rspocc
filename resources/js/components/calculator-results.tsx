@@ -1,0 +1,219 @@
+import { useState } from 'react';
+import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Paper from '@mui/material/Paper';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
+import { formatCurrency } from '@/calculator-assumptions';
+import type { CalculatorCopy } from '@/calculator-copy';
+import GlossaryText from '@/components/glossary-text';
+import { credits, useCalculator, type Inputs } from '@/hooks/use-calculator';
+
+const creditColors = {
+    cspo: 'primary.main',
+    cspko: 'secondary.main',
+    cspke: '#929e78',
+} as const;
+
+export default function CalculatorResults({
+    inputs,
+    text,
+    result,
+    valid,
+    shareUrl,
+}: {
+    inputs: Inputs;
+    text: CalculatorCopy;
+    result: ReturnType<typeof useCalculator>;
+    valid: boolean;
+    shareUrl: () => string;
+}) {
+    const [message, setMessage] = useState('');
+    const locale = inputs.language === 'id' ? 'id-ID' : 'en-US';
+    const number = (value: number) =>
+        new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(
+            value,
+        );
+    const money = (value: number, currency: string) =>
+        formatCurrency(value, currency, inputs.language);
+
+    return (
+        <Stack
+            component="section"
+            sx={{ position: { md: 'sticky' }, top: 24, gap: 3 }}
+            aria-label={text.results}
+        >
+            {!valid ? (
+                <Alert severity="error">{text.error}</Alert>
+            ) : (
+                <>
+                    <Paper
+                        variant="outlined"
+                        sx={{
+                            p: { xs: 3, md: 4 },
+                            bgcolor: '#244e38',
+                            color: '#fff',
+                            borderColor: '#244e38',
+                            '& .MuiTypography-root': { color: 'inherit' },
+                        }}
+                    >
+                        <Typography component="h2" sx={{ fontSize: 17 }}>
+                            {text.total}
+                        </Typography>
+                        <Typography
+                            variant="h2"
+                            component="p"
+                            sx={{
+                                mt: 2,
+                                fontSize: { xs: '2.35rem', lg: '3.1rem' },
+                                fontVariantNumeric: 'tabular-nums',
+                                overflowWrap: 'anywhere',
+                            }}
+                        >
+                            {money(result.converted, inputs.currency)}
+                        </Typography>
+                        <Typography color="text.secondary" sx={{ mt: 1 }}>
+                            {money(result.usd, 'USD')}
+                        </Typography>
+                        <Box
+                            sx={{
+                                mt: 4,
+                                pt: 3,
+                                borderTop: 1,
+                                borderColor: '#577762',
+                            }}
+                        >
+                            <Typography
+                                color="secondary.main"
+                                sx={{ fontWeight: 600 }}
+                            >
+                                {text.added}
+                            </Typography>
+                            <Typography
+                                variant="h3"
+                                component="p"
+                                sx={{
+                                    mt: 1,
+                                    fontSize: { xs: '2rem', md: '2.5rem' },
+                                }}
+                            >
+                                {money(result.added, inputs.currency)}{' '}
+                                <Typography
+                                    component="span"
+                                    color="text.secondary"
+                                >
+                                    / kg
+                                </Typography>
+                            </Typography>
+                        </Box>
+                    </Paper>
+                    <Paper variant="outlined" sx={{ p: { xs: 3, md: 4 } }}>
+                        <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
+                            {text.outputs}
+                        </Typography>
+                        <Box
+                            aria-hidden="true"
+                            sx={{
+                                display: 'flex',
+                                height: 8,
+                                gap: 0.5,
+                                mb: 2,
+                                overflow: 'hidden',
+                                borderRadius: 1,
+                            }}
+                        >
+                            {credits.map((credit) => (
+                                <Box
+                                    key={credit}
+                                    sx={{
+                                        flexGrow: result.volumes[credit],
+                                        bgcolor: creditColors[credit],
+                                    }}
+                                />
+                            ))}
+                        </Box>
+                        {credits.map((credit) => (
+                            <Stack
+                                key={credit}
+                                direction="row"
+                                sx={{
+                                    justifyContent: 'space-between',
+                                    py: 1.5,
+                                    borderBottom: 1,
+                                    borderColor: 'divider',
+                                }}
+                            >
+                                <Box>
+                                    <Typography>
+                                        {credit.toUpperCase()}
+                                    </Typography>
+                                    <Typography
+                                        color="text.secondary"
+                                        sx={{ fontSize: 14 }}
+                                    >
+                                        {inputs.included[credit]
+                                            ? money(
+                                                  result.revenues[credit],
+                                                  'USD',
+                                              )
+                                            : inputs.language === 'id'
+                                              ? 'Tidak dihitung'
+                                              : 'Excluded'}
+                                    </Typography>
+                                </Box>
+                                <Typography sx={{ fontWeight: 650 }}>
+                                    {number(result.volumes[credit] / 1000)} t
+                                </Typography>
+                            </Stack>
+                        ))}
+                    </Paper>
+                </>
+            )}
+            <Typography
+                color="text.secondary"
+                sx={{ fontSize: 15, lineHeight: 1.7 }}
+            >
+                <GlossaryText language={inputs.language}>
+                    {text.disclaimer}
+                </GlossaryText>
+            </Typography>
+            <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ gap: 2 }}>
+                <Button
+                    disabled={!valid}
+                    variant="contained"
+                    onClick={() => {
+                        void navigator.clipboard
+                            .writeText(shareUrl())
+                            .then(() => setMessage(text.copied))
+                            .catch(() =>
+                                setMessage(
+                                    inputs.language === 'id'
+                                        ? 'Tidak dapat menyalin. Salin URL dari bilah alamat.'
+                                        : 'Unable to copy. Copy the URL from the address bar.',
+                                ),
+                            );
+                    }}
+                >
+                    {text.copy}
+                </Button>
+                <Button
+                    disabled={!valid}
+                    variant="outlined"
+                    color="secondary"
+                    onClick={() =>
+                        window.open(
+                            'https://wa.me/?text=' +
+                                encodeURIComponent(shareUrl()),
+                            '_blank',
+                            'noopener,noreferrer',
+                        )
+                    }
+                >
+                    {text.whatsapp}
+                </Button>
+            </Stack>
+            <Typography role="status">{message}</Typography>
+        </Stack>
+    );
+}
