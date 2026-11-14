@@ -40,6 +40,7 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'name' => config('app.name'),
+            'lang' => $request->query('lang') === 'en' ? 'en' : 'id',
             'auth' => [
                 'user' => $request->user(),
             ],
