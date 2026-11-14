@@ -16,6 +16,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
+import MuiLink from '@mui/material/Link';
 import MenuItem from '@mui/material/MenuItem';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
@@ -277,12 +278,13 @@ export default function Layout({
                         >
                             <Box
                                 component="img"
-                                src="/kbs-wordmark.png"
+                                src="/logo-white-green.svg"
                                 alt=""
                                 sx={{
-                                    width: 110,
-                                    height: 42,
+                                    width: 44,
+                                    height: 44,
                                     objectFit: 'contain',
+                                    borderRadius: '12%',
                                 }}
                             />
                             <Box>
@@ -376,14 +378,54 @@ export default function Layout({
                                 gap: 3,
                                 alignItems: { xs: 'stretch', sm: 'center' },
                                 justifyContent: 'space-between',
+                                flexWrap: 'wrap',
                             }}
                         >
-                            <Typography
-                                color="text.secondary"
-                                sx={{ fontSize: 15, lineHeight: 1.7 }}
+                            <Stack
+                                component="nav"
+                                aria-label={
+                                    language === 'id'
+                                        ? 'Tautan halaman'
+                                        : 'Page links'
+                                }
+                                direction="row"
+                                sx={{
+                                    gap: 0.5,
+                                    flexWrap: 'wrap',
+                                    alignContent: 'start',
+                                    alignItems: 'center',
+                                }}
                             >
-                                Koperasi Perkebunan Belayan Sejahtera
-                            </Typography>
+                                <Box
+                                    component="img"
+                                    src="/logo-white-green.svg"
+                                    alt=""
+                                    sx={{
+                                        width: 36,
+                                        height: 36,
+                                        objectFit: 'contain',
+                                        borderRadius: '12%',
+                                        mr: 1,
+                                    }}
+                                />
+                                {navigation.map((item) => (
+                                    <Button
+                                        key={item.title}
+                                        component={NavigationLink}
+                                        nativeButton={false}
+                                        href={item.route.url({
+                                            query: { lang: language },
+                                        })}
+                                        color="inherit"
+                                        sx={{ fontSize: 14 }}
+                                    >
+                                        {language === 'id'
+                                            ? item.titleId
+                                            : item.title}
+                                    </Button>
+                                ))}
+                            </Stack>
+
                             <Stack
                                 direction={{ xs: 'column', sm: 'row' }}
                                 sx={{
@@ -429,36 +471,35 @@ export default function Layout({
                                 </Button>
                             </Stack>
                         </Stack>
-                        <Stack
-                            component="nav"
-                            aria-label={
-                                language === 'id'
-                                    ? 'Tautan halaman'
-                                    : 'Page links'
-                            }
-                            direction="row"
-                            sx={{
-                                gap: 0.5,
-                                flexWrap: 'wrap',
-                                alignContent: 'start',
-                            }}
-                        >
-                            {navigation.map((item) => (
-                                <Button
-                                    key={item.title}
-                                    component={NavigationLink}
-                                    nativeButton={false}
-                                    href={item.route.url({
-                                        query: { lang: language },
-                                    })}
-                                    color="inherit"
-                                    sx={{ fontSize: 14 }}
-                                >
-                                    {language === 'id'
-                                        ? item.titleId
-                                        : item.title}
-                                </Button>
-                            ))}
+
+                        <Stack sx={{ gap: 0.5 }}>
+                            <Typography
+                                color="text.secondary"
+                                variant="caption"
+                                sx={{
+                                    pt: 2,
+                                    borderTop: 1,
+                                    borderColor: 'divider',
+                                }}
+                            >
+                                {language === 'id'
+                                    ? 'Dikembangkan oleh Tim Litbang KPBS.'
+                                    : 'Developed by the KPBS Research & Development Team.'}
+                            </Typography>
+                            <MuiLink
+                                href="https://belayansejahtera.org/"
+                                target="_blank"
+                                rel="noreferrer"
+                                color="text.secondary"
+                                underline="hover"
+                                sx={{
+                                    width: 'fit-content',
+                                    fontSize: 13,
+                                    lineHeight: 1.6,
+                                }}
+                            >
+                                Koperasi Perkebunan Belayan Sejahtera
+                            </MuiLink>
                         </Stack>
                     </Stack>
                 </Container>
