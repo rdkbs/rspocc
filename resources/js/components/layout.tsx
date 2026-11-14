@@ -16,7 +16,9 @@ import CssBaseline from '@mui/material/CssBaseline';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
+import MenuItem from '@mui/material/MenuItem';
 import Stack from '@mui/material/Stack';
+import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import {
     calculator,
@@ -55,12 +57,14 @@ export default function Layout({
     path = '/',
     description = 'Estimate RSPO credit premium revenue and added value per kilogram of fresh fruit bunches.',
     language = 'en',
+    onLanguageChange,
 }: {
     children: ReactNode;
     title: string;
     path?: string;
     description?: string;
     language?: 'id' | 'en';
+    onLanguageChange?: (language: 'id' | 'en') => void;
 }) {
     const [dark, setDark] = useState(false);
     useEffect(() => {
@@ -295,21 +299,6 @@ export default function Layout({
                                 </Typography>
                             </Box>
                         </Link>
-                        <Button
-                            variant="outlined"
-                            color="inherit"
-                            onClick={() => setDark(!dark)}
-                            aria-pressed={dark}
-                            sx={{ fontSize: 14, order: { xs: 1, md: 2 } }}
-                        >
-                            {language === 'id'
-                                ? dark
-                                    ? 'Mode terang'
-                                    : 'Mode gelap'
-                                : dark
-                                  ? 'Light mode'
-                                  : 'Dark mode'}
-                        </Button>
                         <Stack
                             component="nav"
                             aria-label={
@@ -380,18 +369,66 @@ export default function Layout({
                 }}
             >
                 <Container maxWidth="lg">
-                    <Stack
-                        direction={{ xs: 'column', md: 'row' }}
-                        sx={{ gap: 4, justifyContent: 'space-between' }}
-                    >
-                        <Box sx={{ maxWidth: 340 }}>
+                    <Stack sx={{ gap: 3 }}>
+                        <Stack
+                            direction={{ xs: 'column', sm: 'row' }}
+                            sx={{
+                                gap: 3,
+                                alignItems: { xs: 'stretch', sm: 'center' },
+                                justifyContent: 'space-between',
+                            }}
+                        >
                             <Typography
                                 color="text.secondary"
                                 sx={{ fontSize: 15, lineHeight: 1.7 }}
                             >
                                 Koperasi Perkebunan Belayan Sejahtera
                             </Typography>
-                        </Box>
+                            <Stack
+                                direction={{ xs: 'column', sm: 'row' }}
+                                sx={{
+                                    gap: 1.5,
+                                    alignItems: { xs: 'stretch', sm: 'center' },
+                                }}
+                            >
+                                {onLanguageChange && (
+                                    <TextField
+                                        select
+                                        label="Language / Bahasa"
+                                        size="small"
+                                        value={language}
+                                        onChange={(event) =>
+                                            onLanguageChange(
+                                                event.target.value as
+                                                    | 'id'
+                                                    | 'en',
+                                            )
+                                        }
+                                        sx={{ minWidth: 180 }}
+                                    >
+                                        <MenuItem value="id">
+                                            Indonesia
+                                        </MenuItem>
+                                        <MenuItem value="en">English</MenuItem>
+                                    </TextField>
+                                )}
+                                <Button
+                                    variant="outlined"
+                                    color="inherit"
+                                    onClick={() => setDark(!dark)}
+                                    aria-pressed={dark}
+                                    sx={{ fontSize: 14 }}
+                                >
+                                    {language === 'id'
+                                        ? dark
+                                            ? 'Mode terang'
+                                            : 'Mode gelap'
+                                        : dark
+                                          ? 'Light mode'
+                                          : 'Dark mode'}
+                                </Button>
+                            </Stack>
+                        </Stack>
                         <Stack
                             component="nav"
                             aria-label={
@@ -404,7 +441,6 @@ export default function Layout({
                                 gap: 0.5,
                                 flexWrap: 'wrap',
                                 alignContent: 'start',
-                                maxWidth: 560,
                             }}
                         >
                             {navigation.map((item) => (

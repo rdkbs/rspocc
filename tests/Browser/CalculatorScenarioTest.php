@@ -45,12 +45,21 @@ it('keeps canonical URLs language-specific and displays the cooperative mission'
 
     $page->navigate('/?lang=en')
         ->assertPresent('header img[src="/kbs-wordmark.png"]')
+        ->assertScript('document.querySelector("header [role=combobox]") === null', true)
+        ->assertScript('document.querySelector("footer [role=combobox]") !== null', true)
+        ->assertScript('[...document.querySelectorAll("footer button")].some((button) => button.innerText.includes("Dark mode"))', true)
         ->assertScript('document.body.innerText.includes("before costs and taxes")', false)
         ->assertScript('document.querySelector("link[rel=icon]").href.endsWith("/favicon.ico")', true)
         ->assertNoJavaScriptErrors();
 
     $page->navigate('/?lang=id')
         ->assertScript('document.body.innerText.includes("sebelum biaya dan pajak")', false);
+
+    $page->navigate('/?lang=en')
+        ->click('footer [role=combobox]')
+        ->click('Indonesia')
+        ->assertQueryStringHas('lang', 'id')
+        ->assertScript('document.documentElement.lang', 'id');
 
     $page->navigate('/?lang=en')
         ->click('Dark mode')
