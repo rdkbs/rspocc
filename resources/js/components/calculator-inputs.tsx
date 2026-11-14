@@ -84,14 +84,15 @@ export default function CalculatorInputs({
                 }) || '/'
             }
             onSubmit={(event) => event.preventDefault()}
-            className="app-frame"
             variant="outlined"
             sx={{ p: { xs: 2.5, md: 4 } }}
         >
             <Typography
-                variant="h5"
+                variant="h6"
                 component="h2"
                 sx={{
+                    fontSize: 24,
+                    fontWeight: 600,
                     mb: 4,
                     pb: 3,
                     borderBottom: 1,
@@ -163,7 +164,8 @@ export default function CalculatorInputs({
                     <Box>
                         <Typography
                             component="h3"
-                            sx={{ fontSize: 17, fontWeight: 600, mb: 1 }}
+                            variant="body2"
+                            sx={{ fontSize: 16, fontWeight: 600, mb: 1 }}
                         >
                             {inputs.language === 'id'
                                 ? 'Harga kredit IS (USD / kredit)'
@@ -308,7 +310,7 @@ export default function CalculatorInputs({
                         >
                             <Typography
                                 component="span"
-                                sx={{ fontSize: 17, fontWeight: 600 }}
+                                sx={{ fontSize: 16, fontWeight: 600 }}
                             >
                                 {inputs.language === 'id'
                                     ? 'Kurs & rendemen'
@@ -328,7 +330,8 @@ export default function CalculatorInputs({
                         <Stack sx={{ p: 2, gap: 2.5 }}>
                             <Typography
                                 component="h3"
-                                sx={{ fontSize: 17, fontWeight: 600 }}
+                                variant="body2"
+                                sx={{ fontSize: 16, fontWeight: 600 }}
                             >
                                 {inputs.language === 'id'
                                     ? 'Rendemen (% dari TBS)'

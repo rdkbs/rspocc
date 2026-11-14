@@ -37,7 +37,11 @@ export default function Index({
             language={inputs.language}
             onLanguageChange={(language) => update('language', language)}
         >
-            <Box data-enter>
+            <Box
+                component="section"
+                aria-labelledby="calculator-title"
+                data-enter
+            >
                 <Head>
                     <script type="application/ld+json">
                         {JSON.stringify({
@@ -50,58 +54,63 @@ export default function Index({
                         })}
                     </script>
                 </Head>
-                <Typography
-                    variant="h1"
-                    sx={{
-                        fontSize: { xs: '2.5rem', md: '3.75rem' },
-                        maxWidth: 850,
-                        mt: 3,
-                        mb: 1,
-                    }}
-                >
-                    {text.title}
-                </Typography>
-                <Typography
-                    color="text.secondary"
-                    sx={{
-                        maxWidth: 680,
-                        mt: 2,
-                        mb: 5,
-                        fontSize: '1.125rem',
-                        lineHeight: 1.7,
-                    }}
-                >
-                    <GlossaryText language={inputs.language}>
-                        {text.intro}
-                    </GlossaryText>
-                </Typography>
-                {invalid && (
-                    <Alert severity="warning" sx={{ mb: 2 }}>
-                        {text.invalid}
-                    </Alert>
-                )}
-                <Box
-                    sx={{
-                        display: 'grid',
-                        gridTemplateColumns: {
-                            xs: '1fr',
-                            md: 'minmax(0, 1.08fr) minmax(0, 1fr)',
-                        },
-                        gap: { xs: 3, lg: 4 },
-                        alignItems: 'start',
-                        '@media (orientation: portrait)': {
-                            gridTemplateColumns: '1fr',
-                        },
-                    }}
-                >
-                    <CalculatorInputs scenario={scenario} text={text} />
-                    <CalculatorResults
-                        inputs={inputs}
-                        text={text}
-                        result={result}
-                        valid={valid}
-                        shareUrl={shareUrl}
-                    />
+                <Box className="wrap">
+                    <Box className="hero-text">
+                        <Typography
+                            variant="h1"
+                            id="calculator-title"
+                            sx={{
+                                fontSize: { xs: '2.5rem', md: '3.75rem' },
+                                maxWidth: 850,
+                                mb: 1,
+                            }}
+                        >
+                            {text.title}
+                        </Typography>
+                        <Typography
+                            color="text.secondary"
+                            sx={{
+                                maxWidth: 680,
+                                mt: 2,
+                                mb: 5,
+                                fontSize: '1.125rem',
+                                lineHeight: 1.7,
+                            }}
+                        >
+                            <GlossaryText language={inputs.language}>
+                                {text.intro}
+                            </GlossaryText>
+                        </Typography>
+                        {invalid && (
+                            <Alert severity="warning" sx={{ mb: 2 }}>
+                                {text.invalid}
+                            </Alert>
+                        )}
+                    </Box>
+                    <Box
+                        className="app-frame"
+                        sx={{
+                            display: 'grid',
+                            gridTemplateColumns: {
+                                xs: '1fr',
+                                md: 'repeat(2, minmax(0, 1fr))',
+                            },
+                            gap: 3,
+                            alignItems: 'start',
+                            '@media (orientation: portrait)': {
+                                gridTemplateColumns: '1fr',
+                            },
+                        }}
+                    >
+                        <CalculatorInputs scenario={scenario} text={text} />
+                        <CalculatorResults
+                            inputs={inputs}
+                            text={text}
+                            result={result}
+                            valid={valid}
+                            shareUrl={shareUrl}
+                        />
+                    </Box>
                 </Box>
             </Box>
         </Layout>

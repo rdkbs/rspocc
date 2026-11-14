@@ -254,8 +254,13 @@ export default function Layout({
                     borderColor: 'divider',
                 }}
             >
-                <Container maxWidth="lg">
+                <Container
+                    maxWidth="lg"
+                    disableGutters
+                    sx={{ px: { xs: 2, lg: 0 } }}
+                >
                     <Stack
+                        className="wrap"
                         direction="row"
                         sx={{
                             minHeight: 94,
@@ -303,6 +308,7 @@ export default function Layout({
                         </Link>
                         <Stack
                             component="nav"
+                            className="wrap"
                             aria-label={
                                 language === 'id'
                                     ? 'Navigasi utama'
@@ -357,7 +363,13 @@ export default function Layout({
                 component="main"
                 id="main"
                 maxWidth="lg"
-                sx={{ py: { xs: 4, md: 6 }, minHeight: '75vh' }}
+                disableGutters
+                sx={{
+                    px: { xs: 2, lg: 0 },
+                    pt: { xs: 3, md: 0 },
+                    pb: { xs: 4, md: 6 },
+                    minHeight: '75vh',
+                }}
             >
                 {children}
             </Container>
@@ -370,8 +382,12 @@ export default function Layout({
                     py: { xs: 4, md: 5 },
                 }}
             >
-                <Container maxWidth="lg">
-                    <Stack sx={{ gap: 3 }}>
+                <Container
+                    maxWidth="lg"
+                    disableGutters
+                    sx={{ px: { xs: 2, lg: 0 } }}
+                >
+                    <Stack className="wrap" sx={{ gap: 3 }}>
                         <Stack
                             direction={{ xs: 'column', sm: 'row' }}
                             sx={{
