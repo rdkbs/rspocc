@@ -394,6 +394,7 @@ export default function Layout({
                         </Stack>
                         <TextField
                             select
+                            variant="standard"
                             label={language === 'id' ? 'Bahasa' : 'Language'}
                             size="small"
                             value={language}
@@ -406,14 +407,13 @@ export default function Layout({
                                 select: {
                                     SelectDisplayProps: {
                                         style: {
-                                            minHeight: 44,
                                             boxSizing: 'border-box',
                                         },
                                     },
                                 },
                             }}
                             sx={{
-                                minWidth: 180,
+                                minWidth: 120,
                                 order: { xs: 1, md: 2 },
                                 ml: { xs: 'auto', md: 0 },
                             }}
