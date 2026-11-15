@@ -76,7 +76,7 @@ export default function ExchangeRateField({
                 value={currency === 'USD' ? 1 : value}
                 onValueChange={(rate) => {
                     onModeChange('manual');
-                    onChange(rate);
+                    onChange(rate ?? 0);
                 }}
                 slotProps={{
                     htmlInput: {

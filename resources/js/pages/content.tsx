@@ -51,8 +51,8 @@ const conversionExplanation = (language: Language) =>
 const indonesianConversionExplanation = () =>
     `Default Kernel Extraction Rate (KER) RSPO adalah ${formatPercent(extractionAssumptions.kernel, 'id')} dari TBS. Inti sawit menghasilkan ${formatPercent(extractionAssumptions.kernelOilRecovery, 'id')} minyak dan ${formatPercent(extractionAssumptions.kernelExpellerRecovery, 'id')} bungkil, sehingga rendemen konversi TBS menjadi CSPKO ${formatPercent(defaultExtractionRates.cspko, 'id')} dan CSPKE ${formatPercent(defaultExtractionRates.cspke, 'id')}.`;
 const priceSnapshot = {
-    en: `No. Defaults are ${defaultPriceReference.source}’s last-traded IS credit prices in its ${defaultPriceReference.period} view, checked on ${checkedOn('en')}: ${priceList('en')}. Enter your agreed selling prices.`,
-    id: `Tidak. Harga default adalah harga transaksi terakhir kredit IS di ${defaultPriceReference.source} untuk tampilan tahun ${defaultPriceReference.period}, diperiksa pada ${checkedOn('id')}: ${priceList('id')}. Masukkan harga jual yang telah disepakati.`,
+    en: `No. The placeholders show ${defaultPriceReference.source}’s last-traded IS credit prices in its ${defaultPriceReference.period} view, checked on ${checkedOn('en')}: ${priceList('en')}. Enter your agreed selling prices.`,
+    id: `Tidak. Placeholder menampilkan harga transaksi terakhir kredit IS di ${defaultPriceReference.source} pada tampilan ${defaultPriceReference.period}, diperiksa ${checkedOn('id')}: ${priceList('id')}. Masukkan harga jual yang disepakati.`,
 };
 
 const englishPages: Record<ContentSlug, ContentPage> = {
@@ -65,7 +65,7 @@ const englishPages: Record<ContentSlug, ContentPage> = {
             ],
             [
                 '2. Enter credit prices',
-                'Enter a USD price for each credit. Uncheck any credit you will not sell. The calculator keeps its price if you select it again.',
+                'Enter your USD price for each credit. Placeholders show dated PRISMA reference prices. Uncheck credits you will not sell; their entered prices are kept if selected again.',
             ],
             [
                 '3. Read the estimate',
@@ -194,7 +194,7 @@ const indonesianPages: Record<ContentSlug, ContentPage> = {
             ],
             [
                 '2. Masukkan harga kredit',
-                'Masukkan harga USD untuk setiap kredit. Hapus centang pada kredit yang tidak akan dijual. Harga tetap tersimpan jika kredit dipilih kembali.',
+                'Masukkan harga USD untuk setiap kredit. Placeholder menampilkan harga referensi PRISMA bertanggal. Hapus centang pada kredit yang tidak dijual; harga tetap tersimpan jika dipilih kembali.',
             ],
             [
                 '3. Baca perkiraan',

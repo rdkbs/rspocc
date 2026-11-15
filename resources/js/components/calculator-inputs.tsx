@@ -88,15 +88,18 @@ export default function CalculatorInputs({
             sx={{ p: { xs: 2.5, md: 4 } }}
         >
             <Typography
-                variant="h6"
-                component="h2"
+                component="h1"
+                id="calculator-title"
                 sx={{
-                    fontSize: 24,
-                    fontWeight: 600,
-                    mb: 4,
-                    pb: 3,
-                    borderBottom: 1,
-                    borderColor: 'divider',
+                    position: 'absolute',
+                    width: '1px',
+                    height: '1px',
+                    padding: 0,
+                    margin: '-1px',
+                    overflow: 'hidden',
+                    clip: 'rect(0, 0, 0, 0)',
+                    whiteSpace: 'nowrap',
+                    border: 0,
                 }}
             >
                 {text.inputs}
@@ -108,6 +111,11 @@ export default function CalculatorInputs({
                     language={inputs.language}
                     value={inputs.volume}
                     onValueChange={(value) => update('volume', value)}
+                    placeholder={
+                        inputs.language === 'id'
+                            ? 'Masukkan Volume TBS'
+                            : 'Enter FFB volume'
+                    }
                     slotProps={{
                         htmlInput: { min: 0, max: 1e12, step: 'any' },
                         input: {
@@ -237,6 +245,11 @@ export default function CalculatorInputs({
                                         }
                                         language={inputs.language}
                                         value={inputs.prices[credit]}
+                                        placeholder={
+                                            inputs.language === 'id'
+                                                ? `Masukkan harga ${credit.toUpperCase()}`
+                                                : `Enter ${credit.toUpperCase()} price`
+                                        }
                                         onValueChange={(value) =>
                                             setInputs((previous) => ({
                                                 ...previous,
@@ -276,8 +289,8 @@ export default function CalculatorInputs({
                             sx={{ fontSize: 14, lineHeight: 1.6, mt: 2 }}
                         >
                             {inputs.language === 'id'
-                                ? 'Default IS: transaksi terakhir 2026, dicek '
-                                : 'IS defaults: last traded in 2026, checked '}
+                                ? `Placeholder harga IS dari transaksi terakhir ${defaultPriceReference.period}, diperiksa `
+                                : `IS price placeholders show last-traded prices from ${defaultPriceReference.period}, checked `}
                             {defaultPriceReference.checkedOn}
                             {' · '}
                             <Box
@@ -377,7 +390,7 @@ export default function CalculatorInputs({
                                                 language={inputs.language}
                                                 value={inputs[key]}
                                                 onValueChange={(value) =>
-                                                    update(key, value)
+                                                    update(key, value ?? 0)
                                                 }
                                                 slotProps={{
                                                     input: {

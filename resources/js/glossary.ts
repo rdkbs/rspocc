@@ -162,8 +162,8 @@ export const glossaryEntries: GlossaryEntry[] = [
             id: 'Harga kredit RSPO',
         },
         matches: ['harga kredit'],
-        en: 'The USD amount per credit. Each credit type has its own price. Defaults come from a dated PRISMA price snapshot.',
-        id: 'Harga dalam USD untuk satu kredit. Setiap jenis kredit memiliki harga sendiri. Harga default berasal dari catatan harga PRISMA bertanggal.',
+        en: 'The USD amount per credit. Each credit type has its own price. Placeholders show dated PRISMA reference prices as examples.',
+        id: 'Harga dalam USD untuk satu kredit. Setiap jenis kredit memiliki harga sendiri. Placeholder menampilkan contoh harga referensi PRISMA bertanggal.',
     },
     {
         term: 'Premium revenue',

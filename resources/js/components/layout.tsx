@@ -432,8 +432,7 @@ export default function Layout({
                 disableGutters
                 sx={{
                     px: { xs: 2, lg: 0 },
-                    pt: { xs: 3, md: 0 },
-                    pb: { xs: 4, md: 6 },
+                    py: { xs: 4, md: 6 },
                     minHeight: '75vh',
                 }}
             >

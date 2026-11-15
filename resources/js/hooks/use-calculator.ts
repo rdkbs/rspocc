@@ -9,12 +9,12 @@ export const credits = ['cspo', 'cspko', 'cspke'] as const;
 export type Credit = (typeof credits)[number];
 const maxDecodedScenarioLength = 64 * 1024;
 export type Inputs = {
-    volume: number;
+    volume: number | null;
     unit: 'kg' | 't';
     oer: number;
     ker: number;
     yield: number;
-    prices: Record<Credit, number>;
+    prices: Record<Credit, number | null>;
     included: Record<Credit, boolean>;
     exchange: number;
     currency: 'IDR' | 'MYR' | 'USD';
@@ -32,6 +32,11 @@ export const defaults: Inputs = {
     currency: 'IDR',
     language: 'id',
 };
+const initialInputs: Inputs = {
+    ...defaults,
+    volume: null,
+    prices: { cspo: null, cspko: null, cspke: null },
+};
 function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
@@ -42,6 +47,9 @@ function isNumber(value: unknown): value is number {
         value >= 0 &&
         value <= 1e12
     );
+}
+function isOptionalNumber(value: unknown): value is number | null {
+    return value === null || isNumber(value);
 }
 export function isValidExtractionRates(value: unknown): boolean {
     if (!isRecord(value)) return false;
@@ -66,16 +74,16 @@ export function isValidInputs(value: unknown): value is Inputs {
 
     const { prices, included } = value;
     return (
-        isNumber(value.volume) &&
+        isOptionalNumber(value.volume) &&
         isValidExtractionRates(value) &&
         (value.unit === 'kg' || value.unit === 't') &&
         (value.currency === 'IDR' ||
             value.currency === 'MYR' ||
             value.currency === 'USD') &&
         (value.language === 'id' || value.language === 'en') &&
-        isNumber(prices.cspo) &&
-        isNumber(prices.cspko) &&
-        isNumber(prices.cspke) &&
+        isOptionalNumber(prices.cspo) &&
+        isOptionalNumber(prices.cspko) &&
+        isOptionalNumber(prices.cspke) &&
         typeof included.cspo === 'boolean' &&
         typeof included.cspko === 'boolean' &&
         typeof included.cspke === 'boolean'
@@ -117,13 +125,13 @@ function toInputs(data: Inputs): Inputs {
     };
 }
 function invalidScenario(): { inputs: Inputs; invalid: true } {
-    return { inputs: defaults, invalid: true };
+    return { inputs: initialInputs, invalid: true };
 }
 export function decode(payload: string | null): {
     inputs: Inputs;
     invalid: boolean;
 } {
-    if (!payload) return { inputs: defaults, invalid: false };
+    if (!payload) return { inputs: initialInputs, invalid: false };
     if (payload.length > 4096) return invalidScenario();
 
     try {
@@ -245,7 +253,7 @@ function decompressScenario(payload: string): string | null {
     }
 }
 export function useCalculator(inputs: Inputs) {
-    const kg = inputs.volume * (inputs.unit === 't' ? 1000 : 1);
+    const kg = (inputs.volume ?? 0) * (inputs.unit === 't' ? 1000 : 1);
     const volumes: Record<Credit, number> = {
         cspo: (kg * inputs.oer) / 100,
         cspko: (kg * inputs.ker) / 100,
@@ -255,7 +263,7 @@ export function useCalculator(inputs: Inputs) {
         credits.map((credit) => [
             credit,
             inputs.included[credit]
-                ? (volumes[credit] / 1000) * inputs.prices[credit]
+                ? (volumes[credit] / 1000) * (inputs.prices[credit] ?? 0)
                 : 0,
         ]),
     ) as Record<Credit, number>;
