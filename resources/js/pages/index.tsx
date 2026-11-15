@@ -109,7 +109,7 @@ export default function Index({
                             component="h2"
                             id="guide-preview-title"
                             variant="h6"
-                            sx={{ mb: 3 }}
+                            sx={{ mb: 3, color: 'primary.main' }}
                         >
                             {homeText.guideTitle}
                         </Typography>
@@ -251,7 +251,7 @@ export default function Index({
                             component="h2"
                             id="faq-preview-title"
                             variant="h6"
-                            sx={{ mb: 3 }}
+                            sx={{ mb: 3, color: 'primary.main' }}
                         >
                             {homeText.faqTitle}
                         </Typography>

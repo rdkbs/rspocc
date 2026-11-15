@@ -97,15 +97,18 @@ export default function CalculatorResults({
                         variant="outlined"
                         sx={{
                             p: { xs: 3, md: 4 },
-                            bgcolor: '#244e38',
-                            color: '#fff',
-                            borderColor: '#244e38',
+                            bgcolor: 'primary.main',
+                            color: 'primary.contrastText',
+                            borderColor: 'primary.main',
                             '& .MuiTypography-root': { color: 'inherit' },
                         }}
                     >
                         <Typography
                             component="h2"
-                            sx={{ fontSize: 24, fontWeight: 600 }}
+                            sx={{
+                                fontSize: 24,
+                                fontWeight: 600,
+                            }}
                         >
                             {text.total}
                         </Typography>
@@ -149,6 +152,7 @@ export default function CalculatorResults({
                             <Button
                                 disabled={!valid}
                                 variant="contained"
+                                color="secondary"
                                 onClick={() => {
                                     void navigator.clipboard
                                         .writeText(shareUrl())
@@ -195,7 +199,7 @@ export default function CalculatorResults({
                                     mt: 4,
                                     pt: 3,
                                     borderTop: 1,
-                                    borderColor: '#577762',
+                                    borderColor: 'divider',
                                 }}
                             >
                                 <Typography
