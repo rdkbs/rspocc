@@ -1,11 +1,10 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { formatCurrency } from '@/calculator-assumptions';
 import type { CalculatorCopy } from '@/calculator-copy';
 import GlossaryText from '@/components/glossary-text';
 import { credits, useCalculator, type Inputs } from '@/hooks/use-calculator';
@@ -36,8 +35,52 @@ export default function CalculatorResults({
         new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(
             value,
         );
-    const money = (value: number, currency: string) =>
-        formatCurrency(value, currency, inputs.language);
+    const money = (
+        value: number,
+        currency: string,
+        currencySize = '0.78em',
+    ) => {
+        const parts = new Intl.NumberFormat(
+            inputs.language === 'id' ? 'id-ID' : 'en-US',
+            {
+                style: 'currency',
+                currency,
+                currencyDisplay: 'code',
+                maximumFractionDigits: currency === 'IDR' ? 0 : 2,
+            },
+        ).formatToParts(value);
+        const currencyIndex = parts.findIndex(
+            (part) => part.type === 'currency',
+        );
+        const amountIndex = parts.findIndex((part) => part.type === 'integer');
+
+        return parts.map((part, index) => {
+            if (part.type === 'currency') {
+                return (
+                    <Box
+                        key={index}
+                        component="span"
+                        sx={{
+                            fontSize: currencySize,
+                            fontWeight: 500,
+                            letterSpacing: '0.01em',
+                            ...(currencyIndex < amountIndex
+                                ? { mr: '0.5em' }
+                                : { ml: '0.5em' }),
+                        }}
+                    >
+                        {part.value}
+                    </Box>
+                );
+            }
+
+            if (part.type === 'literal' && !part.value.trim()) {
+                return null;
+            }
+
+            return <Fragment key={index}>{part.value}</Fragment>;
+        });
+    };
     const [shareMessage, setShareMessage] = useState('');
 
     return (
@@ -81,7 +124,11 @@ export default function CalculatorResults({
                                         overflowWrap: 'anywhere',
                                     }}
                                 >
-                                    {money(result.converted, inputs.currency)}
+                                    {money(
+                                        result.converted,
+                                        inputs.currency,
+                                        '0.46em',
+                                    )}
                                 </Typography>
                                 <Typography
                                     color="text.secondary"
@@ -165,7 +212,11 @@ export default function CalculatorResults({
                                         fontSize: { xs: '2rem', md: '2.5rem' },
                                     }}
                                 >
-                                    {money(result.added, inputs.currency)}{' '}
+                                    {money(
+                                        result.added,
+                                        inputs.currency,
+                                        '0.55em',
+                                    )}{' '}
                                     <Typography
                                         component="span"
                                         color="text.secondary"
