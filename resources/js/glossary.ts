@@ -173,8 +173,8 @@ export const glossaryEntries: GlossaryEntry[] = [
             id: 'Pendapatan premium kredit RSPO',
         },
         matches: ['pendapatan kredit'],
-        en: 'Credit quantity multiplied by its selling price. Only selected credits contribute to the total.',
-        id: 'Jumlah kredit dikalikan harga jualnya. Hanya kredit yang dicentang masuk ke total pendapatan.',
+        en: 'Credit quantity multiplied by its selling price. Only credits with a price entered contribute to the total.',
+        id: 'Jumlah kredit dikalikan harga jualnya. Hanya kredit yang memiliki harga masuk ke total pendapatan.',
     },
     {
         term: 'Added value per kg FFB',

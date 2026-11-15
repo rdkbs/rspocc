@@ -2,13 +2,18 @@ import { useEffect, useRef, useState } from 'react';
 import TextField, { type TextFieldProps } from '@mui/material/TextField';
 
 type Language = 'id' | 'en';
-export function formatNumericInput(raw: string, language: Language): string {
+export function formatNumericInput(
+    raw: string,
+    language: Language,
+    groupThousands = true,
+): string {
     if (raw === '' || raw === '-') return raw;
     const [integer, fraction] = raw.split('.');
-    const grouped = new Intl.NumberFormat(
-        language === 'id' ? 'id-ID' : 'en-US',
-        { maximumFractionDigits: 0 },
-    ).format(Number(integer === '-' ? '-0' : integer || 0));
+    const grouped = groupThousands
+        ? new Intl.NumberFormat(language === 'id' ? 'id-ID' : 'en-US', {
+              maximumFractionDigits: 0,
+          }).format(Number(integer === '-' ? '-0' : integer || 0))
+        : integer;
     return (
         grouped +
         (fraction === undefined
@@ -73,7 +78,11 @@ export default function NumberField({
     return (
         <TextField
             {...props}
-            value={formatNumericInput(draft ?? String(value ?? ''), language)}
+            value={formatNumericInput(
+                draft ?? String(value ?? ''),
+                language,
+                draft === null,
+            )}
             type="text"
             onFocus={() => setDraft(String(value ?? ''))}
             onBlur={() => setDraft(null)}
@@ -84,7 +93,7 @@ export default function NumberField({
                 const beforeCaret = input.value
                     .slice(0, input.selectionStart ?? input.value.length)
                     .replaceAll(group, '').length;
-                const formatted = formatNumericInput(raw, language);
+                const formatted = formatNumericInput(raw, language, false);
                 const numeric = Number(raw);
                 const next =
                     raw === '' ? null : Number.isFinite(numeric) ? numeric : 0;

@@ -231,18 +231,12 @@ export default function CalculatorResults({
                                             color="text.secondary"
                                             sx={{ fontSize: 14 }}
                                         >
-                                            {inputs.included[credit]
-                                                ? inputs.prices[credit] === null
-                                                    ? text.priceMissing
-                                                    : money(
-                                                          result.revenues[
-                                                              credit
-                                                          ],
-                                                          'USD',
-                                                      )
-                                                : inputs.language === 'id'
-                                                  ? 'Tidak dihitung'
-                                                  : 'Excluded'}
+                                            {inputs.prices[credit] === null
+                                                ? text.excluded
+                                                : money(
+                                                      result.revenues[credit],
+                                                      'USD',
+                                                  )}
                                         </Typography>
                                     </Box>
                                     <Typography sx={{ fontWeight: 650 }}>

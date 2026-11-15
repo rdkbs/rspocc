@@ -31,10 +31,7 @@ export default function Index({
     const result = useCalculator(inputs);
     const ready =
         inputs.volume !== null &&
-        credits.every(
-            (credit) =>
-                !inputs.included[credit] || inputs.prices[credit] !== null,
-        );
+        credits.some((credit) => inputs.prices[credit] !== null);
     const shareUrl = () =>
         new URL(
             calculator.url(

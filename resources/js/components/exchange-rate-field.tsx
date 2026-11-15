@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import InputAdornment from '@mui/material/InputAdornment';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
+import Typography from '@mui/material/Typography';
 import NumberField from '@/components/number-field';
 import { exchangeRates } from '@/routes';
 import type { Inputs } from '@/hooks/use-calculator';
@@ -66,8 +68,17 @@ export default function ExchangeRateField({
               timeZone: 'UTC',
           }).format(new Date(`${reference.date}T00:00:00Z`))
         : null;
+    const formattedReferenceRate = reference
+        ? `${new Intl.NumberFormat(id ? 'id-ID' : 'en-US', {
+              maximumFractionDigits: 4,
+          }).format(reference.rate)} ${currency}`
+        : null;
     return (
-        <Box>
+        <Box
+            sx={{
+                pt: 1,
+            }}
+        >
             <NumberField
                 fullWidth
                 size="small"
@@ -89,15 +100,13 @@ export default function ExchangeRateField({
                                 <Select
                                     variant="standard"
                                     disableUnderline
-                                    value={currency}
+                                    value={currency === 'USD' ? '' : currency}
+                                    displayEmpty
+                                    renderValue={() => currency}
                                     onChange={(event) => {
                                         onModeChange('auto');
                                         onCurrencyChange(event.target.value);
-                                        onChange(
-                                            event.target.value === 'USD'
-                                                ? 1
-                                                : 0,
-                                        );
+                                        onChange(0);
                                     }}
                                     inputProps={{
                                         'aria-label': id
@@ -112,7 +121,7 @@ export default function ExchangeRateField({
                                         pl: 1,
                                     }}
                                 >
-                                    {['IDR', 'MYR', 'USD'].map((code) => (
+                                    {['IDR', 'MYR'].map((code) => (
                                         <MenuItem key={code} value={code}>
                                             {code}
                                         </MenuItem>
@@ -125,37 +134,67 @@ export default function ExchangeRateField({
             />
             {currency !== 'USD' && (
                 <Box
-                    role="status"
                     sx={{
-                        mt: 1,
-                        fontSize: 14,
-                        color: 'text.secondary',
-                        lineHeight: 1.6,
+                        mt: 0.5,
                     }}
                 >
-                    <Box
-                        component="a"
-                        href="https://frankfurter.dev/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        sx={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            minHeight: 44,
-                        }}
+                    {reference &&
+                        Number.isFinite(reference.rate) &&
+                        reference.rate > 0 &&
+                        reference.rate !== value && (
+                            <Button
+                                type="button"
+                                size="small"
+                                onClick={() => {
+                                    onModeChange('auto');
+                                    onChange(reference.rate);
+                                }}
+                                sx={{
+                                    minHeight: 44,
+                                    minWidth: 0,
+                                    px: 0.5,
+                                    textTransform: 'none',
+                                    verticalAlign: 'middle',
+                                }}
+                            >
+                                {id
+                                    ? `Gunakan kurs ini: ${formattedReferenceRate} untuk 1 USD`
+                                    : `Use this rate: ${formattedReferenceRate} for 1 USD`}
+                            </Button>
+                        )}
+                    <Typography
+                        component="div"
+                        variant="caption"
+                        color="text.secondary"
                     >
-                        Frankfurter
-                    </Box>
-                    {' · '}
-                    {rateDate
-                        ? `${id ? 'Tanggal kurs' : 'Rate date'}: ${rateDate}`
-                        : failed || result
-                          ? id
-                              ? 'Pembaruan tidak tersedia'
-                              : 'Update unavailable'
-                          : id
-                            ? 'Memuat pembaruan…'
-                            : 'Loading update…'}
+                        <Box
+                            component="a"
+                            href="https://frankfurter.dev/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            sx={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                minHeight: 44,
+                            }}
+                        >
+                            Frankfurter
+                        </Box>
+                        {' · '}
+                        <Box component="span" role="status">
+                            {rateDate
+                                ? id
+                                    ? `Diperbarui ${rateDate}`
+                                    : `Updated ${rateDate}`
+                                : failed || result
+                                  ? id
+                                      ? 'Pembaruan tidak tersedia'
+                                      : 'Update unavailable'
+                                  : id
+                                    ? 'Memuat pembaruan…'
+                                    : 'Loading update…'}
+                        </Box>
+                    </Typography>
                 </Box>
             )}
         </Box>

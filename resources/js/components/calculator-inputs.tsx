@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
-import Checkbox from '@mui/material/Checkbox';
-import FormControlLabel from '@mui/material/FormControlLabel';
 import InputAdornment from '@mui/material/InputAdornment';
 import MenuItem from '@mui/material/MenuItem';
 import Paper from '@mui/material/Paper';
 import Select from '@mui/material/Select';
 import Stack from '@mui/material/Stack';
-import Tooltip from '@mui/material/Tooltip';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
 import Typography from '@mui/material/Typography';
 import { defaultPriceReference } from '@/calculator-assumptions';
 import type { CalculatorCopy } from '@/calculator-copy';
@@ -16,33 +16,7 @@ import ExchangeRateField from '@/components/exchange-rate-field';
 import NumberField from '@/components/number-field';
 import { credits, type Inputs } from '@/hooks/use-calculator';
 import { useCalculatorScenario } from '@/hooks/use-calculator-scenario';
-import { calculator, glossary } from '@/routes';
-
-function Help({ text, label }: { text: string; label: string }) {
-    const [open, setOpen] = useState(false);
-
-    return (
-        <Tooltip
-            title={text}
-            describeChild
-            open={open}
-            onClose={() => setOpen(false)}
-            disableHoverListener
-            disableFocusListener
-            disableTouchListener
-            arrow
-        >
-            <Button
-                type="button"
-                size="small"
-                aria-expanded={open}
-                onClick={() => setOpen(!open)}
-            >
-                {label} ?
-            </Button>
-        </Tooltip>
-    );
-}
+import { calculator } from '@/routes';
 
 type Scenario = ReturnType<typeof useCalculatorScenario>;
 
@@ -55,11 +29,17 @@ export default function CalculatorInputs({
 }) {
     const { inputs, setInputs, update, rateMode, setRateMode, ratesValid } =
         scenario;
-    const ratesDetails = useRef<HTMLDetailsElement>(null);
+    const configDetails = useRef<HTMLDetailsElement>(null);
+    const [activeConfig, setActiveConfig] = useState<'rates' | 'currency'>(
+        'currency',
+    );
 
     useEffect(() => {
-        if (!ratesValid && ratesDetails.current) {
-            ratesDetails.current.open = true;
+        if (!ratesValid) {
+            setActiveConfig('rates');
+            if (configDetails.current) {
+                configDetails.current.open = true;
+            }
         }
     }, [ratesValid]);
 
@@ -68,12 +48,29 @@ export default function CalculatorInputs({
         ker: 'CSPKO',
         yield: 'CSPKE',
     } as const;
-    const rateHelp = {
-        oer: text.oerHelp,
-        ker: text.kerHelp,
-        yield: text.yieldHelp,
-    } as const;
-
+    const pricePresets = [
+        {
+            key: 'is',
+            label:
+                inputs.language === 'id'
+                    ? 'Petani Swadaya (IS)'
+                    : 'Independent Smallholder (IS)',
+            prices: defaultPriceReference.prices.is,
+        },
+        {
+            key: 'standard',
+            label: inputs.language === 'id' ? 'Standar' : 'Standard',
+            prices: defaultPriceReference.prices.standard,
+        },
+    ] as const;
+    const priceFormat = new Intl.NumberFormat(
+        inputs.language === 'id' ? 'id-ID' : 'en-US',
+        { minimumFractionDigits: 2, maximumFractionDigits: 2 },
+    );
+    const priceReferenceDate = new Intl.DateTimeFormat(
+        inputs.language === 'id' ? 'id-ID' : 'en-US',
+        { dateStyle: 'medium', timeZone: 'UTC' },
+    ).format(new Date(`${defaultPriceReference.checkedOn}T00:00:00Z`));
     return (
         <Paper
             component="form"
@@ -85,7 +82,11 @@ export default function CalculatorInputs({
             }
             onSubmit={(event) => event.preventDefault()}
             variant="outlined"
-            sx={{ p: { xs: 2.5, md: 4 } }}
+            sx={{
+                p: { xs: 2.5, md: 4 },
+                containerType: 'inline-size',
+                containerName: 'calculator-inputs',
+            }}
         >
             <Typography
                 component="h1"
@@ -111,11 +112,6 @@ export default function CalculatorInputs({
                     language={inputs.language}
                     value={inputs.volume}
                     onValueChange={(value) => update('volume', value)}
-                    placeholder={
-                        inputs.language === 'id'
-                            ? 'Masukkan Volume TBS'
-                            : 'Enter FFB volume'
-                    }
                     slotProps={{
                         htmlInput: { min: 0, max: 1e12, step: 'any' },
                         input: {
@@ -176,272 +172,389 @@ export default function CalculatorInputs({
                     }}
                 >
                     <Box>
-                        <Typography
-                            component="h3"
-                            variant="body2"
-                            sx={{ fontSize: 16, fontWeight: 600, mb: 1 }}
-                        >
-                            {inputs.language === 'id'
-                                ? 'Harga kredit IS (USD / kredit)'
-                                : 'IS credit prices (USD / credit)'}
-                        </Typography>
-                        <Typography
-                            color="text.secondary"
-                            sx={{ fontSize: 14, lineHeight: 1.6, mb: 2 }}
-                        >
-                            {text.basis}
-                        </Typography>
-                        <Stack sx={{ gap: 1.5 }}>
-                            {credits.map((credit) => (
-                                <Box
-                                    key={credit}
-                                    sx={{
-                                        display: 'grid',
+                        <Stack
+                            sx={{
+                                display: 'grid',
+                                gridTemplateColumns: 'minmax(0, 1fr)',
+                                gap: 1.5,
+                                '@container calculator-inputs (inline-size > 30rem)':
+                                    {
                                         gridTemplateColumns:
-                                            '130px minmax(0, 1fr)',
-                                        gap: 1,
-                                        alignItems: 'center',
+                                            'repeat(3, minmax(0, 1fr))',
+                                    },
+                            }}
+                        >
+                            {credits.map((credit) => (
+                                <NumberField
+                                    key={credit}
+                                    fullWidth
+                                    size="small"
+                                    sx={{ minWidth: 0 }}
+                                    label={
+                                        inputs.language === 'id'
+                                            ? 'Harga ' + credit.toUpperCase()
+                                            : credit.toUpperCase() + ' Price'
+                                    }
+                                    language={inputs.language}
+                                    value={inputs.prices[credit]}
+                                    onValueChange={(value) =>
+                                        setInputs((previous) => ({
+                                            ...previous,
+                                            prices: {
+                                                ...previous.prices,
+                                                [credit]: value,
+                                            },
+                                        }))
+                                    }
+                                    slotProps={{
+                                        inputLabel: { shrink: true },
+                                        input: {
+                                            endAdornment: (
+                                                <InputAdornment position="end">
+                                                    USD
+                                                </InputAdornment>
+                                            ),
+                                        },
+                                        htmlInput: {
+                                            'aria-label':
+                                                credit.toUpperCase() +
+                                                ' ' +
+                                                (inputs.language === 'id'
+                                                    ? 'Harga'
+                                                    : 'Price') +
+                                                ' (USD)',
+                                            min: 0,
+                                            max: 1e12,
+                                            step: 'any',
+                                        },
                                     }}
-                                >
-                                    <FormControlLabel
-                                        sx={{
-                                            m: 0,
-                                            '& .MuiTypography-root': {
-                                                fontSize: 16,
-                                            },
-                                        }}
-                                        control={
-                                            <Checkbox
-                                                sx={{
-                                                    minHeight: 44,
-                                                    minWidth: 44,
-                                                }}
-                                                checked={
-                                                    inputs.included[credit]
-                                                }
-                                                onChange={(event) =>
-                                                    setInputs((previous) => ({
-                                                        ...previous,
-                                                        included: {
-                                                            ...previous.included,
-                                                            [credit]:
-                                                                event.target
-                                                                    .checked,
-                                                        },
-                                                    }))
-                                                }
-                                            />
-                                        }
-                                        label={'IS-' + credit.toUpperCase()}
-                                    />
-                                    <NumberField
-                                        fullWidth
-                                        size="small"
-                                        disabled={!inputs.included[credit]}
-                                        label={
-                                            inputs.language === 'id'
-                                                ? 'Harga'
-                                                : 'Price'
-                                        }
-                                        language={inputs.language}
-                                        value={inputs.prices[credit]}
-                                        placeholder={
-                                            inputs.language === 'id'
-                                                ? 'Masukkan harga'
-                                                : 'Enter price'
-                                        }
-                                        onValueChange={(value) =>
-                                            setInputs((previous) => ({
-                                                ...previous,
-                                                prices: {
-                                                    ...previous.prices,
-                                                    [credit]: value,
-                                                },
-                                            }))
-                                        }
-                                        slotProps={{
-                                            input: {
-                                                startAdornment: (
-                                                    <InputAdornment position="start">
-                                                        USD
-                                                    </InputAdornment>
-                                                ),
-                                            },
-                                            htmlInput: {
-                                                'aria-label':
-                                                    credit.toUpperCase() +
-                                                    ' ' +
-                                                    (inputs.language === 'id'
-                                                        ? 'Harga'
-                                                        : 'Price') +
-                                                    ' (USD)',
-                                                min: 0,
-                                                max: 1e12,
-                                                step: 'any',
-                                            },
-                                        }}
-                                    />
-                                </Box>
+                                />
                             ))}
                         </Stack>
                         <Typography
+                            variant="body2"
                             color="text.secondary"
-                            sx={{ fontSize: 14, lineHeight: 1.6, mt: 2 }}
+                            sx={{ mt: 1.5 }}
                         >
                             {inputs.language === 'id'
-                                ? `Placeholder harga IS dari transaksi terakhir ${defaultPriceReference.period}, diperiksa `
-                                : `IS price placeholders show last-traded prices from ${defaultPriceReference.period}, checked `}
-                            {defaultPriceReference.checkedOn}
-                            {' · '}
-                            <Box
-                                component="a"
-                                href={defaultPriceReference.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                {defaultPriceReference.source}
-                            </Box>
+                                ? 'Harga dapat diisi dari salah satu referensi di bawah.'
+                                : 'You can fill these prices from either reference below.'}
                         </Typography>
+                        <Box
+                            role="group"
+                            aria-label={
+                                inputs.language === 'id'
+                                    ? 'Referensi harga PRISMA'
+                                    : 'PRISMA price references'
+                            }
+                            sx={{
+                                display: 'grid',
+                                gridTemplateColumns: 'minmax(0, 1fr)',
+                                gap: 1,
+                                mt: 1.5,
+                                '@container calculator-inputs (inline-size > 30rem)':
+                                    {
+                                        gridTemplateColumns:
+                                            'repeat(2, minmax(0, 1fr))',
+                                    },
+                            }}
+                        >
+                            {pricePresets.map((preset) => {
+                                const selected = credits.every(
+                                    (credit) =>
+                                        inputs.prices[credit] ===
+                                        preset.prices[credit],
+                                );
+
+                                return (
+                                    <Button
+                                        key={preset.key}
+                                        type="button"
+                                        disableRipple
+                                        aria-pressed={selected}
+                                        onClick={() =>
+                                            setInputs((previous) => ({
+                                                ...previous,
+                                                prices: preset.prices,
+                                            }))
+                                        }
+                                        sx={{
+                                            width: '100%',
+                                            minHeight: 48,
+                                            justifyContent: 'flex-start',
+                                            alignItems: 'flex-start',
+                                            border: 1,
+                                            borderColor: selected
+                                                ? 'primary.main'
+                                                : 'divider',
+                                            borderRadius: 1,
+                                            px: 1.25,
+                                            py: 1,
+                                            textAlign: 'left',
+                                            color: selected
+                                                ? 'text.primary'
+                                                : 'text.secondary',
+                                            bgcolor: selected
+                                                ? 'action.selected'
+                                                : 'transparent',
+                                            containerType: 'inline-size',
+                                            '&:hover': {
+                                                borderColor: 'primary.main',
+                                                bgcolor: 'action.hover',
+                                            },
+                                            '&:focus-visible': {
+                                                outline: '2px solid',
+                                                outlineColor: 'primary.main',
+                                                outlineOffset: 2,
+                                            },
+                                        }}
+                                    >
+                                        <Stack sx={{ gap: 1, width: '100%' }}>
+                                            <Typography
+                                                component="span"
+                                                variant="body2"
+                                                sx={{
+                                                    fontWeight: 500,
+                                                    lineHeight: 1.3,
+                                                }}
+                                            >
+                                                {preset.label} · USD
+                                            </Typography>
+                                            <Box
+                                                sx={{
+                                                    display: 'grid',
+                                                    gridTemplateColumns:
+                                                        'repeat(3, minmax(0, 1fr))',
+                                                    gap: 1,
+                                                    width: '100%',
+                                                }}
+                                            >
+                                                {credits.map((credit) => (
+                                                    <Box
+                                                        key={credit}
+                                                        sx={{ minWidth: 0 }}
+                                                    >
+                                                        <Typography
+                                                            component="span"
+                                                            variant="body2"
+                                                            color="text.secondary"
+                                                            sx={{
+                                                                fontSize:
+                                                                    'clamp(0.75rem, calc(0.45rem + 2.7cqi), 0.875rem)',
+                                                                lineHeight: 1.2,
+                                                            }}
+                                                        >
+                                                            {credit.toUpperCase()}
+                                                        </Typography>
+                                                        <Typography
+                                                            component="span"
+                                                            sx={{
+                                                                display:
+                                                                    'block',
+                                                                fontSize:
+                                                                    'clamp(0.875rem, calc(0.5rem + 3.5cqi), 1rem)',
+                                                                fontVariantNumeric:
+                                                                    'tabular-nums',
+                                                                lineHeight: 1.3,
+                                                            }}
+                                                        >
+                                                            {priceFormat.format(
+                                                                preset.prices[
+                                                                    credit
+                                                                ],
+                                                            )}
+                                                        </Typography>
+                                                    </Box>
+                                                ))}
+                                            </Box>
+                                            <Typography
+                                                component="span"
+                                                variant="caption"
+                                                color="text.secondary"
+                                                sx={{ lineHeight: 1.2 }}
+                                            >
+                                                {defaultPriceReference.source} ·{' '}
+                                                {priceReferenceDate}
+                                            </Typography>
+                                        </Stack>
+                                    </Button>
+                                );
+                            })}
+                        </Box>
                     </Box>
                     <Box
                         component="details"
-                        ref={ratesDetails}
+                        ref={configDetails}
                         sx={{
                             border: 1,
-                            borderColor: ratesValid ? 'divider' : 'error.main',
+                            borderColor:
+                                !ratesValid && activeConfig === 'rates'
+                                    ? 'error.main'
+                                    : 'divider',
                             borderRadius: 1,
                             bgcolor: 'background.default',
                             '&[open] > summary': {
                                 borderBottom: 1,
                                 borderColor: 'divider',
                             },
+                            '&[open] > summary .settings-disclosure-icon': {
+                                transform: 'rotate(180deg)',
+                            },
                         }}
                     >
                         <Box
                             component="summary"
                             sx={{
+                                display: 'flex',
+                                alignItems: 'center',
                                 px: 2,
-                                py: 1.5,
-                                minHeight: 64,
+                                py: 1,
+                                minHeight: 48,
                                 cursor: 'pointer',
-                                '&::marker': { color: 'primary.main' },
+                                listStyle: 'none',
+                                '&::-webkit-details-marker': {
+                                    display: 'none',
+                                },
                             }}
                         >
                             <Typography
                                 component="span"
-                                sx={{ fontSize: 16, fontWeight: 600 }}
-                            >
-                                {inputs.language === 'id'
-                                    ? 'Kurs & rendemen'
-                                    : 'Rates'}
-                            </Typography>
-                            <Typography
-                                component="span"
-                                color="text.secondary"
-                                sx={{ display: 'block', fontSize: 14, mt: 0.5 }}
-                            >
-                                {inputs.language === 'id'
-                                    ? 'Rendemen dan '
-                                    : 'Extraction rates and '}
-                                {inputs.currency}/USD
-                            </Typography>
-                        </Box>
-                        <Stack sx={{ p: 2, gap: 2.5 }}>
-                            <Typography
-                                component="h3"
                                 variant="body2"
-                                sx={{ fontSize: 16, fontWeight: 600 }}
+                                color="text.secondary"
+                                sx={{ fontWeight: 500 }}
                             >
                                 {inputs.language === 'id'
-                                    ? 'Rendemen (% dari TBS)'
-                                    : 'Extraction rates (% of FFB)'}
+                                    ? 'Pengaturan Mata Uang dan Rendemen'
+                                    : 'Currency and Extraction Rate Settings'}
                             </Typography>
-                            <Box
+                            <ExpandMoreIcon
+                                className="settings-disclosure-icon"
+                                aria-hidden="true"
                                 sx={{
-                                    display: 'grid',
-                                    gridTemplateColumns:
-                                        'repeat(3, minmax(0, 1fr))',
-                                    gap: { xs: 1, sm: 2 },
+                                    ml: 'auto',
+                                    color: 'text.secondary',
+                                    transition: 'transform 160ms ease',
                                 }}
-                            >
-                                {(['oer', 'ker', 'yield'] as const).map(
-                                    (key) => (
-                                        <Box key={key} sx={{ minWidth: 0 }}>
-                                            <Typography
-                                                sx={{
-                                                    fontSize: 14,
-                                                    color: 'text.secondary',
-                                                    mb: 1,
-                                                }}
-                                            >
-                                                {rateLabels[key]}
-                                            </Typography>
-                                            <NumberField
-                                                fullWidth
-                                                size="small"
-                                                label={
-                                                    key === 'oer'
-                                                        ? 'OER'
-                                                        : inputs.language ===
-                                                            'id'
-                                                          ? 'Rendemen'
-                                                          : 'Rate'
-                                                }
-                                                language={inputs.language}
-                                                value={inputs[key]}
-                                                onValueChange={(value) =>
-                                                    update(key, value ?? 0)
-                                                }
-                                                slotProps={{
-                                                    input: {
-                                                        endAdornment: (
-                                                            <InputAdornment
-                                                                position="end"
-                                                                sx={{ ml: 0 }}
-                                                            >
-                                                                %
-                                                            </InputAdornment>
-                                                        ),
-                                                    },
-                                                    htmlInput: {
-                                                        'aria-label':
-                                                            text[key] + ' (%)',
-                                                        min: 0,
-                                                        max: 100,
-                                                        step: 0.01,
-                                                    },
-                                                }}
-                                            />
-                                            <Help
-                                                label={rateLabels[key]}
-                                                text={rateHelp[key]}
-                                            />
-                                        </Box>
-                                    ),
-                                )}
-                            </Box>
-                            <Button
-                                component="a"
-                                href={glossary.url({
-                                    query: { lang: inputs.language },
-                                })}
-                            >
-                                {inputs.language === 'id'
-                                    ? 'Arti istilah'
-                                    : 'Glossary'}
-                            </Button>
-                            <ExchangeRateField
-                                value={inputs.exchange}
-                                currency={inputs.currency}
-                                language={inputs.language}
-                                mode={rateMode}
-                                onModeChange={setRateMode}
-                                onChange={(value) => update('exchange', value)}
-                                onCurrencyChange={(currency) =>
-                                    update('currency', currency)
+                            />
+                        </Box>
+                        <Tabs
+                            value={activeConfig}
+                            onChange={(_, value: 'rates' | 'currency') =>
+                                setActiveConfig(value)
+                            }
+                            aria-label={
+                                inputs.language === 'id'
+                                    ? 'Pengaturan kalkulator'
+                                    : 'Calculator settings'
+                            }
+                            variant="fullWidth"
+                            sx={{ borderBottom: 1, borderColor: 'divider' }}
+                        >
+                            <Tab
+                                value="currency"
+                                id="calculator-currency-tab"
+                                label={
+                                    inputs.language === 'id'
+                                        ? 'Kurs mata uang'
+                                        : 'Currency rate'
                                 }
                             />
-                        </Stack>
+                            <Tab
+                                value="rates"
+                                id="calculator-rates-tab"
+                                label={
+                                    inputs.language === 'id'
+                                        ? 'Rendemen'
+                                        : 'Extraction rates'
+                                }
+                            />
+                        </Tabs>
+                        {activeConfig === 'rates' ? (
+                            <Stack
+                                role="tabpanel"
+                                id="calculator-rates-panel"
+                                aria-labelledby="calculator-rates-tab"
+                                sx={{ p: 2, gap: 2.5 }}
+                            >
+                                <Typography
+                                    component="h3"
+                                    variant="body2"
+                                    sx={{ fontSize: 16, fontWeight: 600 }}
+                                >
+                                    {inputs.language === 'id'
+                                        ? 'Rendemen (% dari TBS)'
+                                        : 'Extraction rates (% of FFB)'}
+                                </Typography>
+                                <Box
+                                    sx={{
+                                        display: 'grid',
+                                        gridTemplateColumns:
+                                            'repeat(3, minmax(0, 1fr))',
+                                        gap: { xs: 1, sm: 2 },
+                                    }}
+                                >
+                                    {(['oer', 'ker', 'yield'] as const).map(
+                                        (key) => (
+                                            <Box key={key} sx={{ minWidth: 0 }}>
+                                                <NumberField
+                                                    fullWidth
+                                                    size="small"
+                                                    label={rateLabels[key]}
+                                                    language={inputs.language}
+                                                    value={inputs[key]}
+                                                    onValueChange={(value) =>
+                                                        update(key, value ?? 0)
+                                                    }
+                                                    slotProps={{
+                                                        input: {
+                                                            endAdornment: (
+                                                                <InputAdornment
+                                                                    position="end"
+                                                                    sx={{
+                                                                        ml: 0,
+                                                                    }}
+                                                                >
+                                                                    %
+                                                                </InputAdornment>
+                                                            ),
+                                                        },
+                                                        htmlInput: {
+                                                            'aria-label':
+                                                                text[key] +
+                                                                ' (%)',
+                                                            min: 0,
+                                                            max: 100,
+                                                            step: 0.01,
+                                                        },
+                                                    }}
+                                                />
+                                            </Box>
+                                        ),
+                                    )}
+                                </Box>
+                            </Stack>
+                        ) : (
+                            <Box
+                                role="tabpanel"
+                                id="calculator-currency-panel"
+                                aria-labelledby="calculator-currency-tab"
+                                sx={{ p: 2 }}
+                            >
+                                <ExchangeRateField
+                                    value={inputs.exchange}
+                                    currency={inputs.currency}
+                                    language={inputs.language}
+                                    mode={rateMode}
+                                    onModeChange={setRateMode}
+                                    onChange={(value) =>
+                                        update('exchange', value)
+                                    }
+                                    onCurrencyChange={(currency) =>
+                                        update('currency', currency)
+                                    }
+                                />
+                            </Box>
+                        )}
                     </Box>
                 </Stack>
             </Stack>
