@@ -50,9 +50,9 @@ export function parseNumericInput(
 }
 
 type Props = Omit<TextFieldProps, 'value' | 'onChange' | 'type'> & {
-    value: number;
+    value: number | null;
     language: Language;
-    onValueChange: (value: number) => void;
+    onValueChange: (value: number | null) => void;
 };
 export default function NumberField({
     value,
@@ -62,7 +62,7 @@ export default function NumberField({
     ...props
 }: Props) {
     const [draft, setDraft] = useState<string | null>(null);
-    const lastEmitted = useRef(value);
+    const lastEmitted = useRef<number | null>(value);
     useEffect(() => {
         if (lastEmitted.current !== value) {
             lastEmitted.current = value;
@@ -73,9 +73,9 @@ export default function NumberField({
     return (
         <TextField
             {...props}
-            value={formatNumericInput(draft ?? String(value), language)}
+            value={formatNumericInput(draft ?? String(value ?? ''), language)}
             type="text"
-            onFocus={() => setDraft(String(value))}
+            onFocus={() => setDraft(String(value ?? ''))}
             onBlur={() => setDraft(null)}
             onChange={(event) => {
                 const input = event.target;
@@ -86,7 +86,8 @@ export default function NumberField({
                     .replaceAll(group, '').length;
                 const formatted = formatNumericInput(raw, language);
                 const numeric = Number(raw);
-                const next = Number.isFinite(numeric) ? numeric : 0;
+                const next =
+                    raw === '' ? null : Number.isFinite(numeric) ? numeric : 0;
                 lastEmitted.current = next;
                 setDraft(raw);
                 onValueChange(next);

@@ -21,12 +21,14 @@ export default function CalculatorResults({
     text,
     result,
     valid,
+    ready,
     shareUrl,
 }: {
     inputs: Inputs;
     text: CalculatorCopy;
     result: ReturnType<typeof useCalculator>;
     valid: boolean;
+    ready: boolean;
     shareUrl: () => string;
 }) {
     const locale = inputs.language === 'id' ? 'id-ID' : 'en-US';
@@ -64,21 +66,35 @@ export default function CalculatorResults({
                         >
                             {text.total}
                         </Typography>
-                        <Typography
-                            variant="h2"
-                            component="p"
-                            sx={{
-                                mt: 2,
-                                fontSize: { xs: '2.35rem', lg: '3.1rem' },
-                                fontVariantNumeric: 'tabular-nums',
-                                overflowWrap: 'anywhere',
-                            }}
-                        >
-                            {money(result.converted, inputs.currency)}
-                        </Typography>
-                        <Typography color="text.secondary" sx={{ mt: 1 }}>
-                            {money(result.usd, 'USD')}
-                        </Typography>
+                        {ready ? (
+                            <>
+                                <Typography
+                                    variant="h2"
+                                    component="p"
+                                    sx={{
+                                        mt: 2,
+                                        fontSize: {
+                                            xs: '2.35rem',
+                                            lg: '3.1rem',
+                                        },
+                                        fontVariantNumeric: 'tabular-nums',
+                                        overflowWrap: 'anywhere',
+                                    }}
+                                >
+                                    {money(result.converted, inputs.currency)}
+                                </Typography>
+                                <Typography
+                                    color="text.secondary"
+                                    sx={{ mt: 1 }}
+                                >
+                                    {money(result.usd, 'USD')}
+                                </Typography>
+                            </>
+                        ) : (
+                            <Typography sx={{ mt: 2, lineHeight: 1.6 }}>
+                                {text.estimatePrompt}
+                            </Typography>
+                        )}
                         <Stack
                             direction={{ xs: 'column', sm: 'row' }}
                             sx={{ gap: 1.5, mt: 3 }}
@@ -126,108 +142,117 @@ export default function CalculatorResults({
                         >
                             {shareMessage}
                         </Typography>
-                        <Box
-                            sx={{
-                                mt: 4,
-                                pt: 3,
-                                borderTop: 1,
-                                borderColor: '#577762',
-                            }}
-                        >
-                            <Typography
-                                color="secondary.main"
-                                sx={{ fontWeight: 600 }}
-                            >
-                                {text.added}
-                            </Typography>
-                            <Typography
-                                variant="h3"
-                                component="p"
+                        {ready && (
+                            <Box
                                 sx={{
-                                    mt: 1,
-                                    fontSize: { xs: '2rem', md: '2.5rem' },
+                                    mt: 4,
+                                    pt: 3,
+                                    borderTop: 1,
+                                    borderColor: '#577762',
                                 }}
                             >
-                                {money(result.added, inputs.currency)}{' '}
                                 <Typography
-                                    component="span"
-                                    color="text.secondary"
+                                    color="secondary.main"
+                                    sx={{ fontWeight: 600 }}
                                 >
-                                    / kg
+                                    {text.added}
                                 </Typography>
-                            </Typography>
-                        </Box>
-                    </Paper>
-                    <Paper variant="outlined" sx={{ p: { xs: 3, md: 4 } }}>
-                        <Typography
-                            component="h2"
-                            sx={{ mb: 2, fontSize: 24, fontWeight: 600 }}
-                        >
-                            {text.outputs}
-                        </Typography>
-                        <Box
-                            component="figure"
-                            role="img"
-                            aria-label={
-                                inputs.language === 'id'
-                                    ? 'Perbandingan volume produk CSPO, CSPKO, dan CSPKE'
-                                    : 'Comparison of CSPO, CSPKO, and CSPKE product volumes'
-                            }
-                            sx={{
-                                m: 0,
-                                display: 'flex',
-                                height: 8,
-                                gap: 0.5,
-                                mb: 2,
-                                overflow: 'hidden',
-                                borderRadius: 1,
-                            }}
-                        >
-                            {credits.map((credit) => (
-                                <Box
-                                    key={credit}
+                                <Typography
+                                    variant="h3"
+                                    component="p"
                                     sx={{
-                                        flexGrow: result.volumes[credit],
-                                        bgcolor: creditColors[credit],
+                                        mt: 1,
+                                        fontSize: { xs: '2rem', md: '2.5rem' },
                                     }}
-                                />
-                            ))}
-                        </Box>
-                        {credits.map((credit) => (
-                            <Stack
-                                key={credit}
-                                direction="row"
+                                >
+                                    {money(result.added, inputs.currency)}{' '}
+                                    <Typography
+                                        component="span"
+                                        color="text.secondary"
+                                    >
+                                        / kg
+                                    </Typography>
+                                </Typography>
+                            </Box>
+                        )}
+                    </Paper>
+                    {inputs.volume !== null && (
+                        <Paper variant="outlined" sx={{ p: { xs: 3, md: 4 } }}>
+                            <Typography
+                                component="h2"
+                                sx={{ mb: 2, fontSize: 24, fontWeight: 600 }}
+                            >
+                                {text.outputs}
+                            </Typography>
+                            <Box
+                                component="figure"
+                                role="img"
+                                aria-label={
+                                    inputs.language === 'id'
+                                        ? 'Perbandingan volume produk CSPO, CSPKO, dan CSPKE'
+                                        : 'Comparison of CSPO, CSPKO, and CSPKE product volumes'
+                                }
                                 sx={{
-                                    justifyContent: 'space-between',
-                                    py: 1.5,
-                                    borderBottom: 1,
-                                    borderColor: 'divider',
+                                    m: 0,
+                                    display: 'flex',
+                                    height: 8,
+                                    gap: 0.5,
+                                    mb: 2,
+                                    overflow: 'hidden',
+                                    borderRadius: 1,
                                 }}
                             >
-                                <Box>
-                                    <Typography>
-                                        {credit.toUpperCase()}
+                                {credits.map((credit) => (
+                                    <Box
+                                        key={credit}
+                                        sx={{
+                                            flexGrow: result.volumes[credit],
+                                            bgcolor: creditColors[credit],
+                                        }}
+                                    />
+                                ))}
+                            </Box>
+                            {credits.map((credit) => (
+                                <Stack
+                                    key={credit}
+                                    direction="row"
+                                    sx={{
+                                        justifyContent: 'space-between',
+                                        py: 1.5,
+                                        borderBottom: 1,
+                                        borderColor: 'divider',
+                                    }}
+                                >
+                                    <Box>
+                                        <Typography>
+                                            {credit.toUpperCase()}
+                                        </Typography>
+                                        <Typography
+                                            color="text.secondary"
+                                            sx={{ fontSize: 14 }}
+                                        >
+                                            {inputs.included[credit]
+                                                ? inputs.prices[credit] === null
+                                                    ? text.priceMissing
+                                                    : money(
+                                                          result.revenues[
+                                                              credit
+                                                          ],
+                                                          'USD',
+                                                      )
+                                                : inputs.language === 'id'
+                                                  ? 'Tidak dihitung'
+                                                  : 'Excluded'}
+                                        </Typography>
+                                    </Box>
+                                    <Typography sx={{ fontWeight: 650 }}>
+                                        {number(result.volumes[credit] / 1000)}{' '}
+                                        t
                                     </Typography>
-                                    <Typography
-                                        color="text.secondary"
-                                        sx={{ fontSize: 14 }}
-                                    >
-                                        {inputs.included[credit]
-                                            ? money(
-                                                  result.revenues[credit],
-                                                  'USD',
-                                              )
-                                            : inputs.language === 'id'
-                                              ? 'Tidak dihitung'
-                                              : 'Excluded'}
-                                    </Typography>
-                                </Box>
-                                <Typography sx={{ fontWeight: 650 }}>
-                                    {number(result.volumes[credit] / 1000)} t
-                                </Typography>
-                            </Stack>
-                        ))}
-                    </Paper>
+                                </Stack>
+                            ))}
+                        </Paper>
+                    )}
                 </>
             )}
             <Typography

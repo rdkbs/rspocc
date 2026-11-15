@@ -75,7 +75,7 @@ export function useCalculatorScenario(
         return () => clearTimeout(timer);
     }, [inputs, initial.inputs, payload, valid]);
 
-    const update = (key: keyof Inputs, value: string | number) => {
+    const update = (key: keyof Inputs, value: string | number | null) => {
         setInputs((previous) => ({ ...previous, [key]: value }));
     };
 

@@ -1,13 +1,16 @@
 import { Head } from '@inertiajs/react';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
 import CalculatorInputs from '@/components/calculator-inputs';
 import CalculatorResults from '@/components/calculator-results';
-import GlossaryText from '@/components/glossary-text';
 import Layout from '@/components/layout';
 import { calculatorCopy } from '@/calculator-copy';
-import { encode, useCalculator, type Inputs } from '@/hooks/use-calculator';
+import {
+    credits,
+    encode,
+    useCalculator,
+    type Inputs,
+} from '@/hooks/use-calculator';
 import { useCalculatorScenario } from '@/hooks/use-calculator-scenario';
 import { calculator } from '@/routes';
 
@@ -22,6 +25,12 @@ export default function Index({
     const { inputs, update, invalid, valid } = scenario;
     const text = calculatorCopy[inputs.language];
     const result = useCalculator(inputs);
+    const ready =
+        inputs.volume !== null &&
+        credits.every(
+            (credit) =>
+                !inputs.included[credit] || inputs.prices[credit] !== null,
+        );
     const shareUrl = () =>
         new URL(
             calculator.url(
@@ -55,38 +64,11 @@ export default function Index({
                     </script>
                 </Head>
                 <Box className="wrap">
-                    <Box className="hero-text">
-                        <Typography
-                            variant="h1"
-                            id="calculator-title"
-                            sx={{
-                                fontSize: { xs: '2.5rem', md: '3.75rem' },
-                                maxWidth: 850,
-                                mb: 1,
-                            }}
-                        >
-                            {text.title}
-                        </Typography>
-                        <Typography
-                            color="text.secondary"
-                            sx={{
-                                maxWidth: 680,
-                                mt: 2,
-                                mb: 5,
-                                fontSize: '1.125rem',
-                                lineHeight: 1.7,
-                            }}
-                        >
-                            <GlossaryText language={inputs.language}>
-                                {text.intro}
-                            </GlossaryText>
-                        </Typography>
-                        {invalid && (
-                            <Alert severity="warning" sx={{ mb: 2 }}>
-                                {text.invalid}
-                            </Alert>
-                        )}
-                    </Box>
+                    {invalid && (
+                        <Alert severity="warning" sx={{ mb: 2 }}>
+                            {text.invalid}
+                        </Alert>
+                    )}
                     <Box
                         className="app-frame"
                         sx={{
@@ -108,6 +90,7 @@ export default function Index({
                             text={text}
                             result={result}
                             valid={valid}
+                            ready={ready}
                             shareUrl={shareUrl}
                         />
                     </Box>

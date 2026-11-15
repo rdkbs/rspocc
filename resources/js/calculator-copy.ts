@@ -6,8 +6,6 @@ import {
 
 export const calculatorCopy = {
     en: {
-        title: 'RSPO Credit Calculator',
-        intro: 'Enter FFB volume and credit prices to estimate your revenue.',
         inputs: 'Volume & credit prices',
         results: 'Your premium estimate',
         volume: 'FFB volume',
@@ -16,13 +14,17 @@ export const calculatorCopy = {
         ker: 'CSPKO · Extraction rate',
         yield: 'CSPKE · Extraction rate',
         total: 'Estimated credit revenue',
+        estimatePrompt:
+            'Enter FFB volume and prices for selected credits to see the estimate.',
+        priceMissing: 'Enter a price',
         added: 'Extra revenue per kg FFB',
         outputs: 'Estimated product volumes',
         copy: 'Copy link',
         whatsapp: 'Share to WhatsApp',
         disclaimer: 'Confirm certified volumes and prices with your buyer.',
         copied: 'Link copied.',
-        invalid: 'This link could not be read. Default assumptions are shown.',
+        invalid:
+            'This link could not be read. Enter volume and credit prices to start a new estimate.',
         error: 'Values must be zero or more. The exchange rate must be above zero. Total extraction rates cannot exceed 100%.',
         oerHelp:
             'Share of FFB weight that becomes palm oil. RSPO default: ' +
@@ -49,8 +51,6 @@ export const calculatorCopy = {
         basis: 'Uncheck credits you will not sell.',
     },
     id: {
-        title: 'Kalkulator Kredit RSPO',
-        intro: 'Masukkan volume TBS dan harga kredit untuk memperkirakan pendapatan.',
         inputs: 'Volume & harga kredit',
         results: 'Estimasi premi Anda',
         volume: 'Volume TBS',
@@ -59,6 +59,9 @@ export const calculatorCopy = {
         ker: 'CSPKO · Rendemen',
         yield: 'CSPKE · Rendemen',
         total: 'Perkiraan pendapatan kredit',
+        estimatePrompt:
+            'Masukkan volume TBS dan harga kredit yang dipilih untuk melihat perkiraan.',
+        priceMissing: 'Masukkan harga',
         added: 'Tambahan pendapatan per kg TBS',
         outputs: 'Perkiraan volume produk',
         copy: 'Salin tautan',
@@ -66,7 +69,8 @@ export const calculatorCopy = {
         disclaimer:
             'Konfirmasikan volume bersertifikat dan harga kepada pembeli.',
         copied: 'Tautan disalin.',
-        invalid: 'Tautan tidak dapat dibaca. Asumsi awal ditampilkan.',
+        invalid:
+            'Tautan tidak dapat dibaca. Masukkan volume dan harga kredit untuk memulai perhitungan baru.',
         error: 'Nilai tidak boleh negatif. Kurs harus lebih dari nol. Total rendemen maksimal 100%.',
         oerHelp:
             'Bagian berat TBS yang menjadi minyak sawit. Default RSPO: ' +
