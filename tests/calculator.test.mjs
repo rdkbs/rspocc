@@ -22,9 +22,9 @@ describe('calculator scenarios', () => {
             cspko: 22500,
             cspke: 27500,
         });
-        expect(result.usd).toBe(2700.25);
-        expect(result.converted).toBe(43204000);
-        expect(result.added).toBe(43.204);
+        expect(result.usd).toBe(2732.725);
+        expect(result.converted).toBe(43723600);
+        expect(result.added).toBe(43.7236);
         expect(
             useCalculator({ ...defaults, volume: 1000000, unit: 'kg' }),
         ).toEqual(result);
@@ -32,7 +32,7 @@ describe('calculator scenarios', () => {
     test('handles zero harvest and USD without a foreign exchange multiplier', () => {
         expect(useCalculator({ ...defaults, volume: 0 }).added).toBe(0);
         expect(useCalculator({ ...defaults, currency: 'USD' }).converted).toBe(
-            2700.25,
+            2732.725,
         );
     });
     test('round trips scenario URLs and rejects malformed or impossible inputs', () => {
@@ -40,6 +40,11 @@ describe('calculator scenarios', () => {
             inputs: defaults,
             invalid: false,
         });
+        expect(
+            JSON.parse(
+                LZString.decompressFromEncodedURIComponent(encode(defaults)),
+            ),
+        ).not.toHaveProperty('included');
         expect(decode('bad link').invalid).toBe(true);
         expect(decode(encode({ ...defaults, oer: 101 })).invalid).toBe(true);
         expect(decode(encode({ ...defaults, exchange: 0 })).invalid).toBe(true);
@@ -61,7 +66,7 @@ describe('calculator scenarios', () => {
                 .language,
         ).toBe('id');
     });
-    test('prices credits individually and sums only selected revenues', () => {
+    test('includes credits with prices and excludes credits with blank prices', () => {
         const inputs = {
             ...defaults,
             prices: { cspo: 10, cspko: 20, cspke: 30 },
@@ -73,16 +78,17 @@ describe('calculator scenarios', () => {
         });
         expect(useCalculator(inputs).usd).toBe(3275);
         for (let mask = 0; mask < 8; mask++) {
-            const included = {
-                cspo: Boolean(mask & 1),
-                cspko: Boolean(mask & 2),
-                cspke: Boolean(mask & 4),
+            const prices = {
+                cspo: mask & 1 ? 10 : null,
+                cspko: mask & 2 ? 20 : null,
+                cspke: mask & 4 ? 30 : null,
             };
             const expected =
-                (included.cspo ? 2000 : 0) +
-                (included.cspko ? 450 : 0) +
-                (included.cspke ? 825 : 0);
-            const result = useCalculator({ ...inputs, included });
+                (prices.cspo === null ? 0 : 2000) +
+                (prices.cspko === null ? 0 : 450) +
+                (prices.cspke === null ? 0 : 825);
+            const scenario = { ...inputs, prices };
+            const result = useCalculator(scenario);
             expect(result.usd).toBe(expected);
             expect(result.added).toBe((expected * 16000) / 1000000);
             expect(result.volumes).toEqual({
@@ -90,11 +96,39 @@ describe('calculator scenarios', () => {
                 cspko: 22500,
                 cspke: 27500,
             });
-            expect(decode(encode({ ...inputs, included })).inputs).toEqual({
-                ...inputs,
-                included,
-            });
+            expect(decode(encode(scenario)).inputs).toEqual(scenario);
         }
+
+        const zeroPrice = {
+            ...inputs,
+            prices: { cspo: 0, cspko: null, cspke: null },
+        };
+        expect(useCalculator(zeroPrice).revenues).toEqual({
+            cspo: 0,
+            cspko: 0,
+            cspke: 0,
+        });
+        expect(decode(encode(zeroPrice)).inputs).toEqual(zeroPrice);
+    });
+    test('migrates older excluded credits to blank prices', () => {
+        const legacy = {
+            ...defaults,
+            prices: { cspo: 10, cspko: 20, cspke: 30 },
+            included: { cspo: false, cspko: true, cspke: false },
+        };
+        const payload = LZString.compressToEncodedURIComponent(
+            JSON.stringify(legacy),
+        );
+
+        const restored = decode(payload);
+
+        expect(restored.invalid).toBe(false);
+        expect(restored.inputs.prices).toEqual({
+            cspo: null,
+            cspko: 20,
+            cspke: null,
+        });
+        expect(useCalculator(restored.inputs).usd).toBe(450);
     });
     test('preserves old single-price shared links', () => {
         const legacy = {
@@ -110,10 +144,9 @@ describe('calculator scenarios', () => {
             cspko: 25,
             cspke: 25,
         });
-        expect(restored.inputs.included).toEqual(defaults.included);
         expect(useCalculator(restored.inputs).usd).toBe(6250);
     });
-    test('rejects invalid individual prices and selection flags', () => {
+    test('rejects invalid prices and malformed legacy inclusion state', () => {
         expect(
             decode(
                 encode({
@@ -126,7 +159,7 @@ describe('calculator scenarios', () => {
             decode(
                 encode({
                     ...defaults,
-                    included: { ...defaults.included, cspo: 'false' },
+                    included: { cspo: 'false', cspko: true, cspke: true },
                 }),
             ).invalid,
         ).toBe(true);
@@ -140,6 +173,8 @@ describe('localized numeric inputs', () => {
     test('groups thousands and preserves editable decimals', () => {
         expect(formatNumericInput('1234567.50', 'id')).toBe('1.234.567,50');
         expect(formatNumericInput('1234567.50', 'en')).toBe('1,234,567.50');
+        expect(formatNumericInput('1000', 'en', false)).toBe('1000');
+        expect(formatNumericInput('1000.50', 'id', false)).toBe('1000,50');
         expect(formatNumericInput('2.', 'id')).toBe('2,');
         expect(formatNumericInput('', 'en')).toBe('');
         expect(formatNumericInput('-', 'en')).toBe('-');

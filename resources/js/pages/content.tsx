@@ -32,12 +32,24 @@ const priceList = (language: Language) => {
         maximumFractionDigits: 2,
     });
 
-    return (['cspo', 'cspko', 'cspke'] as const)
-        .map(
-            (credit) =>
-                `IS-${credit.toUpperCase()} USD ${price.format(defaultPriceReference.prices[credit])}`,
-        )
-        .join(', ');
+    return (['is', 'standard'] as const)
+        .map((kind) => {
+            const label =
+                kind === 'is'
+                    ? 'IS'
+                    : language === 'id'
+                      ? 'Standar'
+                      : 'Standard';
+            const prices = (['cspo', 'cspko', 'cspke'] as const)
+                .map(
+                    (credit) =>
+                        `${credit.toUpperCase()} USD ${price.format(defaultPriceReference.prices[kind][credit])}`,
+                )
+                .join(', ');
+
+            return `${label}: ${prices}`;
+        })
+        .join('; ');
 };
 const checkedOn = (language: Language) =>
     new Intl.DateTimeFormat(language === 'id' ? 'id-ID' : 'en-US', {
@@ -51,8 +63,8 @@ const conversionExplanation = (language: Language) =>
 const indonesianConversionExplanation = () =>
     `Default Kernel Extraction Rate (KER) RSPO adalah ${formatPercent(extractionAssumptions.kernel, 'id')} dari TBS. Inti sawit menghasilkan ${formatPercent(extractionAssumptions.kernelOilRecovery, 'id')} minyak dan ${formatPercent(extractionAssumptions.kernelExpellerRecovery, 'id')} bungkil, sehingga rendemen konversi TBS menjadi CSPKO ${formatPercent(defaultExtractionRates.cspko, 'id')} dan CSPKE ${formatPercent(defaultExtractionRates.cspke, 'id')}.`;
 const priceSnapshot = {
-    en: `No. The placeholders show ${defaultPriceReference.source}’s last-traded IS credit prices in its ${defaultPriceReference.period} view, checked on ${checkedOn('en')}: ${priceList('en')}. Enter your agreed selling prices.`,
-    id: `Tidak. Placeholder menampilkan harga transaksi terakhir kredit IS di ${defaultPriceReference.source} pada tampilan ${defaultPriceReference.period}, diperiksa ${checkedOn('id')}: ${priceList('id')}. Masukkan harga jual yang disepakati.`,
+    en: `No. The optional preset cards show ${defaultPriceReference.source} last-traded prices for ${defaultPriceReference.period}, checked on ${checkedOn('en')}: ${priceList('en')}. Select a card to fill the fields, then adjust them to your agreed selling prices.`,
+    id: `Tidak. Kartu preset menampilkan harga transaksi terakhir ${defaultPriceReference.source} untuk ${defaultPriceReference.period}, diperiksa ${checkedOn('id')}: ${priceList('id')}. Pilih kartu untuk mengisi kolom, lalu sesuaikan dengan harga jual yang disepakati.`,
 };
 
 const englishPages: Record<ContentSlug, ContentPage> = {
@@ -65,11 +77,11 @@ const englishPages: Record<ContentSlug, ContentPage> = {
             ],
             [
                 '2. Enter credit prices',
-                'Enter your USD price for each credit. Placeholders show dated PRISMA reference prices. Uncheck credits you will not sell; their entered prices are kept if selected again.',
+                'Enter your USD price for each credit you sell. Leave other credit prices blank. You can select a dated PRISMA price card above the fields, then edit the prices.',
             ],
             [
                 '3. Read the estimate',
-                'The results show credit revenue in USD and your chosen currency, plus the extra revenue per kg of FFB. Product volumes remain visible when you exclude a credit. Costs and taxes are not included.',
+                'The results show credit revenue in USD and your chosen currency, plus the extra revenue per kg of FFB. Product volumes remain visible when a price is blank. Costs and taxes are not included.',
             ],
             [
                 '4. Change rates if needed',
@@ -81,7 +93,7 @@ const englishPages: Record<ContentSlug, ContentPage> = {
             ],
             [
                 'Save or share a calculator result',
-                'Use Copy link or Share to WhatsApp. The link contains your inputs, selected credits, prices, currency, and language. Anyone with the link can read them.',
+                'Use Copy link or Share to WhatsApp. The link contains your inputs, prices, currency, and language. Anyone with the link can read them.',
             ],
             [
                 'Before selling RSPO credits',
@@ -149,7 +161,7 @@ const englishPages: Record<ContentSlug, ContentPage> = {
             ],
             [
                 'Costs and limitations',
-                'The calculator includes only selected credits and excludes fees, taxes, certification costs, and other deductions. Actual revenue may differ. We provide no warranty of accuracy, availability, or suitability, to the extent permitted by law.',
+                'The calculator includes only credits with prices entered and excludes fees, taxes, certification costs, and other deductions. Actual revenue may differ. We provide no warranty of accuracy, availability, or suitability, to the extent permitted by law.',
             ],
             [
                 'Shared calculator links',
@@ -194,11 +206,11 @@ const indonesianPages: Record<ContentSlug, ContentPage> = {
             ],
             [
                 '2. Masukkan harga kredit',
-                'Masukkan harga USD untuk setiap kredit. Placeholder menampilkan harga referensi PRISMA bertanggal. Hapus centang pada kredit yang tidak dijual; harga tetap tersimpan jika dipilih kembali.',
+                'Masukkan harga USD untuk setiap kredit yang dijual. Kosongkan harga kredit lainnya. Pilih kartu referensi harga PRISMA bertanggal di atas kolom, lalu sesuaikan harganya.',
             ],
             [
                 '3. Baca perkiraan',
-                'Hasil menampilkan pendapatan kredit dalam USD dan mata uang pilihan, serta tambahan pendapatan per kg TBS. Volume produk tetap terlihat meski kredit tidak dihitung. Biaya dan pajak belum termasuk.',
+                'Hasil menampilkan pendapatan kredit dalam USD dan mata uang pilihan, serta tambahan pendapatan per kg TBS. Volume produk tetap terlihat jika harga dikosongkan. Biaya dan pajak belum termasuk.',
             ],
             [
                 '4. Ubah rendemen bila perlu',
@@ -210,7 +222,7 @@ const indonesianPages: Record<ContentSlug, ContentPage> = {
             ],
             [
                 'Simpan atau bagikan hasil kalkulator',
-                'Gunakan Salin tautan atau Bagikan ke WhatsApp. Tautan memuat input, kredit yang dipilih, harga, mata uang, dan bahasa. Siapa pun yang memiliki tautan dapat membacanya.',
+                'Gunakan Salin tautan atau Bagikan ke WhatsApp. Tautan memuat input, harga, mata uang, dan bahasa. Siapa pun yang memiliki tautan dapat membacanya.',
             ],
             [
                 'Sebelum menjual kredit RSPO',
@@ -278,7 +290,7 @@ const indonesianPages: Record<ContentSlug, ContentPage> = {
             ],
             [
                 'Biaya dan batasan',
-                'Kalkulator hanya menghitung kredit yang dipilih dan tidak memasukkan biaya, pajak, biaya sertifikasi, atau potongan lainnya. Pendapatan sebenarnya dapat berbeda. Sejauh diizinkan oleh hukum, kami tidak menjamin akurasi, ketersediaan, atau kesesuaian hasil.',
+                'Kalkulator hanya menghitung kredit yang memiliki harga dan tidak memasukkan biaya, pajak, biaya sertifikasi, atau potongan lainnya. Pendapatan sebenarnya dapat berbeda. Sejauh diizinkan oleh hukum, kami tidak menjamin akurasi, ketersediaan, atau kesesuaian hasil.',
             ],
             [
                 'Tautan kalkulator yang dibagikan',

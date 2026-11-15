@@ -15,7 +15,6 @@ export type Inputs = {
     ker: number;
     yield: number;
     prices: Record<Credit, number | null>;
-    included: Record<Credit, boolean>;
     exchange: number;
     currency: 'IDR' | 'MYR' | 'USD';
     language: 'id' | 'en';
@@ -26,8 +25,7 @@ export const defaults: Inputs = {
     oer: defaultExtractionRates.cspo,
     ker: defaultExtractionRates.cspko,
     yield: defaultExtractionRates.cspke,
-    prices: defaultPriceReference.prices,
-    included: { cspo: true, cspko: true, cspke: true },
+    prices: defaultPriceReference.prices.is,
     exchange: defaultExchangeRate,
     currency: 'IDR',
     language: 'id',
@@ -36,6 +34,9 @@ const initialInputs: Inputs = {
     ...defaults,
     volume: null,
     prices: { cspo: null, cspko: null, cspke: null },
+};
+type SerializedInputs = Inputs & {
+    included?: Record<Credit, boolean>;
 };
 function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -58,17 +59,11 @@ export function isValidExtractionRates(value: unknown): boolean {
         isNumber(value.oer) &&
         isNumber(value.ker) &&
         isNumber(value.yield) &&
-        isNumber(value.exchange) &&
-        value.exchange > 0 &&
         value.oer + value.ker + value.yield <= 100
     );
 }
-export function isValidInputs(value: unknown): value is Inputs {
-    if (
-        !isRecord(value) ||
-        !isRecord(value.prices) ||
-        !isRecord(value.included)
-    ) {
+export function isValidInputs(value: unknown): value is SerializedInputs {
+    if (!isRecord(value) || !isRecord(value.prices)) {
         return false;
     }
 
@@ -76,6 +71,8 @@ export function isValidInputs(value: unknown): value is Inputs {
     return (
         isOptionalNumber(value.volume) &&
         isValidExtractionRates(value) &&
+        isNumber(value.exchange) &&
+        value.exchange > 0 &&
         (value.unit === 'kg' || value.unit === 't') &&
         (value.currency === 'IDR' ||
             value.currency === 'MYR' ||
@@ -84,9 +81,11 @@ export function isValidInputs(value: unknown): value is Inputs {
         isOptionalNumber(prices.cspo) &&
         isOptionalNumber(prices.cspko) &&
         isOptionalNumber(prices.cspke) &&
-        typeof included.cspo === 'boolean' &&
-        typeof included.cspko === 'boolean' &&
-        typeof included.cspke === 'boolean'
+        (included === undefined ||
+            (isRecord(included) &&
+                credits.every(
+                    (credit) => typeof included[credit] === 'boolean',
+                )))
     );
 }
 function migrateLegacyPrices(data: Record<string, unknown>): void {
@@ -100,9 +99,15 @@ function migrateLegacyPrices(data: Record<string, unknown>): void {
         cspko: data.premium,
         cspke: data.premium,
     };
-    data.included = { cspo: true, cspko: true, cspke: true };
 }
-function toInputs(data: Inputs): Inputs {
+function migrateLegacyInclusion(data: SerializedInputs): void {
+    if (!data.included) return;
+
+    for (const credit of credits) {
+        if (!data.included[credit]) data.prices[credit] = null;
+    }
+}
+function toInputs(data: SerializedInputs): Inputs {
     return {
         volume: data.volume,
         unit: data.unit,
@@ -113,11 +118,6 @@ function toInputs(data: Inputs): Inputs {
             cspo: data.prices.cspo,
             cspko: data.prices.cspko,
             cspke: data.prices.cspke,
-        },
-        included: {
-            cspo: data.included.cspo,
-            cspko: data.included.cspko,
-            cspke: data.included.cspke,
         },
         exchange: data.exchange,
         currency: data.currency,
@@ -142,6 +142,7 @@ export function decode(payload: string | null): {
         if (!isRecord(data)) return invalidScenario();
         migrateLegacyPrices(data);
         if (!isValidInputs(data)) return invalidScenario();
+        migrateLegacyInclusion(data);
         return { inputs: toInputs(data), invalid: false };
     } catch {
         return invalidScenario();
@@ -262,9 +263,9 @@ export function useCalculator(inputs: Inputs) {
     const revenues = Object.fromEntries(
         credits.map((credit) => [
             credit,
-            inputs.included[credit]
-                ? (volumes[credit] / 1000) * (inputs.prices[credit] ?? 0)
-                : 0,
+            inputs.prices[credit] === null
+                ? 0
+                : (volumes[credit] / 1000) * inputs.prices[credit],
         ]),
     ) as Record<Credit, number>;
     const usd = credits.reduce((total, credit) => total + revenues[credit], 0);

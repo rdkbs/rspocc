@@ -1,9 +1,3 @@
-import {
-    defaultExtractionRates,
-    extractionAssumptions,
-    formatPercent,
-} from '@/calculator-assumptions';
-
 export const calculatorCopy = {
     en: {
         inputs: 'Volume & credit prices',
@@ -15,8 +9,8 @@ export const calculatorCopy = {
         yield: 'CSPKE · Extraction rate',
         total: 'Estimated credit revenue',
         estimatePrompt:
-            'Enter FFB volume and prices for selected credits to see the estimate.',
-        priceMissing: 'Enter a price',
+            'Enter FFB volume and a price for each credit you sell.',
+        excluded: 'Excluded',
         added: 'Extra revenue per kg FFB',
         outputs: 'Estimated product volumes',
         copy: 'Copy link',
@@ -26,29 +20,6 @@ export const calculatorCopy = {
         invalid:
             'This link could not be read. Enter volume and credit prices to start a new estimate.',
         error: 'Values must be zero or more. The exchange rate must be above zero. Total extraction rates cannot exceed 100%.',
-        oerHelp:
-            'Share of FFB weight that becomes palm oil. RSPO default: ' +
-            formatPercent(defaultExtractionRates.cspo, 'en') +
-            '.',
-        kerHelp:
-            'RSPO default: ' +
-            formatPercent(extractionAssumptions.kernel, 'en') +
-            ' kernels × ' +
-            formatPercent(extractionAssumptions.kernelOilRecovery, 'en') +
-            ' oil = ' +
-            formatPercent(defaultExtractionRates.cspko, 'en') +
-            ' of FFB. KER itself is ' +
-            formatPercent(extractionAssumptions.kernel, 'en') +
-            '.',
-        yieldHelp:
-            'RSPO default: ' +
-            formatPercent(extractionAssumptions.kernel, 'en') +
-            ' kernels × ' +
-            formatPercent(extractionAssumptions.kernelExpellerRecovery, 'en') +
-            ' expeller = ' +
-            formatPercent(defaultExtractionRates.cspke, 'en') +
-            ' of FFB.',
-        basis: 'Uncheck credits you will not sell.',
     },
     id: {
         inputs: 'Volume & harga kredit',
@@ -60,8 +31,8 @@ export const calculatorCopy = {
         yield: 'CSPKE · Rendemen',
         total: 'Perkiraan pendapatan kredit',
         estimatePrompt:
-            'Masukkan volume TBS dan harga kredit yang dipilih untuk melihat perkiraan.',
-        priceMissing: 'Masukkan harga',
+            'Masukkan volume TBS dan harga untuk setiap kredit yang dijual.',
+        excluded: 'Tidak dihitung',
         added: 'Tambahan pendapatan per kg TBS',
         outputs: 'Perkiraan volume produk',
         copy: 'Salin tautan',
@@ -72,29 +43,6 @@ export const calculatorCopy = {
         invalid:
             'Tautan tidak dapat dibaca. Masukkan volume dan harga kredit untuk memulai perhitungan baru.',
         error: 'Nilai tidak boleh negatif. Kurs harus lebih dari nol. Total rendemen maksimal 100%.',
-        oerHelp:
-            'Bagian berat TBS yang menjadi minyak sawit. Default RSPO: ' +
-            formatPercent(defaultExtractionRates.cspo, 'id') +
-            '.',
-        kerHelp:
-            'Default RSPO: inti ' +
-            formatPercent(extractionAssumptions.kernel, 'id') +
-            ' × minyak ' +
-            formatPercent(extractionAssumptions.kernelOilRecovery, 'id') +
-            ' = ' +
-            formatPercent(defaultExtractionRates.cspko, 'id') +
-            ' dari TBS. KER sendiri adalah ' +
-            formatPercent(extractionAssumptions.kernel, 'id') +
-            '.',
-        yieldHelp:
-            'Default RSPO: inti ' +
-            formatPercent(extractionAssumptions.kernel, 'id') +
-            ' × bungkil ' +
-            formatPercent(extractionAssumptions.kernelExpellerRecovery, 'id') +
-            ' = ' +
-            formatPercent(defaultExtractionRates.cspke, 'id') +
-            ' dari TBS.',
-        basis: 'Hapus centang kredit yang tidak dijual.',
     },
 } as const;
 
@@ -113,7 +61,7 @@ export const homePageCopy = {
             ['Enter FFB volume', 'Enter the volume in kilograms or tonnes.'],
             [
                 'Set credit prices',
-                'Enter your agreed USD price for each credit. Uncheck credits you will not sell.',
+                'Enter your agreed USD price for each credit you sell. Leave other prices blank.',
             ],
             [
                 'Review the estimate',
@@ -124,7 +72,7 @@ export const homePageCopy = {
         faqTitle: 'Common questions',
         faqItems: [
             [
-                'Are the price placeholders fixed selling prices?',
+                'Are the preset prices fixed selling prices?',
                 'No. They show dated PRISMA references. Enter the price agreed with your buyer.',
             ],
             [
@@ -152,7 +100,7 @@ export const homePageCopy = {
             ['Masukkan volume TBS', 'Masukkan volume dalam kilogram atau ton.'],
             [
                 'Atur harga kredit',
-                'Masukkan harga USD yang disepakati untuk setiap kredit. Hapus centang pada kredit yang tidak dijual.',
+                'Masukkan harga USD yang disepakati untuk setiap kredit yang dijual. Kosongkan harga lainnya.',
             ],
             [
                 'Periksa hasil perkiraan',
@@ -163,7 +111,7 @@ export const homePageCopy = {
         faqTitle: 'Pertanyaan umum',
         faqItems: [
             [
-                'Apakah harga placeholder merupakan harga jual tetap?',
+                'Apakah harga preset merupakan harga jual tetap?',
                 'Tidak. Nilainya adalah referensi PRISMA bertanggal. Masukkan harga yang disepakati dengan pembeli.',
             ],
             [
