@@ -30,7 +30,7 @@ import {
     glossary,
 } from '@/routes';
 
-const NavigationLink = forwardRef<
+export const NavigationLink = forwardRef<
     HTMLAnchorElement,
     Omit<ComponentProps<typeof Link>, 'component'>
 >(function NavigationLink({ href = '/', ...props }, ref) {
@@ -38,7 +38,7 @@ const NavigationLink = forwardRef<
 });
 const navigation = [
     { title: 'Guide', titleId: 'Panduan', path: '/guide', route: guide },
-    { title: 'FAQ', titleId: 'FAQ', path: '/faq', route: faq },
+    { title: 'Read FAQ', titleId: 'Baca FAQ', path: '/faq', route: faq },
     {
         title: 'Glossary',
         titleId: 'Istilah',
@@ -389,7 +389,7 @@ export default function Layout({
                                     path === '/faq' ? 'page' : undefined
                                 }
                             >
-                                FAQ
+                                {language === 'id' ? 'Baca FAQ' : 'Read FAQ'}
                             </Button>
                         </Stack>
                         <TextField

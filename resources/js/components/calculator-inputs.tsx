@@ -247,8 +247,8 @@ export default function CalculatorInputs({
                                         value={inputs.prices[credit]}
                                         placeholder={
                                             inputs.language === 'id'
-                                                ? `Masukkan harga ${credit.toUpperCase()}`
-                                                : `Enter ${credit.toUpperCase()} price`
+                                                ? 'Masukkan harga'
+                                                : 'Enter price'
                                         }
                                         onValueChange={(value) =>
                                             setInputs((previous) => ({
