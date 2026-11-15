@@ -16,7 +16,6 @@ import CssBaseline from '@mui/material/CssBaseline';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
-import MuiLink from '@mui/material/Link';
 import MenuItem from '@mui/material/MenuItem';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
@@ -38,12 +37,27 @@ const NavigationLink = forwardRef<
     return <Link {...props} href={href} ref={ref} />;
 });
 const navigation = [
-    { title: 'Guide', titleId: 'Panduan', route: guide },
-    { title: 'FAQ', titleId: 'FAQ', route: faq },
-    { title: 'Glossary', titleId: 'Istilah', route: glossary },
-    { title: 'About', titleId: 'Tentang', route: about },
-    { title: 'Terms', titleId: 'Ketentuan', route: terms },
-    { title: 'Privacy', titleId: 'Privasi', route: privacy },
+    { title: 'Guide', titleId: 'Panduan', path: '/guide', route: guide },
+    { title: 'FAQ', titleId: 'FAQ', path: '/faq', route: faq },
+    {
+        title: 'Glossary',
+        titleId: 'Istilah',
+        path: '/glossary',
+        route: glossary,
+    },
+    { title: 'About', titleId: 'Tentang', path: '/about', route: about },
+    {
+        title: 'Terms',
+        titleId: 'Ketentuan',
+        path: '/terms',
+        route: terms,
+    },
+    {
+        title: 'Privacy',
+        titleId: 'Privasi',
+        path: '/privacy',
+        route: privacy,
+    },
 ];
 function calculatorHomeUrl(language: 'id' | 'en'): string {
     const url = calculator.url(undefined, { query: { lang: language } });
@@ -65,7 +79,7 @@ export default function Layout({
     path?: string;
     description?: string;
     language?: 'id' | 'en';
-    onLanguageChange?: (language: 'id' | 'en') => void;
+    onLanguageChange: (language: 'id' | 'en') => void;
 }) {
     const [dark, setDark] = useState(false);
     useEffect(() => {
@@ -146,6 +160,11 @@ export default function Layout({
                                     paddingInline: 18,
                                     transition:
                                         'transform 150ms ease, background-color 150ms ease',
+                                    '&[aria-current="page"]': {
+                                        textDecoration: 'underline',
+                                        textDecorationThickness: 2,
+                                        textUnderlineOffset: 4,
+                                    },
                                     '@media (hover: hover) and (pointer: fine)':
                                         {
                                             '&:hover': {
@@ -180,6 +199,13 @@ export default function Layout({
                                 root: {
                                     fontSize: '1rem',
                                     color: dark ? '#c4c8bd' : '#52594d',
+                                },
+                            },
+                        },
+                        MuiInputAdornment: {
+                            styleOverrides: {
+                                root: {
+                                    color: dark ? '#bebfb6' : '#62685e',
                                 },
                             },
                         },
@@ -221,6 +247,7 @@ export default function Layout({
             <CssBaseline />
             <Head title={title}>
                 <meta name="description" content={description} />
+                <meta name="color-scheme" content="light dark" />
                 <meta name="page-type" content="software" />
                 <meta name="site-kind" content="software" />
                 <meta property="og:title" content={title} />
@@ -233,11 +260,13 @@ export default function Layout({
                 component="a"
                 href="#main"
                 sx={{
-                    position: 'absolute',
-                    left: -9999,
+                    position: 'fixed',
+                    top: 16,
+                    left: 16,
+                    clipPath: 'inset(50%)',
+                    whiteSpace: 'nowrap',
                     '&:focus': {
-                        left: 16,
-                        top: 16,
+                        clipPath: 'none',
                         zIndex: 10,
                         bgcolor: 'background.paper',
                         p: 2,
@@ -248,6 +277,7 @@ export default function Layout({
             </Box>
             <Box
                 component="header"
+                className="nav"
                 sx={{
                     bgcolor: 'background.paper',
                     borderBottom: 1,
@@ -344,6 +374,9 @@ export default function Layout({
                                 nativeButton={false}
                                 href={guide.url({ query: { lang: language } })}
                                 color="inherit"
+                                aria-current={
+                                    path === '/guide' ? 'page' : undefined
+                                }
                             >
                                 {language === 'id' ? 'Panduan' : 'Guide'}
                             </Button>
@@ -352,16 +385,49 @@ export default function Layout({
                                 nativeButton={false}
                                 href={faq.url({ query: { lang: language } })}
                                 color="inherit"
+                                aria-current={
+                                    path === '/faq' ? 'page' : undefined
+                                }
                             >
                                 FAQ
                             </Button>
                         </Stack>
+                        <TextField
+                            select
+                            label={language === 'id' ? 'Bahasa' : 'Language'}
+                            size="small"
+                            value={language}
+                            onChange={(event) =>
+                                onLanguageChange(
+                                    event.target.value as 'id' | 'en',
+                                )
+                            }
+                            slotProps={{
+                                select: {
+                                    SelectDisplayProps: {
+                                        style: {
+                                            minHeight: 44,
+                                            boxSizing: 'border-box',
+                                        },
+                                    },
+                                },
+                            }}
+                            sx={{
+                                minWidth: 180,
+                                order: { xs: 1, md: 2 },
+                                ml: { xs: 'auto', md: 0 },
+                            }}
+                        >
+                            <MenuItem value="id">Indonesia</MenuItem>
+                            <MenuItem value="en">English</MenuItem>
+                        </TextField>
                     </Stack>
                 </Container>
             </Box>
             <Container
                 component="main"
                 id="main"
+                tabIndex={-1}
                 maxWidth="lg"
                 disableGutters
                 sx={{
@@ -375,6 +441,7 @@ export default function Layout({
             </Container>
             <Box
                 component="footer"
+                className="closing"
                 sx={{
                     bgcolor: 'background.paper',
                     borderTop: 1,
@@ -385,139 +452,100 @@ export default function Layout({
                 <Container
                     maxWidth="lg"
                     disableGutters
+                    className="wrap"
                     sx={{ px: { xs: 2, lg: 0 } }}
                 >
-                    <Stack className="wrap" sx={{ gap: 3 }}>
+                    <Stack
+                        direction={{ xs: 'column', sm: 'row' }}
+                        sx={{
+                            gap: 3,
+                            mb: 3,
+                            alignItems: { xs: 'stretch', sm: 'center' },
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap',
+                        }}
+                    >
                         <Stack
-                            direction={{ xs: 'column', sm: 'row' }}
+                            component="nav"
+                            aria-label={
+                                language === 'id'
+                                    ? 'Tautan halaman'
+                                    : 'Page links'
+                            }
+                            direction="row"
                             sx={{
-                                gap: 3,
-                                alignItems: { xs: 'stretch', sm: 'center' },
-                                justifyContent: 'space-between',
+                                gap: 0.5,
                                 flexWrap: 'wrap',
+                                alignContent: 'start',
+                                alignItems: 'center',
                             }}
                         >
-                            <Stack
-                                component="nav"
-                                aria-label={
-                                    language === 'id'
-                                        ? 'Tautan halaman'
-                                        : 'Page links'
-                                }
-                                direction="row"
+                            <Box
+                                component="img"
+                                src="/logo-white-green.svg"
+                                alt=""
                                 sx={{
-                                    gap: 0.5,
-                                    flexWrap: 'wrap',
-                                    alignContent: 'start',
-                                    alignItems: 'center',
+                                    width: 36,
+                                    height: 36,
+                                    objectFit: 'contain',
+                                    borderRadius: '12%',
+                                    mr: 1,
                                 }}
-                            >
-                                <Box
-                                    component="img"
-                                    src="/logo-white-green.svg"
-                                    alt=""
-                                    sx={{
-                                        width: 36,
-                                        height: 36,
-                                        objectFit: 'contain',
-                                        borderRadius: '12%',
-                                        mr: 1,
-                                    }}
-                                />
-                                {navigation.map((item) => (
-                                    <Button
-                                        key={item.title}
-                                        component={NavigationLink}
-                                        nativeButton={false}
-                                        href={item.route.url({
-                                            query: { lang: language },
-                                        })}
-                                        color="inherit"
-                                        sx={{ fontSize: 14 }}
-                                    >
-                                        {language === 'id'
-                                            ? item.titleId
-                                            : item.title}
-                                    </Button>
-                                ))}
-                            </Stack>
-
-                            <Stack
-                                direction={{ xs: 'column', sm: 'row' }}
-                                sx={{
-                                    gap: 1.5,
-                                    alignItems: { xs: 'stretch', sm: 'center' },
-                                }}
-                            >
-                                {onLanguageChange && (
-                                    <TextField
-                                        select
-                                        label="Language / Bahasa"
-                                        size="small"
-                                        value={language}
-                                        onChange={(event) =>
-                                            onLanguageChange(
-                                                event.target.value as
-                                                    | 'id'
-                                                    | 'en',
-                                            )
-                                        }
-                                        sx={{ minWidth: 180 }}
-                                    >
-                                        <MenuItem value="id">
-                                            Indonesia
-                                        </MenuItem>
-                                        <MenuItem value="en">English</MenuItem>
-                                    </TextField>
-                                )}
+                            />
+                            {navigation.map((item) => (
                                 <Button
-                                    variant="outlined"
+                                    key={item.title}
+                                    component={NavigationLink}
+                                    nativeButton={false}
+                                    href={item.route.url({
+                                        query: { lang: language },
+                                    })}
                                     color="inherit"
-                                    onClick={() => setDark(!dark)}
-                                    aria-pressed={dark}
+                                    aria-current={
+                                        path === item.path ? 'page' : undefined
+                                    }
                                     sx={{ fontSize: 14 }}
                                 >
                                     {language === 'id'
-                                        ? dark
-                                            ? 'Mode terang'
-                                            : 'Mode gelap'
-                                        : dark
-                                          ? 'Light mode'
-                                          : 'Dark mode'}
+                                        ? item.titleId
+                                        : item.title}
                                 </Button>
-                            </Stack>
+                            ))}
                         </Stack>
 
-                        <Stack sx={{ gap: 0.5 }}>
-                            <Typography
-                                color="text.secondary"
-                                variant="caption"
-                                sx={{
-                                    pt: 2,
-                                    borderTop: 1,
-                                    borderColor: 'divider',
-                                }}
-                            >
-                                {language === 'id'
-                                    ? 'Dikembangkan oleh Tim Litbang KPBS.'
-                                    : 'Developed by the KPBS Research & Development Team.'}
-                            </Typography>
-                            <MuiLink
-                                href="https://belayansejahtera.org/"
-                                target="_blank"
-                                rel="noreferrer"
-                                color="text.secondary"
-                                underline="hover"
-                                sx={{
-                                    width: 'fit-content',
-                                    fontSize: 13,
-                                    lineHeight: 1.6,
-                                }}
-                            >
-                                Koperasi Perkebunan Belayan Sejahtera
-                            </MuiLink>
-                        </Stack>
+                        <Button
+                            variant="outlined"
+                            color="inherit"
+                            onClick={() => setDark(!dark)}
+                            aria-pressed={dark}
+                            sx={{
+                                fontSize: 14,
+                                alignSelf: { xs: 'flex-end', sm: 'auto' },
+                            }}
+                        >
+                            {language === 'id'
+                                ? dark
+                                    ? 'Mode terang'
+                                    : 'Mode gelap'
+                                : dark
+                                  ? 'Light mode'
+                                  : 'Dark mode'}
+                        </Button>
                     </Stack>
+                    <Typography
+                        component="p"
+                        color="text.secondary"
+                        variant="caption"
+                        sx={{
+                            pt: 2,
+                            borderTop: 1,
+                            borderColor: 'divider',
+                        }}
+                    >
+                        {language === 'id'
+                            ? `© ${new Date().getFullYear()} Koperasi Perkebunan Belayan Sejahtera · Kalkulator Kredit RSPO oleh Tim Litbang.`
+                            : `© ${new Date().getFullYear()} Koperasi Perkebunan Belayan Sejahtera · RSPO Credit Calculator by the R&D Team.`}
+                    </Typography>
                 </Container>
             </Box>
         </ThemeProvider>

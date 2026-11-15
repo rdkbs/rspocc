@@ -127,10 +127,16 @@ export default function CalculatorInputs({
                                         inputProps={{ 'aria-label': text.unit }}
                                         sx={{
                                             minWidth: 82,
-                                            minHeight: 44,
+                                            minHeight: 48,
                                             borderLeft: 1,
                                             borderColor: 'divider',
                                             pl: 1.5,
+                                        }}
+                                        SelectDisplayProps={{
+                                            style: {
+                                                minHeight: 44,
+                                                boxSizing: 'border-box',
+                                            },
                                         }}
                                     >
                                         <MenuItem value="kg">kg</MenuItem>
