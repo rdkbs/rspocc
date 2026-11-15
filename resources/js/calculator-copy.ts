@@ -98,6 +98,87 @@ export const calculatorCopy = {
     },
 } as const;
 
+export const homePageCopy = {
+    en: {
+        guideTitle: 'How to use the calculator',
+        flowDescription:
+            'Calculator flow: FFB volume, extraction rates, credit volumes and prices, estimated revenue.',
+        flow: [
+            'FFB volume',
+            'Extraction rates',
+            'Credit volumes and prices',
+            'Estimated revenue',
+        ],
+        guideSteps: [
+            ['Enter FFB volume', 'Enter the volume in kilograms or tonnes.'],
+            [
+                'Set credit prices',
+                'Enter your agreed USD price for each credit. Uncheck credits you will not sell.',
+            ],
+            [
+                'Review the estimate',
+                'Check revenue and added value per kg. Adjust extraction rates or exchange rate under Rates.',
+            ],
+        ],
+        guideLink: 'Guide',
+        faqTitle: 'Common questions',
+        faqItems: [
+            [
+                'Are the price placeholders fixed selling prices?',
+                'No. They show dated PRISMA references. Enter the price agreed with your buyer.',
+            ],
+            [
+                'Are calculator fees or taxes included?',
+                'No. Estimates exclude fees, taxes, certification costs, and other deductions.',
+            ],
+            [
+                'Does this estimate confirm which credits I can sell?',
+                'No. Confirm eligible volumes and sale terms with your certification body and buyer.',
+            ],
+        ],
+        faqLink: 'Read FAQ',
+    },
+    id: {
+        guideTitle: 'Cara menggunakan kalkulator',
+        flowDescription:
+            'Alur kalkulator: volume TBS, rendemen, volume dan harga kredit, perkiraan pendapatan.',
+        flow: [
+            'Volume TBS',
+            'Rendemen',
+            'Volume dan harga kredit',
+            'Perkiraan pendapatan',
+        ],
+        guideSteps: [
+            ['Masukkan volume TBS', 'Masukkan volume dalam kilogram atau ton.'],
+            [
+                'Atur harga kredit',
+                'Masukkan harga USD yang disepakati untuk setiap kredit. Hapus centang pada kredit yang tidak dijual.',
+            ],
+            [
+                'Periksa hasil perkiraan',
+                'Periksa pendapatan dan tambahan per kg. Ubah rendemen atau kurs di bagian Kurs.',
+            ],
+        ],
+        guideLink: 'Panduan',
+        faqTitle: 'Pertanyaan umum',
+        faqItems: [
+            [
+                'Apakah harga placeholder merupakan harga jual tetap?',
+                'Tidak. Nilainya adalah referensi PRISMA bertanggal. Masukkan harga yang disepakati dengan pembeli.',
+            ],
+            [
+                'Apakah biaya atau pajak sudah termasuk?',
+                'Tidak. Perkiraan belum memperhitungkan biaya, pajak, sertifikasi, dan potongan lain.',
+            ],
+            [
+                'Apakah perkiraan ini memastikan kredit yang dapat dijual?',
+                'Tidak. Pastikan volume yang memenuhi syarat dan ketentuan penjualan kepada lembaga sertifikasi dan pembeli.',
+            ],
+        ],
+        faqLink: 'Baca FAQ',
+    },
+} as const;
+
 export type CalculatorCopy = {
     [Key in keyof (typeof calculatorCopy)['en']]: string;
 };
