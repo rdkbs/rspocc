@@ -4,10 +4,23 @@ import {
     formatPercent,
 } from '@/calculator-assumptions';
 
-export const glossaryEntries = [
+type GlossaryEntry = {
+    term: string;
+    termId: string;
+    matches: string[];
+    en: string;
+    id: string;
+    heading?: { en: string; id: string };
+};
+
+export const glossaryEntries: GlossaryEntry[] = [
     {
         term: 'URL / calculation link',
         termId: 'URL / tautan perhitungan',
+        heading: {
+            en: 'Calculator link URL',
+            id: 'URL tautan kalkulator',
+        },
         matches: ['URL', 'URLs', 'calculation link', 'tautan perhitungan'],
         en: 'The web address of a calculation. It contains the inputs, so anyone with the link can read them.',
         id: 'Alamat web untuk suatu perhitungan. Tautan ini memuat input, sehingga siapa pun yang memilikinya bisa membacanya.',
@@ -15,21 +28,33 @@ export const glossaryEntries = [
     {
         term: 'Frankfurter',
         termId: 'Frankfurter',
+        heading: {
+            en: 'Frankfurter exchange-rate source',
+            id: 'Sumber kurs Frankfurter',
+        },
         matches: ['Frankfurter'],
-        en: 'The source of this calculator’s reference exchange rates. The rates are not live trading quotes.',
+        en: 'Provides the calculator’s reference exchange rates. These are not live trading quotes.',
         id: 'Sumber kurs referensi kalkulator ini. Kurs tersebut bukan penawaran transaksi langsung.',
     },
 
     {
         term: 'RSPO',
         termId: 'RSPO',
+        heading: {
+            en: 'Roundtable on Sustainable Palm Oil (RSPO)',
+            id: 'Roundtable on Sustainable Palm Oil (RSPO)',
+        },
         matches: ['RSPO'],
-        en: 'Roundtable on Sustainable Palm Oil, the organisation that sets the certification standards used here.',
-        id: 'Roundtable on Sustainable Palm Oil, organisasi yang menetapkan standar sertifikasi yang digunakan di sini.',
+        en: 'The organization that sets the certification standards used here.',
+        id: 'Organisasi yang menetapkan standar sertifikasi yang digunakan di kalkulator ini.',
     },
     {
         term: 'FFB / TBS',
         termId: 'TBS / FFB',
+        heading: {
+            en: 'Fresh fruit bunches (FFB / TBS)',
+            id: 'Tandan Buah Segar (TBS / FFB)',
+        },
         matches: ['FFB', 'TBS'],
         en: 'Fresh Fruit Bunches, or Tandan Buah Segar in Indonesian. The harvested fruit weight entered in this calculator.',
         id: 'Tandan Buah Segar, atau Fresh Fruit Bunches dalam bahasa Inggris. Ini adalah berat buah hasil panen yang Anda masukkan.',
@@ -44,6 +69,10 @@ export const glossaryEntries = [
     {
         term: 'IS credits',
         termId: 'Kredit IS',
+        heading: {
+            en: 'Independent Smallholder (IS) credits',
+            id: 'Kredit petani swadaya bersertifikat (IS)',
+        },
         matches: ['IS-CSPO', 'IS-CSPKO', 'IS-CSPKE', 'kredit IS'],
         en: 'Independent Smallholder credits come from certified independent smallholders. Their market prices differ from standard credits. This calculator uses IS prices by default.',
         id: 'Kredit Independent Smallholder (IS) berasal dari petani swadaya bersertifikat. Harganya berbeda dari kredit biasa. Kalkulator ini memakai harga IS sebagai default.',
@@ -51,41 +80,65 @@ export const glossaryEntries = [
     {
         term: 'CSPO',
         termId: 'CSPO',
+        heading: {
+            en: 'Certified Sustainable Palm Oil (CSPO)',
+            id: 'Minyak sawit berkelanjutan bersertifikat (CSPO)',
+        },
         matches: ['CSPO'],
-        en: 'Certified Sustainable Palm Oil: oil extracted from the fruit.',
-        id: 'Certified Sustainable Palm Oil: minyak sawit bersertifikat yang dihasilkan dari daging buah.',
+        en: 'Palm oil extracted from the fruit and sold as a certified product.',
+        id: 'Minyak sawit dari daging buah yang dijual sebagai produk bersertifikat.',
     },
     {
         term: 'CSPKO',
         termId: 'CSPKO',
+        heading: {
+            en: 'Certified Sustainable Palm Kernel Oil (CSPKO)',
+            id: 'Minyak inti sawit berkelanjutan bersertifikat (CSPKO)',
+        },
         matches: ['CSPKO'],
-        en: 'Certified Sustainable Palm Kernel Oil: oil extracted from the kernels inside the fruit.',
-        id: 'Certified Sustainable Palm Kernel Oil: minyak inti sawit bersertifikat yang dihasilkan dari inti buah.',
+        en: 'Oil extracted from the kernels inside the fruit and sold as a certified product.',
+        id: 'Minyak dari inti buah yang dijual sebagai produk bersertifikat.',
     },
     {
         term: 'CSPKE',
         termId: 'CSPKE',
+        heading: {
+            en: 'Certified Sustainable Palm Kernel Expeller (CSPKE)',
+            id: 'Bungkil inti sawit berkelanjutan bersertifikat (CSPKE)',
+        },
         matches: ['CSPKE'],
-        en: 'Certified Sustainable Palm Kernel Expeller: material left after oil is extracted from the kernels, often used in animal feed.',
-        id: 'Certified Sustainable Palm Kernel Expeller: bungkil inti sawit bersertifikat, yaitu sisa setelah minyak inti diambil. Umumnya digunakan untuk pakan ternak.',
+        en: 'The material left after oil is extracted from palm kernels. It is often used in animal feed.',
+        id: 'Sisa bahan setelah minyak diambil dari inti sawit. Bahan ini sering digunakan untuk pakan ternak.',
     },
     {
         term: 'OER',
         termId: 'OER',
+        heading: {
+            en: 'Palm oil extraction rate (OER)',
+            id: 'Rendemen minyak sawit (OER)',
+        },
         matches: ['OER'],
-        en: `Oil Extraction Rate: the share of FFB weight converted into palm oil. The RSPO default is ${formatPercent(defaultExtractionRates.cspo, 'en')}, or ${(defaultExtractionRates.cspo * 1000) / 100} kg of CSPO per 1,000 kg of FFB.`,
-        id: `Oil Extraction Rate: bagian berat TBS yang menjadi minyak sawit. Default RSPO adalah ${formatPercent(defaultExtractionRates.cspo, 'id')}, atau ${(defaultExtractionRates.cspo * 1000) / 100} kg CSPO dari 1.000 kg TBS.`,
+        en: `The share of FFB weight converted into palm oil. The RSPO default is ${formatPercent(defaultExtractionRates.cspo, 'en')}, or ${(defaultExtractionRates.cspo * 1000) / 100} kg of CSPO per 1,000 kg of FFB.`,
+        id: `Bagian berat TBS yang menjadi minyak sawit. Default RSPO adalah ${formatPercent(defaultExtractionRates.cspo, 'id')}, atau ${(defaultExtractionRates.cspo * 1000) / 100} kg CSPO dari 1.000 kg TBS.`,
     },
     {
         term: 'KER',
         termId: 'KER',
+        heading: {
+            en: 'Palm kernel extraction rate (KER)',
+            id: 'Rendemen inti sawit (KER)',
+        },
         matches: ['KER'],
-        en: `Kernel Extraction Rate: the share of FFB weight recovered as kernels. The RSPO default is ${formatPercent(extractionAssumptions.kernel, 'en')}, not the final CSPKO or CSPKE percentage.`,
-        id: `Kernel Extraction Rate: bagian berat TBS yang menjadi inti sawit. Default RSPO adalah ${formatPercent(extractionAssumptions.kernel, 'id')}, bukan persentase akhir CSPKO atau CSPKE.`,
+        en: `The share of FFB weight recovered as kernels. RSPO's default is ${formatPercent(extractionAssumptions.kernel, 'en')}. Separate recovery factors determine the CSPKO and CSPKE percentages.`,
+        id: `Bagian berat TBS yang menjadi inti sawit. KER default RSPO adalah ${formatPercent(extractionAssumptions.kernel, 'id')}. Faktor pemulihan yang berbeda menentukan persentase CSPKO dan CSPKE.`,
     },
     {
         term: 'CSPKO extraction rate',
         termId: 'Rendemen CSPKO',
+        heading: {
+            en: 'Conversion to certified palm kernel oil (CSPKO)',
+            id: 'Hasil konversi TBS menjadi minyak inti (CSPKO)',
+        },
         matches: ['rendemen CSPKO'],
         en: `The FFB-to-kernel-oil factor: ${formatPercent(extractionAssumptions.kernel, 'en')} KER × ${formatPercent(extractionAssumptions.kernelOilRecovery, 'en')} oil recovery = ${formatPercent(defaultExtractionRates.cspko, 'en')} of FFB by default.`,
         id: `Faktor TBS menjadi minyak inti: KER ${formatPercent(extractionAssumptions.kernel, 'id')} × hasil minyak ${formatPercent(extractionAssumptions.kernelOilRecovery, 'id')} = ${formatPercent(defaultExtractionRates.cspko, 'id')} dari TBS secara default.`,
@@ -93,6 +146,10 @@ export const glossaryEntries = [
     {
         term: 'CSPKE extraction rate',
         termId: 'Rendemen CSPKE',
+        heading: {
+            en: 'Conversion to certified palm kernel expeller (CSPKE)',
+            id: 'Hasil konversi TBS menjadi bungkil inti (CSPKE)',
+        },
         matches: ['rendemen CSPKE'],
         en: `The FFB-to-kernel-expeller factor: ${formatPercent(extractionAssumptions.kernel, 'en')} KER × ${formatPercent(extractionAssumptions.kernelExpellerRecovery, 'en')} expeller recovery = ${formatPercent(defaultExtractionRates.cspke, 'en')} of FFB by default.`,
         id: `Faktor TBS menjadi bungkil inti: KER ${formatPercent(extractionAssumptions.kernel, 'id')} × hasil bungkil ${formatPercent(extractionAssumptions.kernelExpellerRecovery, 'id')} = ${formatPercent(defaultExtractionRates.cspke, 'id')} dari TBS secara default.`,
@@ -100,13 +157,21 @@ export const glossaryEntries = [
     {
         term: 'Credit price',
         termId: 'Harga kredit',
+        heading: {
+            en: 'RSPO credit price',
+            id: 'Harga kredit RSPO',
+        },
         matches: ['harga kredit'],
-        en: 'The USD amount per credit. Each credit type has its own price. Defaults are a dated PRISMA snapshot, not live quotes.',
-        id: 'Harga dalam USD untuk satu kredit. Setiap jenis kredit memiliki harga sendiri. Harga default berasal dari catatan PRISMA bertanggal, bukan harga langsung.',
+        en: 'The USD amount per credit. Each credit type has its own price. Defaults come from a dated PRISMA price snapshot.',
+        id: 'Harga dalam USD untuk satu kredit. Setiap jenis kredit memiliki harga sendiri. Harga default berasal dari catatan harga PRISMA bertanggal.',
     },
     {
         term: 'Premium revenue',
         termId: 'Pendapatan kredit',
+        heading: {
+            en: 'RSPO credit premium revenue',
+            id: 'Pendapatan premium kredit RSPO',
+        },
         matches: ['pendapatan kredit'],
         en: 'Credit quantity multiplied by its selling price. Only selected credits contribute to the total.',
         id: 'Jumlah kredit dikalikan harga jualnya. Hanya kredit yang dicentang masuk ke total pendapatan.',
@@ -114,20 +179,32 @@ export const glossaryEntries = [
     {
         term: 'Added value per kg FFB',
         termId: 'Tambahan pendapatan per kg TBS',
+        heading: {
+            en: 'Added value per kg of fresh fruit bunches',
+            id: 'Tambahan pendapatan per kg Tandan Buah Segar',
+        },
         matches: ['tambahan pendapatan per kg TBS'],
-        en: 'Credit revenue divided by FFB weight in kg. This is extra revenue before costs and taxes, not net profit.',
-        id: 'Pendapatan kredit dibagi berat TBS dalam kg. Ini tambahan pendapatan sebelum biaya dan pajak, bukan laba bersih.',
+        en: 'Credit revenue divided by FFB weight in kg. It shows extra revenue before costs and taxes.',
+        id: 'Pendapatan kredit dibagi berat TBS dalam kg. Angka ini menunjukkan tambahan pendapatan sebelum biaya dan pajak.',
     },
     {
         term: 'Exchange rate',
         termId: 'Kurs valuta',
+        heading: {
+            en: 'Exchange rate per USD',
+            id: 'Kurs per USD',
+        },
         matches: ['exchange rate', 'exchange rates', 'kurs valuta', 'kurs'],
         en: 'The amount of the chosen currency equal to 1 USD. For IDR, enter rupiah per US dollar.',
-        id: 'Jumlah mata uang pilihan yang setara dengan 1 USD. Untuk IDR, masukkan rupiah per dolar AS.',
+        id: 'Jumlah mata uang pilihan yang setara dengan 1 USD. Untuk IDR, masukkan rupiah per USD.',
     },
     {
         term: 'Reference rate',
         termId: 'Kurs referensi',
+        heading: {
+            en: 'Reference exchange rate',
+            id: 'Kurs referensi mata uang',
+        },
         matches: ['kurs referensi'],
         en: 'An exchange rate supplied by a source such as Frankfurter. Your bank’s rate and fees may differ.',
         id: 'Kurs dari sumber informasi seperti Frankfurter. Kurs dan biaya dari bank Anda bisa berbeda.',
@@ -135,6 +212,10 @@ export const glossaryEntries = [
     {
         term: 'PRISMA',
         termId: 'PRISMA',
+        heading: {
+            en: 'PRISMA certification and credit-trading platform',
+            id: 'Platform sertifikasi dan perdagangan kredit PRISMA',
+        },
         matches: ['PRISMA'],
         en: 'RSPO’s platform for certification, traceability, and credit trading.',
         id: 'Platform RSPO untuk sertifikasi, penelusuran produk, dan perdagangan kredit.',

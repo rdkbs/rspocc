@@ -22,7 +22,8 @@ function Term({ text, definition }: { text: string; definition: string }) {
                     type="button"
                     onClick={() => setOpen(true)}
                     sx={{
-                        display: 'inline',
+                        display: 'inline-flex',
+                        verticalAlign: 'middle',
                         font: 'inherit',
                         color: 'inherit',
                         bgcolor: 'transparent',

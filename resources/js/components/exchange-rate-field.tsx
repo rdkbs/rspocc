@@ -138,6 +138,11 @@ export default function ExchangeRateField({
                         href="https://frankfurter.dev/"
                         target="_blank"
                         rel="noopener noreferrer"
+                        sx={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            minHeight: 44,
+                        }}
                     >
                         Frankfurter
                     </Box>
