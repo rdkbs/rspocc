@@ -71,6 +71,25 @@ export default function CalculatorInputs({
         inputs.language === 'id' ? 'id-ID' : 'en-US',
         { dateStyle: 'medium', timeZone: 'UTC' },
     ).format(new Date(`${defaultPriceReference.checkedOn}T00:00:00Z`));
+    const brandedNumberFieldSx = {
+        '& .MuiInputLabel-root': { color: 'primary.main' },
+        '& .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'primary.main',
+        },
+        '& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'primary.dark',
+        },
+        '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline':
+            {
+                borderColor: 'primary.main',
+                borderWidth: 2,
+            },
+        '& .MuiOutlinedInput-root:active .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'primary.main',
+            borderWidth: 2,
+        },
+    };
+
     return (
         <Paper
             component="form"
@@ -109,6 +128,7 @@ export default function CalculatorInputs({
                 <NumberField
                     fullWidth
                     label={text.volume}
+                    sx={brandedNumberFieldSx}
                     language={inputs.language}
                     value={inputs.volume}
                     onValueChange={(value) => update('volume', value)}
@@ -189,7 +209,10 @@ export default function CalculatorInputs({
                                     key={credit}
                                     fullWidth
                                     size="small"
-                                    sx={{ minWidth: 0 }}
+                                    sx={{
+                                        ...brandedNumberFieldSx,
+                                        minWidth: 0,
+                                    }}
                                     label={
                                         inputs.language === 'id'
                                             ? 'Harga ' + credit.toUpperCase()
@@ -316,6 +339,9 @@ export default function CalculatorInputs({
                                                 sx={{
                                                     fontWeight: 500,
                                                     lineHeight: 1.3,
+                                                    ...(selected && {
+                                                        color: 'primary.main',
+                                                    }),
                                                 }}
                                             >
                                                 {preset.label} · USD
@@ -351,6 +377,7 @@ export default function CalculatorInputs({
                                                             sx={{
                                                                 display:
                                                                     'block',
+                                                                color: 'primary.main',
                                                                 fontSize:
                                                                     'clamp(0.875rem, calc(0.5rem + 3.5cqi), 1rem)',
                                                                 fontVariantNumeric:

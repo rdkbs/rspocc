@@ -373,7 +373,9 @@ export default function Layout({
                                 component={NavigationLink}
                                 nativeButton={false}
                                 href={guide.url({ query: { lang: language } })}
-                                color="inherit"
+                                color={
+                                    path === '/guide' ? 'primary' : 'inherit'
+                                }
                                 aria-current={
                                     path === '/guide' ? 'page' : undefined
                                 }
@@ -384,7 +386,7 @@ export default function Layout({
                                 component={NavigationLink}
                                 nativeButton={false}
                                 href={faq.url({ query: { lang: language } })}
-                                color="inherit"
+                                color={path === '/faq' ? 'primary' : 'inherit'}
                                 aria-current={
                                     path === '/faq' ? 'page' : undefined
                                 }
@@ -499,7 +501,11 @@ export default function Layout({
                                     href={item.route.url({
                                         query: { lang: language },
                                     })}
-                                    color="inherit"
+                                    color={
+                                        path === item.path
+                                            ? 'primary'
+                                            : 'inherit'
+                                    }
                                     aria-current={
                                         path === item.path ? 'page' : undefined
                                     }

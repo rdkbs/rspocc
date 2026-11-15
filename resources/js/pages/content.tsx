@@ -412,6 +412,7 @@ export default function Content({
                             sx={{
                                 fontSize: { xs: '2.5rem', md: '3.75rem' },
                                 maxWidth: 820,
+                                color: 'primary.main',
                             }}
                         >
                             {page.title}
