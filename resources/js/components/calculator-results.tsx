@@ -252,7 +252,10 @@ export default function CalculatorResults({
                                         key={credit}
                                         sx={{
                                             flexGrow: result.volumes[credit],
-                                            bgcolor: creditColors[credit],
+                                            bgcolor:
+                                                inputs.prices[credit] === null
+                                                    ? 'action.disabledBackground'
+                                                    : creditColors[credit],
                                         }}
                                     />
                                 ))}
@@ -266,23 +269,89 @@ export default function CalculatorResults({
                                         py: 1.5,
                                         borderBottom: 1,
                                         borderColor: 'divider',
+                                        color:
+                                            inputs.prices[credit] === null
+                                                ? 'text.disabled'
+                                                : 'text.primary',
+                                        gap: 2,
                                     }}
                                 >
                                     <Box>
-                                        <Typography>
+                                        <Typography
+                                            sx={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 1,
+                                            }}
+                                        >
+                                            <Box
+                                                component="span"
+                                                aria-hidden="true"
+                                                sx={{
+                                                    width: 10,
+                                                    height: 10,
+                                                    flexShrink: 0,
+                                                    bgcolor:
+                                                        inputs.prices[
+                                                            credit
+                                                        ] === null
+                                                            ? 'action.disabledBackground'
+                                                            : creditColors[
+                                                                  credit
+                                                              ],
+                                                }}
+                                            />
                                             {credit.toUpperCase()}
                                         </Typography>
-                                        <Typography
-                                            color="text.secondary"
-                                            sx={{ fontSize: 14 }}
+                                        <Stack
+                                            direction="row"
+                                            sx={{
+                                                columnGap: 4,
+                                                rowGap: 0.5,
+                                                flexWrap: 'wrap',
+                                                fontVariantNumeric:
+                                                    'tabular-nums',
+                                            }}
                                         >
-                                            {inputs.prices[credit] === null
-                                                ? text.excluded
-                                                : money(
-                                                      result.revenues[credit],
-                                                      'USD',
-                                                  )}
-                                        </Typography>
+                                            <Typography
+                                                color={
+                                                    inputs.prices[credit] ===
+                                                    null
+                                                        ? 'text.disabled'
+                                                        : 'text.secondary'
+                                                }
+                                                sx={{ fontSize: 14 }}
+                                            >
+                                                {inputs.prices[credit] === null
+                                                    ? text.excluded
+                                                    : money(
+                                                          result.revenues[
+                                                              credit
+                                                          ],
+                                                          'USD',
+                                                      )}
+                                            </Typography>
+                                            {inputs.prices[credit] !== null &&
+                                                inputs.currency !== 'USD' && (
+                                                    <Typography
+                                                        color="text.secondary"
+                                                        sx={{
+                                                            fontSize: 14,
+                                                            fontVariantNumeric:
+                                                                'tabular-nums',
+                                                            overflowWrap:
+                                                                'anywhere',
+                                                        }}
+                                                    >
+                                                        {money(
+                                                            result.revenues[
+                                                                credit
+                                                            ] * inputs.exchange,
+                                                            inputs.currency,
+                                                        )}
+                                                    </Typography>
+                                                )}
+                                        </Stack>
                                     </Box>
                                     <Typography sx={{ fontWeight: 650 }}>
                                         {number(result.volumes[credit] / 1000)}{' '}
