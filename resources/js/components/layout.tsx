@@ -337,13 +337,26 @@ export default function Layout({
                                     sx={{
                                         display: 'block',
                                         fontSize: 13,
+                                        fontWeight: 700,
                                         color: 'primary.main',
-                                        mt: 0.5,
                                     }}
                                 >
                                     {language === 'id'
                                         ? 'Kalkulator Kredit RSPO'
                                         : 'RSPO Credit Calculator'}
+                                </Typography>
+                                <Typography
+                                    component="span"
+                                    variant="caption"
+                                    color="textSecondary"
+                                    sx={{
+                                        display: 'block',
+                                        lineHeight: 1,
+                                    }}
+                                >
+                                    {language === 'id'
+                                        ? 'oleh Belayan Sejahtera'
+                                        : 'by Belayan Sejahtera'}
                                 </Typography>
                             </Box>
                         </Link>
@@ -441,6 +454,13 @@ export default function Layout({
                                 minWidth: 120,
                                 order: { xs: 1, md: 2 },
                                 ml: { xs: 'auto', md: 0 },
+                                '& .MuiInputLabel-root, & .MuiSelect-icon': {
+                                    color: 'primary.main',
+                                },
+                                '& .MuiInput-root::before, & .MuiInput-root:hover:not(.Mui-disabled)::before, & .MuiInput-root::after':
+                                    {
+                                        borderBottomColor: 'primary.main',
+                                    },
                             }}
                         >
                             <MenuItem value="id">Indonesia</MenuItem>
@@ -578,11 +598,6 @@ export default function Layout({
                         component="p"
                         color="text.secondary"
                         variant="caption"
-                        sx={{
-                            // pt: 2,
-                            // borderTop: 1,
-                            // borderColor: 'divider',
-                        }}
                     >
                         {`© ${new Date().getFullYear()} Koperasi Perkebunan Belayan Sejahtera. ${language === 'id' ? 'Berlisensi MIT.' : 'MIT Licensed.'}`}
                     </Typography>
