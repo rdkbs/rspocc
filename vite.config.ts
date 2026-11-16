@@ -6,6 +6,8 @@ import laravel from 'laravel-vite-plugin';
 import { bunny } from 'laravel-vite-plugin/fonts';
 import { defineConfig, lazyPlugins } from 'vite-plus';
 import { sentryVitePlugin } from '@sentry/bundler-plugins/vite';
+import zipPack from 'vite-plugin-zip-pack';
+
 export default defineConfig({
     plugins: lazyPlugins(() => [
         laravel({
@@ -32,6 +34,10 @@ export default defineConfig({
             sourcemaps: {
                 deleteSourcemapsAfterUpload: true,
             },
+        }),
+        zipPack({
+            inDir: 'public/build',
+            outDir: 'storage/app/deploy',
         }),
     ]),
     server: {

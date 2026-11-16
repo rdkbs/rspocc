@@ -51,3 +51,4 @@ yarn-error.log
 
 *.pem
 /storage/logs
+scotty

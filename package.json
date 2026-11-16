@@ -34,6 +34,7 @@
         "@types/node": "^22.20.5",
         "babel-plugin-react-compiler": "^1.0.0",
         "fontaine": "^1.0.3",
+        "vite-plugin-zip-pack": "^1.2.4",
         "vite-plus": "1.4.0"
     },
     "optionalDependencies": {
