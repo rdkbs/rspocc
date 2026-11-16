@@ -11,7 +11,9 @@ import type { Inputs } from '@/hooks/use-calculator';
 import type { RateMode } from '@/hooks/use-calculator-scenario';
 
 type RateResponse = {
-    rates: Partial<Record<'IDR' | 'MYR', { rate: number; date: string }>>;
+    rates: Partial<
+        Record<'IDR' | 'MYR' | 'CNY' | 'EUR', { rate: number; date: string }>
+    >;
     stale: boolean;
 };
 export default function ExchangeRateField({
@@ -121,11 +123,13 @@ export default function ExchangeRateField({
                                         pr: 1,
                                     }}
                                 >
-                                    {['IDR', 'MYR'].map((code) => (
-                                        <MenuItem key={code} value={code}>
-                                            {code}
-                                        </MenuItem>
-                                    ))}
+                                    {['IDR', 'MYR', 'CNY', 'EUR'].map(
+                                        (code) => (
+                                            <MenuItem key={code} value={code}>
+                                                {code}
+                                            </MenuItem>
+                                        ),
+                                    )}
                                 </Select>
                             </InputAdornment>
                         ),

@@ -89,7 +89,7 @@ const englishPages: Record<ContentSlug, ContentPage> = {
             ],
             [
                 'Exchange-rate requests',
-                'Our server asks Frankfurter for public USD/IDR and USD/MYR rates. It does not send your harvest volume, credit prices, or other calculation inputs to Frankfurter. We keep public rates and their update time.',
+                'Our server asks Frankfurter for public USD/IDR, USD/MYR, USD/CNY, and USD/EUR rates. It does not send your harvest volume, credit prices, or other calculation inputs to Frankfurter. We keep public rates and their update time.',
             ],
             [
                 'Sharing calculator links',
@@ -172,7 +172,7 @@ const indonesianPages: Record<ContentSlug, ContentPage> = {
             ],
             [
                 'Pengambilan data kurs',
-                'Server kami mengambil kurs USD/IDR dan USD/MYR dari Frankfurter. Volume TBS, harga kredit, dan data perhitungan Anda tidak dikirim ke Frankfurter. Kami hanya menyimpan data kurs dan waktu pembaruannya.',
+                'Server kami mengambil kurs USD/IDR, USD/MYR, USD/CNY, dan USD/EUR dari Frankfurter. Volume TBS, harga kredit, dan data perhitungan Anda tidak dikirim ke Frankfurter. Kami hanya menyimpan data kurs dan waktu pembaruannya.',
             ],
             [
                 'Membagikan tautan kalkulator',

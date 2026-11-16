@@ -12,6 +12,8 @@ it('keeps edits off the URL and preserves inputs when switching language', funct
         'api.frankfurter.dev/*' => Http::response([
             ['date' => '2026-11-13', 'base' => 'USD', 'quote' => 'IDR', 'rate' => 16000],
             ['date' => '2026-11-13', 'base' => 'USD', 'quote' => 'MYR', 'rate' => 4.5],
+            ['date' => '2026-11-13', 'base' => 'USD', 'quote' => 'CNY', 'rate' => 7.2],
+            ['date' => '2026-11-13', 'base' => 'USD', 'quote' => 'EUR', 'rate' => 0.92],
         ]),
     ]);
 

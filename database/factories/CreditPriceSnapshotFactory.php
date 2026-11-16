@@ -26,6 +26,12 @@ class CreditPriceSnapshotFactory extends Factory
                 'standard' => ['cspo' => 1.0, 'cspko' => 1.0, 'cspke' => 1.0],
                 'is' => ['cspo' => 1.0, 'cspko' => 1.0, 'cspke' => 1.0],
             ],
+            'exchange_rates' => [
+                'IDR' => ['rate' => 16000, 'date' => now('UTC')->toDateString()],
+                'MYR' => ['rate' => 4.5, 'date' => now('UTC')->toDateString()],
+                'CNY' => ['rate' => 7.2, 'date' => now('UTC')->toDateString()],
+                'EUR' => ['rate' => 0.92, 'date' => now('UTC')->toDateString()],
+            ],
             'retrieved_at' => now('UTC'),
         ];
     }
