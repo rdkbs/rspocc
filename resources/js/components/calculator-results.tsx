@@ -340,9 +340,8 @@ export default function CalculatorResults({
                         sx={{
                             display: 'inline-flex',
                             alignItems: 'center',
-                            minHeight: 44,
                             color: 'primary.main',
-                            verticalAlign: 'middle',
+                            verticalAlign: 'baseline',
                         }}
                     >
                         <Link
