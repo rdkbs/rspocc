@@ -52,3 +52,4 @@ yarn-error.log
 *.pem
 /storage/logs
 scotty
+.env.sentry-build-plugin
