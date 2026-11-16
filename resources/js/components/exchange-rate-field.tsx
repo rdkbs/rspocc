@@ -72,7 +72,7 @@ export default function ExchangeRateField({
         : null;
     const formattedReferenceRate = reference
         ? `${new Intl.NumberFormat(id ? 'id-ID' : 'en-US', {
-              maximumFractionDigits: 4,
+              maximumFractionDigits: reference.rate > 999999 ? 0 : 4,
           }).format(reference.rate)} ${currency}`
         : null;
     return (

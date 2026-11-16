@@ -77,9 +77,9 @@ final class CalculatorPreview
     public function formatNumber(float $value, string $language): string
     {
         $decimal = $language === 'id' ? ',' : '.';
-        $formatted = number_format($value, 2, $decimal, $language === 'id' ? '.' : ',');
+        $formatted = number_format($value, $value > 999999 ? 0 : 2, $decimal, $language === 'id' ? '.' : ',');
 
-        return rtrim(rtrim($formatted, '0'), $decimal);
+        return $value > 999999 ? $formatted : rtrim(rtrim($formatted, '0'), $decimal);
     }
 
     /** @return array{title: string, description: string}|null */

@@ -18,3 +18,7 @@ paths:
 ## Choose the test runner by language
 
 Use Pest for PHP tests and Bun's built-in test runner for JavaScript tests. Run JavaScript tests through the project's test scripts.
+
+## Displayed number precision
+
+For displayed numbers in calculator results, price references, and social previews, omit zero fractional digits. Values greater than 999999 must display as rounded whole numbers in every currency; values at or below 999999 may retain nonzero decimals within the display's existing precision. Preserve editable input precision and underlying calculation values.

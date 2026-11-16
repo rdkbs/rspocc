@@ -46,6 +46,7 @@ export function formatCurrency(
         style: 'currency',
         currency,
         currencyDisplay: 'code',
-        maximumFractionDigits: currency === 'IDR' ? 0 : 2,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: value > 999999 ? 0 : 2,
     }).format(value);
 }

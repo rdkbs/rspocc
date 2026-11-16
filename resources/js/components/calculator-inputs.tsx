@@ -69,10 +69,11 @@ export default function CalculatorInputs({
               },
           ] as const)
         : [];
-    const priceFormat = new Intl.NumberFormat(
-        inputs.language === 'id' ? 'id-ID' : 'en-US',
-        { minimumFractionDigits: 2, maximumFractionDigits: 2 },
-    );
+    const formatPrice = (value: number) =>
+        new Intl.NumberFormat(inputs.language === 'id' ? 'id-ID' : 'en-US', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: value > 999999 ? 0 : 2,
+        }).format(value);
     const priceReferenceDate = new Intl.DateTimeFormat(
         inputs.language === 'id' ? 'id-ID' : 'en-US',
         { dateStyle: 'medium', timeZone: 'UTC' },
@@ -410,7 +411,7 @@ export default function CalculatorInputs({
                                                                             lineHeight: 1.3,
                                                                         }}
                                                                     >
-                                                                        {priceFormat.format(
+                                                                        {formatPrice(
                                                                             preset
                                                                                 .prices[
                                                                                 credit

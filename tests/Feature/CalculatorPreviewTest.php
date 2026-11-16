@@ -131,4 +131,8 @@ it('omits zero decimals but preserves fractional preview amounts', function (flo
     [43.5, 'en', '43.5'],
     [0.0, 'id', '0'],
     [1000.001, 'en', '1,000'],
+    [1000000.5, 'en', '1,000,001'],
+    [1000000.0, 'id', '1.000.000'],
+    [999999.0, 'en', '999,999'],
+    [999999.5, 'id', '1.000.000'],
 ]);
