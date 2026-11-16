@@ -27,8 +27,8 @@ export const calculatorCopy = {
         error: 'Values must be zero or more. The exchange rate must be above zero. Total extraction rates cannot exceed 100%.',
     },
     id: {
-        inputs: 'Volume & harga kredit',
-        results: 'Estimasi premi Anda',
+        inputs: 'Volume dan harga kredit',
+        results: 'Perkiraan pendapatan Anda',
         volume: 'Volume TBS',
         unit: 'Satuan volume',
         oer: 'CSPO · Oil Extraction Rate (OER)',
@@ -42,12 +42,12 @@ export const calculatorCopy = {
         outputs: 'Perkiraan volume produk',
         share: 'Bagikan hasil',
         disclaimerBeforeEmphasis:
-            'Kalkulator ini dikembangkan oleh Koperasi Perkebunan Belayan Sejahtera, anggota RSPO. Kalkulator ini bukan kalkulator resmi RSPO, dan keanggotaan tersebut tidak berarti RSPO mendukungnya. Hasilnya hanya ',
+            'Kalkulator ini dikembangkan oleh Koperasi Perkebunan Belayan Sejahtera, anggota RSPO. Kalkulator ini bukan kalkulator resmi RSPO, dan status keanggotaan ini tidak berarti kalkulator mendapat dukungan resmi dari RSPO. Hasilnya hanya ',
         disclaimerEmphasis: 'perkiraan',
         disclaimerAfterEmphasis:
             ', bukan penawaran atau kontrak yang mengikat.',
         termsLink: 'Baca ketentuan lengkap',
-        copied: 'Tautan disalin.',
+        copied: 'Tautan berhasil disalin.',
         shareFailed:
             'Fitur berbagi tidak tersedia. Salin URL dari bilah alamat browser.',
         invalid:
@@ -93,11 +93,11 @@ export const homePageCopy = {
             ['Masukkan volume TBS', 'Masukkan volume dalam kilogram atau ton.'],
             [
                 'Atur harga kredit',
-                'Masukkan perkiraan harga dalam USD untuk setiap kredit yang akan dijual.',
+                'Masukkan perkiraan harga jual setiap jenis kredit dalam USD.',
             ],
             [
-                'Periksa hasil perkiraan',
-                'Periksa pendapatan dan tambahan per kg. Jika perlu, sesuaikan rendemen atau kurs di pengaturan.',
+                'Lihat hasil perhitungan',
+                'Lihat perkiraan pendapatan dan nilai tambah per kg TBS. Jika perlu, ubah rendemen atau kurs di pengaturan.',
             ],
         ],
         faqTitle: 'Pertanyaan umum',
@@ -108,11 +108,11 @@ export const homePageCopy = {
             ],
             [
                 'Apakah harganya terbaru?',
-                'Kartu harga menampilkan referensi PRISMA pada tanggal yang tercantum, bukan harga pasar langsung. Periksa tanggal pada kartu dan masukkan perkiraan harga jual Anda.',
+                'Harga pada kartu mengacu pada data PRISMA sesuai tanggal yang tertera. Harga ini tidak diperbarui secara langsung. Periksa tanggalnya, lalu sesuaikan dengan perkiraan harga jual Anda.',
             ],
             [
                 'Apakah kursnya terbaru?',
-                'Frankfurter menyediakan kurs referensi, bukan kurs transaksi langsung. Kurs digunakan kembali hingga satu jam. Jika layanan tidak tersedia, kalkulator memakai hasil terakhir yang berhasil diperoleh. Periksa tanggal kurs di pengaturan. Tautan yang dibagikan mempertahankan kurs tersimpan, dan Anda dapat memasukkan kurs sendiri.',
+                'Kurs acuan berasal dari Frankfurter dan disimpan hingga satu jam sebelum diambil kembali. Jika layanan tidak tersedia, kalkulator memakai data terakhir yang berhasil diambil. Lihat tanggal kurs di pengaturan. Hasil yang dibuka dari tautan tetap memakai kurs saat dibagikan. Anda juga dapat mengisi kurs sendiri.',
             ],
         ],
         faqLink: 'FAQ',
