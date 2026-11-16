@@ -144,7 +144,7 @@ const englishPages: Record<ContentSlug, ContentPage> = {
             ],
             [
                 'The RSPO Credit Calculator',
-                'This tool helps cooperative managers, farmers, and buyers estimate RSPO credit revenue from FFB volume. Confirm production data, certification eligibility, and buyer terms before making a decision. It is not affiliated with or endorsed by RSPO.',
+                'This tool helps cooperative managers, farmers, and buyers estimate RSPO credit revenue from FFB volume. It is developed by Koperasi Perkebunan Belayan Sejahtera, an RSPO member. It is not an official RSPO calculator, and membership does not mean RSPO has endorsed it. Confirm production data, certification eligibility, and buyer terms before making a decision.',
             ],
         ],
     },
@@ -154,6 +154,10 @@ const englishPages: Record<ContentSlug, ContentPage> = {
             [
                 'Estimates only',
                 'Results are estimates for information and discussion. They are not contracts, quotations, purchase offers, guarantees of income, investment advice, or certification decisions.',
+            ],
+            [
+                'RSPO relationship',
+                'This calculator is developed by Koperasi Perkebunan Belayan Sejahtera, an RSPO member. It is not an official RSPO calculator, and membership does not mean RSPO has endorsed it.',
             ],
             [
                 'Calculator input requirements',
@@ -273,7 +277,7 @@ const indonesianPages: Record<ContentSlug, ContentPage> = {
             ],
             [
                 'Kalkulator Kredit RSPO',
-                'Alat ini membantu pengurus koperasi, petani, dan pembeli memperkirakan pendapatan kredit RSPO dari volume TBS. Pastikan data produksi, kelayakan sertifikasi, dan ketentuan pembeli sebelum mengambil keputusan. Alat ini tidak berafiliasi dengan atau didukung oleh RSPO.',
+                'Alat ini membantu pengurus koperasi, petani, dan pembeli memperkirakan pendapatan kredit RSPO dari volume TBS. Alat ini dikembangkan oleh Koperasi Perkebunan Belayan Sejahtera, anggota RSPO. Alat ini bukan kalkulator resmi RSPO, dan keanggotaan tersebut tidak berarti RSPO mendukungnya. Pastikan data produksi, kelayakan sertifikasi, dan ketentuan pembeli sebelum mengambil keputusan.',
             ],
         ],
     },
@@ -283,6 +287,10 @@ const indonesianPages: Record<ContentSlug, ContentPage> = {
             [
                 'Hanya perkiraan',
                 'Hasil kalkulator adalah perkiraan untuk informasi dan diskusi. Hasil bukan kontrak, penawaran harga, tawaran pembelian, jaminan pendapatan, saran investasi, atau keputusan sertifikasi.',
+            ],
+            [
+                'Hubungan dengan RSPO',
+                'Kalkulator ini dikembangkan oleh Koperasi Perkebunan Belayan Sejahtera, anggota RSPO. Kalkulator ini bukan kalkulator resmi RSPO, dan keanggotaan tersebut tidak berarti RSPO mendukungnya.',
             ],
             [
                 'Tanggung jawab input kalkulator',

@@ -15,7 +15,7 @@ export const calculatorCopy = {
         outputs: 'Estimated product volumes',
         share: 'Share the result',
         disclaimerBeforeEmphasis:
-            'Results from the RSPO Credit Calculator are ',
+            'This calculator is developed by Koperasi Perkebunan Belayan Sejahtera, an RSPO member. It is not an official RSPO calculator, and membership does not mean RSPO has endorsed it. Results are ',
         disclaimerEmphasis: 'estimates',
         disclaimerAfterEmphasis: ', not binding offers or contracts.',
         termsLink: 'Read the full terms',
@@ -42,7 +42,7 @@ export const calculatorCopy = {
         outputs: 'Perkiraan volume produk',
         share: 'Bagikan hasil',
         disclaimerBeforeEmphasis:
-            'Hasil perhitungan Kalkulator Kredit RSPO hanya ',
+            'Kalkulator ini dikembangkan oleh Koperasi Perkebunan Belayan Sejahtera, anggota RSPO. Kalkulator ini bukan kalkulator resmi RSPO, dan keanggotaan tersebut tidak berarti RSPO mendukungnya. Hasilnya hanya ',
         disclaimerEmphasis: 'perkiraan',
         disclaimerAfterEmphasis:
             ', bukan penawaran atau kontrak yang mengikat.',
