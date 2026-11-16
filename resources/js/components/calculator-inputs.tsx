@@ -1,3 +1,4 @@
+import { usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Box from '@mui/material/Box';
@@ -10,7 +11,7 @@ import Stack from '@mui/material/Stack';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import Typography from '@mui/material/Typography';
-import { defaultPriceReference } from '@/calculator-assumptions';
+import type { PriceReference } from '@/calculator-assumptions';
 import type { CalculatorCopy } from '@/calculator-copy';
 import ExchangeRateField from '@/components/exchange-rate-field';
 import NumberField from '@/components/number-field';
@@ -48,21 +49,26 @@ export default function CalculatorInputs({
         ker: 'CSPKO',
         yield: 'CSPKE',
     } as const;
-    const pricePresets = [
-        {
-            key: 'is',
-            label:
-                inputs.language === 'id'
-                    ? 'Petani swadaya (IS)'
-                    : 'Independent Smallholder (IS)',
-            prices: defaultPriceReference.prices.is,
-        },
-        {
-            key: 'standard',
-            label: inputs.language === 'id' ? 'Standar' : 'Standard',
-            prices: defaultPriceReference.prices.standard,
-        },
-    ] as const;
+    const { priceReference } = usePage<{
+        priceReference: PriceReference | null;
+    }>().props;
+    const pricePresets = priceReference
+        ? ([
+              {
+                  key: 'is',
+                  label:
+                      inputs.language === 'id'
+                          ? 'Petani swadaya (IS)'
+                          : 'Independent Smallholder (IS)',
+                  prices: priceReference.prices.is,
+              },
+              {
+                  key: 'standard',
+                  label: inputs.language === 'id' ? 'Standar' : 'Standard',
+                  prices: priceReference.prices.standard,
+              },
+          ] as const)
+        : [];
     const priceFormat = new Intl.NumberFormat(
         inputs.language === 'id' ? 'id-ID' : 'en-US',
         { minimumFractionDigits: 2, maximumFractionDigits: 2 },
@@ -70,7 +76,7 @@ export default function CalculatorInputs({
     const priceReferenceDate = new Intl.DateTimeFormat(
         inputs.language === 'id' ? 'id-ID' : 'en-US',
         { dateStyle: 'medium', timeZone: 'UTC' },
-    ).format(new Date(`${defaultPriceReference.checkedOn}T00:00:00Z`));
+    ).format(new Date(priceReference?.checkedOn ?? 0));
     const brandedNumberFieldSx = {
         '& .MuiInputLabel-root': { color: 'primary.dark' },
         '& .MuiOutlinedInput-notchedOutline': {
@@ -259,160 +265,183 @@ export default function CalculatorInputs({
                                 />
                             ))}
                         </Stack>
-                        <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            sx={{ mt: 3 }}
-                        >
-                            {inputs.language === 'id'
-                                ? 'Klik salah satu kartu di bawah untuk mengisi harga.'
-                                : 'You can fill these prices from either reference below.'}
-                        </Typography>
-                        <Box
-                            role="group"
-                            aria-label={
-                                inputs.language === 'id'
-                                    ? 'Referensi harga PRISMA'
-                                    : 'PRISMA price references'
-                            }
-                            sx={{
-                                display: 'grid',
-                                gridTemplateColumns: 'minmax(0, 1fr)',
-                                gap: 1,
-                                mt: 1.5,
-                                '@container calculator-inputs (inline-size > 30rem)':
-                                    {
-                                        gridTemplateColumns:
-                                            'repeat(2, minmax(0, 1fr))',
-                                    },
-                            }}
-                        >
-                            {pricePresets.map((preset) => {
-                                const selected = credits.every(
-                                    (credit) =>
-                                        inputs.prices[credit] ===
-                                        preset.prices[credit],
-                                );
+                        {priceReference && (
+                            <>
+                                <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                    sx={{ mt: 3 }}
+                                >
+                                    {inputs.language === 'id'
+                                        ? 'Klik kartu untuk memakai harga transaksi terakhir di PRISMA.'
+                                        : 'Select a card to use PRISMA’s last-traded prices.'}
+                                </Typography>
+                                <Box
+                                    role="group"
+                                    aria-label={
+                                        inputs.language === 'id'
+                                            ? 'Referensi harga PRISMA'
+                                            : 'PRISMA price references'
+                                    }
+                                    sx={{
+                                        display: 'grid',
+                                        gridTemplateColumns: 'minmax(0, 1fr)',
+                                        gap: 1,
+                                        mt: 1.5,
+                                        '@container calculator-inputs (inline-size > 30rem)':
+                                            {
+                                                gridTemplateColumns:
+                                                    'repeat(2, minmax(0, 1fr))',
+                                            },
+                                    }}
+                                >
+                                    {pricePresets.map((preset) => {
+                                        const selected = credits.every(
+                                            (credit) =>
+                                                inputs.prices[credit] ===
+                                                preset.prices[credit],
+                                        );
 
-                                return (
-                                    <Button
-                                        key={preset.key}
-                                        type="button"
-                                        disableRipple
-                                        aria-pressed={selected}
-                                        onClick={() =>
-                                            setInputs((previous) => ({
-                                                ...previous,
-                                                prices: preset.prices,
-                                            }))
-                                        }
-                                        sx={{
-                                            width: '100%',
-                                            minHeight: 48,
-                                            justifyContent: 'flex-start',
-                                            alignItems: 'flex-start',
-                                            border: 1,
-                                            borderColor: selected
-                                                ? 'primary.dark'
-                                                : 'divider',
-                                            borderRadius: 1,
-                                            px: 1.25,
-                                            py: 1,
-                                            textAlign: 'left',
-                                            color: selected
-                                                ? 'text.primary'
-                                                : 'text.secondary',
-                                            bgcolor: selected
-                                                ? 'action.selected'
-                                                : 'transparent',
-                                            containerType: 'inline-size',
-                                            '&:hover': {
-                                                borderColor: 'primary.dark',
-                                                bgcolor: 'action.hover',
-                                            },
-                                            '&:focus-visible': {
-                                                outline: '2px solid',
-                                                outlineColor: 'primary.dark',
-                                                outlineOffset: 2,
-                                            },
-                                        }}
-                                    >
-                                        <Stack sx={{ gap: 1, width: '100%' }}>
-                                            <Typography
-                                                component="span"
-                                                variant="body2"
+                                        return (
+                                            <Button
+                                                key={preset.key}
+                                                type="button"
+                                                disableRipple
+                                                aria-pressed={selected}
+                                                onClick={() =>
+                                                    setInputs((previous) => ({
+                                                        ...previous,
+                                                        prices: preset.prices,
+                                                    }))
+                                                }
                                                 sx={{
-                                                    fontWeight: 500,
-                                                    lineHeight: 1.3,
-                                                    ...(selected && {
-                                                        color: 'primary.dark',
-                                                    }),
-                                                }}
-                                            >
-                                                {preset.label} · USD
-                                            </Typography>
-                                            <Box
-                                                sx={{
-                                                    display: 'grid',
-                                                    gridTemplateColumns:
-                                                        'repeat(3, minmax(0, 1fr))',
-                                                    gap: 1,
                                                     width: '100%',
+                                                    minHeight: 48,
+                                                    justifyContent:
+                                                        'flex-start',
+                                                    alignItems: 'flex-start',
+                                                    border: 1,
+                                                    borderColor: selected
+                                                        ? 'primary.dark'
+                                                        : 'divider',
+                                                    borderRadius: 1,
+                                                    px: 1.25,
+                                                    py: 1,
+                                                    textAlign: 'left',
+                                                    color: selected
+                                                        ? 'text.primary'
+                                                        : 'text.secondary',
+                                                    bgcolor: selected
+                                                        ? 'action.selected'
+                                                        : 'transparent',
+                                                    containerType:
+                                                        'inline-size',
+                                                    '&:hover': {
+                                                        borderColor:
+                                                            'primary.dark',
+                                                        bgcolor: 'action.hover',
+                                                    },
+                                                    '&:focus-visible': {
+                                                        outline: '2px solid',
+                                                        outlineColor:
+                                                            'primary.dark',
+                                                        outlineOffset: 2,
+                                                    },
                                                 }}
                                             >
-                                                {credits.map((credit) => (
-                                                    <Box
-                                                        key={credit}
-                                                        sx={{ minWidth: 0 }}
-                                                    >
-                                                        <Typography
-                                                            component="span"
-                                                            variant="body2"
-                                                            color="text.secondary"
-                                                            sx={{
-                                                                fontSize:
-                                                                    'clamp(0.75rem, calc(0.45rem + 2.7cqi), 0.875rem)',
-                                                                lineHeight: 1.2,
-                                                            }}
-                                                        >
-                                                            {credit.toUpperCase()}
-                                                        </Typography>
-                                                        <Typography
-                                                            component="span"
-                                                            sx={{
-                                                                display:
-                                                                    'block',
+                                                <Stack
+                                                    sx={{
+                                                        gap: 1,
+                                                        width: '100%',
+                                                    }}
+                                                >
+                                                    <Typography
+                                                        component="span"
+                                                        variant="body2"
+                                                        sx={{
+                                                            fontWeight: 500,
+                                                            lineHeight: 1.3,
+                                                            ...(selected && {
                                                                 color: 'primary.dark',
-                                                                fontSize:
-                                                                    'clamp(0.875rem, calc(0.5rem + 3.5cqi), 1rem)',
-                                                                fontVariantNumeric:
-                                                                    'tabular-nums',
-                                                                lineHeight: 1.3,
-                                                            }}
-                                                        >
-                                                            {priceFormat.format(
-                                                                preset.prices[
-                                                                    credit
-                                                                ],
-                                                            )}
-                                                        </Typography>
+                                                            }),
+                                                        }}
+                                                    >
+                                                        {preset.label} · USD
+                                                    </Typography>
+                                                    <Box
+                                                        sx={{
+                                                            display: 'grid',
+                                                            gridTemplateColumns:
+                                                                'repeat(3, minmax(0, 1fr))',
+                                                            gap: 1,
+                                                            width: '100%',
+                                                        }}
+                                                    >
+                                                        {credits.map(
+                                                            (credit) => (
+                                                                <Box
+                                                                    key={credit}
+                                                                    sx={{
+                                                                        minWidth: 0,
+                                                                    }}
+                                                                >
+                                                                    <Typography
+                                                                        component="span"
+                                                                        variant="body2"
+                                                                        color="text.secondary"
+                                                                        sx={{
+                                                                            fontSize:
+                                                                                'clamp(0.75rem, calc(0.45rem + 2.7cqi), 0.875rem)',
+                                                                            lineHeight: 1.2,
+                                                                        }}
+                                                                    >
+                                                                        {credit.toUpperCase()}
+                                                                    </Typography>
+                                                                    <Typography
+                                                                        component="span"
+                                                                        sx={{
+                                                                            display:
+                                                                                'block',
+                                                                            color: 'primary.dark',
+                                                                            fontSize:
+                                                                                'clamp(0.875rem, calc(0.5rem + 3.5cqi), 1rem)',
+                                                                            fontVariantNumeric:
+                                                                                'tabular-nums',
+                                                                            lineHeight: 1.3,
+                                                                        }}
+                                                                    >
+                                                                        {priceFormat.format(
+                                                                            preset
+                                                                                .prices[
+                                                                                credit
+                                                                            ],
+                                                                        )}
+                                                                    </Typography>
+                                                                </Box>
+                                                            ),
+                                                        )}
                                                     </Box>
-                                                ))}
-                                            </Box>
-                                            <Typography
-                                                component="span"
-                                                variant="caption"
-                                                color="text.secondary"
-                                                sx={{ lineHeight: 1.2 }}
-                                            >
-                                                {defaultPriceReference.source} ·{' '}
-                                                {priceReferenceDate}
-                                            </Typography>
-                                        </Stack>
-                                    </Button>
-                                );
-                            })}
-                        </Box>
+                                                    <Typography
+                                                        component="span"
+                                                        variant="caption"
+                                                        color="text.secondary"
+                                                        sx={{ lineHeight: 1.2 }}
+                                                    >
+                                                        {priceReference?.source}{' '}
+                                                        ·{' '}
+                                                        {inputs.language ===
+                                                        'id'
+                                                            ? 'Diambil'
+                                                            : 'Retrieved'}{' '}
+                                                        {priceReferenceDate}
+                                                    </Typography>
+                                                </Stack>
+                                            </Button>
+                                        );
+                                    })}
+                                </Box>
+                            </>
+                        )}
                     </Box>
                     <Box
                         component="details"

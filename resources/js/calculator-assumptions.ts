@@ -19,15 +19,15 @@ export const defaultExtractionRates = {
         100,
 } as const;
 
-export const defaultPriceReference = {
-    source: 'PRISMA',
-    url: 'https://platform.prismabyrspo.org/credit-market-trends',
-    checkedOn: '2026-11-15',
-    period: '2026 YTD',
-    prices: {
-        is: { cspo: 3.67, cspko: 88.71, cspke: 0.1 },
-        standard: { cspo: 0.12, cspko: 18.05, cspke: 0.25 },
-    },
+export type PriceReference = {
+    source: string;
+    checkedOn: string;
+    periodStart: string;
+    periodEnd: string;
+    prices: Record<
+        'is' | 'standard',
+        Record<'cspo' | 'cspko' | 'cspke', number>
+    >;
 };
 export const defaultExchangeRate = 16000;
 

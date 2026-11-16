@@ -26,7 +26,7 @@ const englishPages: Record<ContentSlug, ContentPage> = {
         sections: [
             [
                 'Are the prices up to date?',
-                'The price cards show a dated PRISMA reference, not live market prices. Check the date on each card and enter your estimated selling price.',
+                'The cards use PRISMA’s last-traded price for each credit type. If no trade is reported during the current period, we keep the last available price. We check PRISMA daily; the date on each card is the retrieval date, not the trade date. Actual selling prices may differ.',
             ],
             [
                 'Are the exchange rates up to date?',
@@ -109,7 +109,7 @@ const indonesianPages: Record<ContentSlug, ContentPage> = {
         sections: [
             [
                 'Apakah harganya terbaru?',
-                'Harga pada kartu mengacu pada data PRISMA sesuai tanggal yang tertera. Harga ini tidak diperbarui secara langsung. Periksa tanggalnya, lalu sesuaikan dengan perkiraan harga jual Anda.',
+                'Kartu menampilkan harga transaksi terakhir di PRISMA untuk setiap jenis kredit. Jika tidak ada transaksi pada periode berjalan, harga terakhir yang tersedia tetap digunakan. Kami memeriksa data setiap hari; tanggal pada kartu adalah tanggal pengambilan data, bukan tanggal transaksi. Harga jual sebenarnya bisa berbeda.',
             ],
             [
                 'Apakah kursnya terbaru?',
