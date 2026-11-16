@@ -18,7 +18,7 @@ type ContentSlug = 'faq' | 'terms' | 'privacy';
 const conversionExplanation = (language: Language) =>
     `RSPO’s default kernel extraction rate (KER) is ${formatPercent(extractionAssumptions.kernel, language)} of FFB. Kernels yield ${formatPercent(extractionAssumptions.kernelOilRecovery, language)} oil and ${formatPercent(extractionAssumptions.kernelExpellerRecovery, language)} expeller, giving FFB conversion rates of ${formatPercent(defaultExtractionRates.cspko, language)} for CSPKO and ${formatPercent(defaultExtractionRates.cspke, language)} for CSPKE.`;
 const indonesianConversionExplanation = () =>
-    `Default Kernel Extraction Rate (KER) RSPO adalah ${formatPercent(extractionAssumptions.kernel, 'id')} dari TBS. Inti sawit menghasilkan ${formatPercent(extractionAssumptions.kernelOilRecovery, 'id')} minyak dan ${formatPercent(extractionAssumptions.kernelExpellerRecovery, 'id')} bungkil, sehingga rendemen konversi TBS menjadi CSPKO ${formatPercent(defaultExtractionRates.cspko, 'id')} dan CSPKE ${formatPercent(defaultExtractionRates.cspke, 'id')}.`;
+    `RSPO menetapkan rendemen inti sawit (Kernel Extraction Rate atau KER) sebesar ${formatPercent(extractionAssumptions.kernel, 'id')} dari TBS. Inti sawit menghasilkan ${formatPercent(extractionAssumptions.kernelOilRecovery, 'id')} minyak dan ${formatPercent(extractionAssumptions.kernelExpellerRecovery, 'id')} bungkil. Dengan demikian, rendemen dari TBS adalah CSPKO ${formatPercent(defaultExtractionRates.cspko, 'id')} dan CSPKE ${formatPercent(defaultExtractionRates.cspke, 'id')}.`;
 
 const englishPages: Record<ContentSlug, ContentPage> = {
     faq: {
@@ -109,28 +109,28 @@ const indonesianPages: Record<ContentSlug, ContentPage> = {
         sections: [
             [
                 'Apakah harganya terbaru?',
-                'Kartu harga menampilkan referensi PRISMA pada tanggal yang tercantum, bukan harga pasar langsung. Periksa tanggal pada kartu dan masukkan perkiraan harga jual Anda.',
+                'Harga pada kartu mengacu pada data PRISMA sesuai tanggal yang tertera. Harga ini tidak diperbarui secara langsung. Periksa tanggalnya, lalu sesuaikan dengan perkiraan harga jual Anda.',
             ],
             [
                 'Apakah kursnya terbaru?',
-                'Frankfurter menyediakan kurs referensi, bukan kurs transaksi langsung. Kurs digunakan kembali hingga satu jam. Jika layanan tidak tersedia, kalkulator memakai hasil terakhir yang berhasil diperoleh. Periksa tanggal kurs di pengaturan. Tautan yang dibagikan mempertahankan kurs tersimpan, dan Anda dapat memasukkan kurs sendiri.',
+                'Kurs acuan berasal dari Frankfurter dan disimpan hingga satu jam sebelum diambil kembali. Jika layanan tidak tersedia, kalkulator memakai data terakhir yang berhasil diambil. Lihat tanggal kurs di pengaturan. Hasil yang dibuka dari tautan tetap memakai kurs saat dibagikan. Anda juga dapat mengisi kurs sendiri.',
             ],
             [
                 'Apa itu Kalkulator Kredit RSPO?',
-                'Alat ini membantu pengurus koperasi, petani, dan pembeli memperkirakan pendapatan kredit RSPO serta nilai tambah per kilogram TBS. Alat ini dikembangkan oleh Tim Riset dan Pengembangan Koperasi Perkebunan Belayan Sejahtera, anggota RSPO. Alat ini bukan kalkulator resmi RSPO, dan keanggotaan tersebut tidak berarti RSPO mendukungnya. Hasil hanya perkiraan; pastikan volume tersertifikasi, kelayakan kredit, dan ketentuan pembeli sebelum menjual.',
+                'Alat ini membantu pengurus koperasi, petani, dan pembeli memperkirakan pendapatan kredit RSPO serta nilai tambah per kilogram TBS. Alat ini dikembangkan oleh Tim Riset dan Pengembangan Koperasi Perkebunan Belayan Sejahtera, anggota RSPO. Alat ini bukan kalkulator resmi RSPO, dan status keanggotaan ini tidak berarti kalkulator mendapat dukungan resmi dari RSPO. Hasilnya berupa perkiraan. Sebelum menjual kredit, periksa volume yang tersertifikasi, kredit yang boleh dijual, dan ketentuan pembeli.',
             ],
             [
                 'Mengapa alat ini dibuat?',
-                'Kami membuat alat ini untuk membantu petani, koperasi, dan pembeli memahami potensi pendapatan kredit RSPO. Perhitungannya lebih mudah digunakan dan dibagikan agar lebih banyak orang dapat menilai nilai tambah dari produksi bersertifikat.',
+                'Kami membuat alat ini untuk membantu petani, koperasi, dan pembeli memahami potensi pendapatan kredit RSPO. Melalui kalkulator ini, kami ingin memudahkan perhitungan dan berbagi hasil agar manfaat produksi bersertifikat lebih mudah dipahami.',
             ],
             [
-                'Mengapa RSPO memakai rendemen konversi CSPKO dan CSPKE ini?',
+                'Bagaimana rendemen CSPKO dan CSPKE dihitung?',
                 indonesianConversionExplanation(),
                 true,
             ],
             [
                 'Bagaimana cara menyimpan hasil kalkulator?',
-                'Gunakan Bagikan untuk membuka pilihan berbagi di perangkat atau menyalin tautan jika fitur berbagi tidak tersedia. Tautan memuat data perhitungan. Kompresi bukan enkripsi.',
+                'Tekan Bagikan untuk membagikan hasil melalui aplikasi di perangkat Anda. Jika perangkat tidak mendukung fitur ini, kalkulator akan menyalin tautan hasilnya. Data perhitungan ada di dalam tautan dan dapat dibaca oleh siapa pun yang memilikinya.',
             ],
         ],
     },
@@ -139,23 +139,23 @@ const indonesianPages: Record<ContentSlug, ContentPage> = {
         sections: [
             [
                 'Hanya perkiraan',
-                'Hasil kalkulator adalah perkiraan untuk informasi dan diskusi. Hasil bukan kontrak, penawaran harga, tawaran pembelian, jaminan pendapatan, saran investasi, atau keputusan sertifikasi.',
+                'Hasil perhitungan hanya berupa perkiraan sebagai bahan informasi dan diskusi. Hasil ini bukan kontrak, penawaran jual atau beli, jaminan pendapatan, saran investasi, maupun keputusan sertifikasi.',
             ],
             [
                 'Hubungan dengan RSPO',
-                'Kalkulator ini dikembangkan oleh Koperasi Perkebunan Belayan Sejahtera, anggota RSPO. Kalkulator ini bukan kalkulator resmi RSPO, dan keanggotaan tersebut tidak berarti RSPO mendukungnya.',
+                'Kalkulator ini dikembangkan oleh Koperasi Perkebunan Belayan Sejahtera, anggota RSPO. Kalkulator ini bukan kalkulator resmi RSPO, dan status keanggotaan ini tidak berarti kalkulator mendapat dukungan resmi dari RSPO.',
             ],
             [
-                'Tanggung jawab input kalkulator',
-                'Anda bertanggung jawab atas input yang dimasukkan. Periksa rendemen, kurs, harga, volume kredit yang memenuhi syarat, persyaratan sertifikasi, serta kewajiban hukum dan komersial yang berlaku.',
+                'Tanggung jawab atas data',
+                'Anda bertanggung jawab atas data yang Anda masukkan. Periksa rendemen, kurs, harga, volume kredit yang boleh dijual, persyaratan sertifikasi, serta kewajiban hukum dan komersial yang berlaku.',
             ],
             [
                 'Biaya dan batasan',
-                'Kalkulator hanya menghitung kredit yang memiliki harga dan tidak memasukkan biaya, pajak, biaya sertifikasi, atau potongan lainnya. Pendapatan sebenarnya dapat berbeda. Sejauh diizinkan oleh hukum, kami tidak menjamin akurasi, ketersediaan, atau kesesuaian hasil.',
+                'Kalkulator menghitung pendapatan dari jenis kredit yang harganya Anda isi. Perhitungan belum memperhitungkan biaya, pajak, biaya sertifikasi, dan potongan lainnya. Pendapatan sebenarnya dapat berbeda. Sejauh diizinkan oleh hukum, kami tidak menjamin akurasi, ketersediaan, atau kesesuaian hasil.',
             ],
             [
                 'Tautan kalkulator yang dibagikan',
-                'Siapa pun yang memiliki tautan perhitungan dapat membaca inputnya. Jangan masukkan informasi pribadi atau rahasia ke tautan yang dibagikan. Perubahan kalkulator di masa mendatang dapat memengaruhi penafsiran hasil.',
+                'Siapa pun yang memiliki tautan perhitungan dapat membaca inputnya. Jangan masukkan informasi pribadi atau rahasia ke tautan yang dibagikan. Perubahan pada kalkulator dapat memengaruhi cara membaca hasil perhitungan lama.',
             ],
         ],
     },
@@ -164,19 +164,19 @@ const indonesianPages: Record<ContentSlug, ContentPage> = {
         sections: [
             [
                 'Data perhitungan Anda',
-                'Browser mengingat input kalkulator di riwayatnya agar dapat dipulihkan saat Anda kembali ke halaman. Mengubah input tidak mengirimkannya ke server kami. Memilih Bagikan membuat tautan berisi input yang dikompresi. Siapa pun yang memiliki tautan tersebut dapat membacanya. Kompresi bukan enkripsi.',
+                'Browser menyimpan data perhitungan dalam riwayat halaman agar isian tetap ada saat Anda kembali. Data yang Anda ubah tidak dikirim ke server kami. Saat Anda menekan Bagikan, kalkulator membuat tautan yang memuat data tersebut dalam bentuk terkompresi. Siapa pun yang memiliki tautan tersebut dapat membacanya. Kompresi bukan enkripsi.',
             ],
             [
                 'Riwayat dan log',
-                'Membuka tautan yang dibagikan mengirim URL beserta perhitungan yang dikompresi ke server kami. URL tersebut dapat muncul di riwayat browser, pesan yang dibagikan, dan log hosting. Sistem hosting juga dapat mencatat alamat IP dan waktu permintaan. Input perhitungan tidak disimpan di basis data aplikasi atau local storage browser.',
+                'Membuka tautan yang dibagikan mengirim URL beserta perhitungan yang dikompresi ke server kami. URL tersebut dapat muncul di riwayat browser, pesan yang dibagikan, dan log hosting. Sistem hosting juga dapat mencatat alamat IP dan waktu permintaan. Data perhitungan tidak disimpan di basis data aplikasi maupun local storage browser.',
             ],
             [
-                'Permintaan kurs valuta',
-                'Server kami meminta kurs publik USD/IDR dan USD/MYR dari Frankfurter. Server tidak mengirim volume panen, harga kredit, atau input perhitungan lainnya ke Frankfurter. Kami menyimpan kurs publik dan waktu pembaruannya.',
+                'Pengambilan data kurs',
+                'Server kami mengambil kurs USD/IDR dan USD/MYR dari Frankfurter. Volume TBS, harga kredit, dan data perhitungan Anda tidak dikirim ke Frankfurter. Kami hanya menyimpan data kurs dan waktu pembaruannya.',
             ],
             [
                 'Membagikan tautan kalkulator',
-                'Bagikan membuka pilihan berbagi di perangkat. Jika fitur berbagi tidak tersedia, tombol akan menyalin URL ke clipboard. Aplikasi yang Anda pilih memiliki ketentuan privasinya sendiri.',
+                'Tombol Bagikan menampilkan pilihan aplikasi untuk membagikan hasil. Jika fitur ini tidak tersedia, kalkulator menyalin tautan agar dapat Anda tempel dan kirim sendiri. Aplikasi yang Anda pilih memiliki ketentuan privasinya sendiri.',
             ],
             [
                 'Preferensi kalkulator dan cookie',

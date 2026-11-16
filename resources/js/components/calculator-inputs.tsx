@@ -53,7 +53,7 @@ export default function CalculatorInputs({
             key: 'is',
             label:
                 inputs.language === 'id'
-                    ? 'Petani Swadaya (IS)'
+                    ? 'Petani swadaya (IS)'
                     : 'Independent Smallholder (IS)',
             prices: defaultPriceReference.prices.is,
         },
@@ -265,7 +265,7 @@ export default function CalculatorInputs({
                             sx={{ mt: 3 }}
                         >
                             {inputs.language === 'id'
-                                ? 'Harga dapat diisi dari salah satu referensi di bawah.'
+                                ? 'Klik salah satu kartu di bawah untuk mengisi harga.'
                                 : 'You can fill these prices from either reference below.'}
                         </Typography>
                         <Box
@@ -456,7 +456,7 @@ export default function CalculatorInputs({
                                 sx={{ fontWeight: 500 }}
                             >
                                 {inputs.language === 'id'
-                                    ? 'Pengaturan Mata Uang dan Rendemen'
+                                    ? 'Pengaturan mata uang dan rendemen'
                                     : 'Currency and Extraction Rate Settings'}
                             </Typography>
                             <ExpandMoreIcon
