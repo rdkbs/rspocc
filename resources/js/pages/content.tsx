@@ -13,9 +13,9 @@ import {
 } from '@/calculator-assumptions';
 import { localizedContent } from '@/routes';
 
-type Section = [heading: string, text: string];
+type Section = [heading: string, text: string, showRateSource?: boolean];
 type ContentPage = { title: string; sections: Section[] };
-type ContentSlug = 'guide' | 'faq' | 'about' | 'terms' | 'privacy';
+type ContentSlug = 'faq' | 'terms' | 'privacy';
 const priceList = (language: Language) => {
     const locale = language === 'id' ? 'id-ID' : 'en-US';
     const price = new Intl.NumberFormat(locale, {
@@ -47,8 +47,6 @@ const checkedOn = (language: Language) =>
         dateStyle: 'long',
         timeZone: 'UTC',
     }).format(new Date(`${defaultPriceReference.checkedOn}T00:00:00Z`));
-const conversionRates = (language: Language) =>
-    `CSPO ${formatPercent(defaultExtractionRates.cspo, language)}, CSPKO ${formatPercent(defaultExtractionRates.cspko, language)}, and CSPKE ${formatPercent(defaultExtractionRates.cspke, language)}`;
 const conversionExplanation = (language: Language) =>
     `RSPO’s default kernel extraction rate (KER) is ${formatPercent(extractionAssumptions.kernel, language)} of FFB. Kernels yield ${formatPercent(extractionAssumptions.kernelOilRecovery, language)} oil and ${formatPercent(extractionAssumptions.kernelExpellerRecovery, language)} expeller, giving FFB conversion rates of ${formatPercent(defaultExtractionRates.cspko, language)} for CSPKO and ${formatPercent(defaultExtractionRates.cspke, language)} for CSPKE.`;
 const indonesianConversionExplanation = () =>
@@ -59,42 +57,13 @@ const priceSnapshot = {
 };
 
 const englishPages: Record<ContentSlug, ContentPage> = {
-    guide: {
-        title: 'RSPO Credit Calculator guide',
-        sections: [
-            [
-                '1. Enter FFB volume',
-                'Enter FFB weight in kg or tonnes. One tonne equals 1,000\u00a0kg.',
-            ],
-            [
-                '2. Enter credit prices',
-                'Enter your USD price for each credit you sell. Leave other credit prices blank. You can select a dated PRISMA price card above the fields, then edit the prices.',
-            ],
-            [
-                '3. Read the estimate',
-                'The results show credit revenue in USD and your chosen currency, plus the extra revenue per kg of FFB. Product volumes remain visible when a price is blank. Costs and taxes are not included.',
-            ],
-            [
-                '4. Change rates if needed',
-                `Open Rates below the prices to change extraction rates or currency. The default FFB conversion rates are ${conversionRates('en')}. Use different rates only when supported by evidence and verified by your auditor.`,
-            ],
-            [
-                'Calculator exchange-rate source',
-                'New calculations use Frankfurter reference rates. You can enter a different rate. If the service is unavailable, the calculator uses the last successful rate. Shared links keep their saved rate. The source and rate date appear below the field.',
-            ],
-            [
-                'Save or share a calculator result',
-                'Use Share to open your device’s sharing options, such as WhatsApp. If your browser does not support sharing, the button copies the link. Anyone with the link can read your inputs, prices, currency, and language.',
-            ],
-            [
-                'Before selling RSPO credits',
-                'Check your certified volumes, eligible credits, prices, fees, and buyer terms. This calculator does not certify products or confirm how many credits you may sell.',
-            ],
-        ],
-    },
     faq: {
-        title: 'RSPO Credit Calculator FAQ',
+        title: 'Frequently Asked Questions',
         sections: [
+            [
+                'What is the RSPO Credit Calculator?',
+                'This tool helps cooperative managers, farmers, and buyers estimate RSPO credit revenue and added value per kilogram of fresh fruit bunches. It is developed by the Research and Development Team at Koperasi Perkebunan Belayan Sejahtera, an RSPO member. It is not an official RSPO calculator, and membership does not imply RSPO endorsement. Results are estimates; check certified volumes, credit eligibility, and buyer terms before selling.',
+            ],
             ['Are these credit prices current?', priceSnapshot.en],
             [
                 'What exchange-rate source does the calculator use?',
@@ -107,6 +76,7 @@ const englishPages: Record<ContentSlug, ContentPage> = {
             [
                 'Why are RSPO’s CSPKO and CSPKE extraction rates different?',
                 conversionExplanation('en'),
+                true,
             ],
             [
                 'Does this calculator certify products?',
@@ -122,25 +92,8 @@ const englishPages: Record<ContentSlug, ContentPage> = {
             ],
         ],
     },
-    about: {
-        title: 'About Koperasi Belayan Sejahtera',
-        sections: [
-            [
-                'Vision for the Belayan community',
-                'To lead a sustainable community-based economy that improves well-being across the Belayan River region and strengthens the welfare of cooperative members.',
-            ],
-            [
-                'Belayan Sejahtera’s mission',
-                'Belayan Sejahtera works to improve member welfare and infrastructure, apply community-based economic principles, support sustainable certification and environmentally responsible farming, adopt technology, develop its businesses, and build closer partnerships with government and others.',
-            ],
-            [
-                'The RSPO Credit Calculator',
-                'This tool helps cooperative managers, farmers, and buyers estimate RSPO credit revenue from FFB volume. It is developed by Koperasi Perkebunan Belayan Sejahtera, an RSPO member. It is not an official RSPO calculator, and membership does not mean RSPO has endorsed it. Confirm production data, certification eligibility, and buyer terms before making a decision.',
-            ],
-        ],
-    },
     terms: {
-        title: 'Terms for the RSPO Credit Calculator',
+        title: 'Terms of Service',
         sections: [
             [
                 'Estimates only',
@@ -165,7 +118,7 @@ const englishPages: Record<ContentSlug, ContentPage> = {
         ],
     },
     privacy: {
-        title: 'Privacy for the RSPO Credit Calculator',
+        title: 'Privacy Policy',
         sections: [
             [
                 'Your calculation data',
@@ -192,42 +145,13 @@ const englishPages: Record<ContentSlug, ContentPage> = {
 };
 
 const indonesianPages: Record<ContentSlug, ContentPage> = {
-    guide: {
-        title: 'Panduan Kalkulator Kredit RSPO',
-        sections: [
-            [
-                '1. Masukkan volume TBS',
-                'Masukkan berat TBS dalam kg atau ton. Satu ton sama dengan 1.000\u00a0kg.',
-            ],
-            [
-                '2. Masukkan harga kredit',
-                'Masukkan harga USD untuk setiap kredit yang dijual. Kosongkan harga kredit lainnya. Pilih kartu referensi harga PRISMA bertanggal di atas kolom, lalu sesuaikan harganya.',
-            ],
-            [
-                '3. Baca perkiraan',
-                'Hasil menampilkan pendapatan kredit dalam USD dan mata uang pilihan, serta tambahan pendapatan per kg TBS. Volume produk tetap terlihat jika harga dikosongkan. Biaya dan pajak belum termasuk.',
-            ],
-            [
-                '4. Ubah rendemen bila perlu',
-                `Buka Kurs & rendemen di bawah harga untuk mengubah rendemen atau mata uang. Rendemen konversi default TBS adalah CSPO ${formatPercent(defaultExtractionRates.cspo, 'id')}, CSPKO ${formatPercent(defaultExtractionRates.cspko, 'id')}, dan CSPKE ${formatPercent(defaultExtractionRates.cspke, 'id')}. Gunakan nilai lain jika ada bukti dan telah diverifikasi auditor.`,
-            ],
-            [
-                'Sumber kurs kalkulator',
-                'Perhitungan baru menggunakan kurs referensi Frankfurter. Anda dapat memasukkan kurs lain. Jika layanan tidak tersedia, kalkulator memakai kurs terakhir yang berhasil diambil. Tautan yang dibagikan menyimpan kurs saat tautan dibuat. Sumber dan tanggal kurs tampil di bawah kolom.',
-            ],
-            [
-                'Simpan atau bagikan hasil kalkulator',
-                'Gunakan Bagikan untuk membuka pilihan berbagi di perangkat, seperti WhatsApp. Jika browser tidak mendukung fitur berbagi, tombol akan menyalin tautan. Siapa pun yang memiliki tautan dapat membaca input, harga, mata uang, dan bahasa Anda.',
-            ],
-            [
-                'Sebelum menjual kredit RSPO',
-                'Periksa volume bersertifikat, kredit yang memenuhi syarat, harga, biaya, dan ketentuan pembeli. Kalkulator ini tidak mensertifikasi produk atau memastikan jumlah kredit yang dapat dijual.',
-            ],
-        ],
-    },
     faq: {
-        title: 'FAQ Kalkulator Kredit RSPO',
+        title: 'Pertanyaan Umum',
         sections: [
+            [
+                'Apa itu Kalkulator Kredit RSPO?',
+                'Alat ini membantu pengurus koperasi, petani, dan pembeli memperkirakan pendapatan kredit RSPO serta nilai tambah per kilogram TBS. Alat ini dikembangkan oleh Tim Riset dan Pengembangan Koperasi Perkebunan Belayan Sejahtera, anggota RSPO. Alat ini bukan kalkulator resmi RSPO, dan keanggotaan tersebut tidak berarti RSPO mendukungnya. Hasil hanya perkiraan; pastikan volume tersertifikasi, kelayakan kredit, dan ketentuan pembeli sebelum menjual.',
+            ],
             ['Apakah harga kredit ini terkini?', priceSnapshot.id],
             [
                 'Sumber kurs apa yang digunakan kalkulator?',
@@ -240,6 +164,7 @@ const indonesianPages: Record<ContentSlug, ContentPage> = {
             [
                 'Mengapa RSPO memakai rendemen konversi CSPKO dan CSPKE ini?',
                 indonesianConversionExplanation(),
+                true,
             ],
             [
                 'Apakah kalkulator ini mensertifikasi produk?',
@@ -255,25 +180,8 @@ const indonesianPages: Record<ContentSlug, ContentPage> = {
             ],
         ],
     },
-    about: {
-        title: 'Tentang Koperasi Belayan Sejahtera',
-        sections: [
-            [
-                'Visi untuk masyarakat Belayan',
-                'Menjadi penggerak ekonomi kerakyatan yang berkelanjutan untuk meningkatkan kesejahteraan masyarakat di dataran Sungai Belayan dan anggota koperasi.',
-            ],
-            [
-                'Misi Koperasi Belayan Sejahtera',
-                'Belayan Sejahtera berupaya meningkatkan kesejahteraan anggota dan infrastruktur, menerapkan prinsip ekonomi kerakyatan, mendukung sertifikasi berkelanjutan dan pertanian ramah lingkungan, mengadopsi teknologi dan digitalisasi, mengembangkan unit usaha, serta mempererat kerja sama dengan pemerintah dan pihak lain.',
-            ],
-            [
-                'Kalkulator Kredit RSPO',
-                'Alat ini membantu pengurus koperasi, petani, dan pembeli memperkirakan pendapatan kredit RSPO dari volume TBS. Alat ini dikembangkan oleh Koperasi Perkebunan Belayan Sejahtera, anggota RSPO. Alat ini bukan kalkulator resmi RSPO, dan keanggotaan tersebut tidak berarti RSPO mendukungnya. Pastikan data produksi, kelayakan sertifikasi, dan ketentuan pembeli sebelum mengambil keputusan.',
-            ],
-        ],
-    },
     terms: {
-        title: 'Ketentuan Kalkulator Kredit RSPO',
+        title: 'Ketentuan Penggunaan',
         sections: [
             [
                 'Hanya perkiraan',
@@ -298,7 +206,7 @@ const indonesianPages: Record<ContentSlug, ContentPage> = {
         ],
     },
     privacy: {
-        title: 'Privasi Kalkulator Kredit RSPO',
+        title: 'Kebijakan Privasi',
         sections: [
             [
                 'Data perhitungan Anda',
@@ -334,10 +242,7 @@ export default function Content({
     const page: ContentPage =
         slug === 'glossary'
             ? {
-                  title:
-                      lang === 'id'
-                          ? 'Glosarium Kredit RSPO'
-                          : 'RSPO credit glossary',
+                  title: lang === 'id' ? 'Glosarium' : 'Glossary',
                   sections: glossaryEntries
                       .slice()
                       .sort((a, b) =>
@@ -349,6 +254,12 @@ export default function Content({
                           entry.heading?.[lang] ??
                               (lang === 'id' ? entry.termId : entry.term),
                           entry[lang],
+                          [
+                              'OER',
+                              'KER',
+                              'CSPKO extraction rate',
+                              'CSPKE extraction rate',
+                          ].includes(entry.term),
                       ]),
               }
             : (lang === 'id' ? indonesianPages : englishPages)[slug];
@@ -536,66 +447,69 @@ export default function Content({
                                 minWidth: 0,
                             }}
                         >
-                            {page.sections.map(([heading, text], index) => (
-                                <Box
-                                    component="section"
-                                    id={`section-${index + 1}`}
-                                    key={heading}
-                                    sx={{
-                                        pb: 4,
-                                        mb: 4,
-                                        borderBottom: 1,
-                                        borderColor: 'divider',
-                                        scrollMarginTop: 32,
-                                    }}
-                                >
-                                    <Typography
-                                        component="h2"
-                                        variant="h5"
+                            {page.sections.map(
+                                ([heading, text, showRateSource], index) => (
+                                    <Box
+                                        component="section"
+                                        id={`section-${index + 1}`}
+                                        key={heading}
                                         sx={{
-                                            mb: 2,
-                                            lineHeight: 1.35,
-                                            color: 'primary.main',
+                                            pb: 4,
+                                            mb: 4,
+                                            borderBottom: 1,
+                                            borderColor: 'divider',
+                                            scrollMarginTop: 32,
                                         }}
                                     >
-                                        {heading}
-                                    </Typography>
-                                    <Typography
-                                        color="text.secondary"
-                                        sx={{
-                                            lineHeight: 1.85,
-                                            fontSize: { xs: 17, md: 18 },
-                                        }}
-                                    >
-                                        <GlossaryText language={lang}>
-                                            {text}
-                                        </GlossaryText>
-                                    </Typography>
-                                </Box>
-                            ))}
+                                        <Typography
+                                            component="h2"
+                                            variant="h5"
+                                            sx={{
+                                                mb: 2,
+                                                lineHeight: 1.35,
+                                                color: 'primary.main',
+                                            }}
+                                        >
+                                            {heading}
+                                        </Typography>
+                                        <Typography
+                                            color="text.secondary"
+                                            sx={{
+                                                lineHeight: 1.85,
+                                                fontSize: { xs: 17, md: 18 },
+                                            }}
+                                        >
+                                            <GlossaryText language={lang}>
+                                                {text}
+                                            </GlossaryText>
+                                        </Typography>
+                                        {showRateSource && (
+                                            <Typography
+                                                sx={{ fontSize: 14, mt: 3 }}
+                                            >
+                                                <Box
+                                                    component="a"
+                                                    href="https://rspo.org/wp-content/uploads/RSPO-Group-Certification_2022_ENG.pdf"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    sx={{
+                                                        display: 'inline-flex',
+                                                        alignItems: 'center',
+                                                        minHeight: 44,
+                                                        color: 'primary.main',
+                                                    }}
+                                                >
+                                                    {lang === 'id'
+                                                        ? 'Sumber: standar sertifikasi RSPO'
+                                                        : 'Source: RSPO certification standard'}
+                                                </Box>
+                                            </Typography>
+                                        )}
+                                    </Box>
+                                ),
+                            )}
                         </Box>
                     </Box>
-                    {(slug === 'guide' ||
-                        slug === 'faq' ||
-                        slug === 'glossary') && (
-                        <Typography sx={{ fontSize: 14, mt: 3 }}>
-                            <Box
-                                component="a"
-                                href="https://rspo.org/wp-content/uploads/RSPO-Group-Certification_2022_ENG.pdf"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                sx={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    minHeight: 44,
-                                }}
-                            >
-                                {lang === 'id'
-                                    ? 'Rendemen RSPO (bagian 1.3)'
-                                    : 'RSPO extraction rates (section 1.3)'}
-                            </Box>
-                        </Typography>
-                    )}
                 </Box>
             </Box>
         </Layout>

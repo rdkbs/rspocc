@@ -30,10 +30,8 @@ export const NavigationLink = forwardRef<
     return <Link {...props} href={href} ref={ref} />;
 });
 const navigation = [
-    { title: 'Guide', titleId: 'Panduan', page: 'guide' },
-    { title: 'Read FAQ', titleId: 'Baca FAQ', page: 'faq' },
+    { title: 'FAQ', titleId: 'FAQ', page: 'faq' },
     { title: 'Glossary', titleId: 'Istilah', page: 'glossary' },
-    { title: 'About', titleId: 'Tentang', page: 'about' },
     { title: 'Terms', titleId: 'Ketentuan', page: 'terms' },
     { title: 'Privacy', titleId: 'Privasi', page: 'privacy' },
 ];
@@ -402,22 +400,6 @@ export default function Layout({
                                 nativeButton={false}
                                 href={localizedContent.url({
                                     language,
-                                    page: 'guide',
-                                })}
-                                color="primary"
-                                aria-current={
-                                    path === `/${language}/guide`
-                                        ? 'page'
-                                        : undefined
-                                }
-                            >
-                                {language === 'id' ? 'Panduan' : 'Guide'}
-                            </Button>
-                            <Button
-                                component={NavigationLink}
-                                nativeButton={false}
-                                href={localizedContent.url({
-                                    language,
                                     page: 'faq',
                                 })}
                                 color="primary"
@@ -427,7 +409,7 @@ export default function Layout({
                                         : undefined
                                 }
                             >
-                                {language === 'id' ? 'Baca FAQ' : 'Read FAQ'}
+                                FAQ
                             </Button>
                         </Stack>
                         <TextField

@@ -7,7 +7,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 it('redirects unprefixed content to Indonesian pages', function (string $slug): void {
     $this->get("/$slug")->assertRedirect("/id/$slug");
     $this->get("/en/$slug")->assertOk()->assertInertia(fn (Assert $page): Assert => $page->component('content')->where('slug', $slug));
-})->with(['guide', 'faq', 'about', 'terms', 'privacy', 'glossary']);
+})->with(['faq', 'terms', 'privacy', 'glossary']);
 
 it('passes calculator payloads without storing a scenario', function (): void {
     $this->get('/en?payload=scenario')->assertOk()->assertInertia(fn (Assert $page): Assert => $page->component('index')->where('payload', 'scenario'));
@@ -23,8 +23,8 @@ it('renders the selected language in Inertia props and the document', function (
 })->with([
     'Indonesian calculator default' => ['/id', 'id'],
     'English calculator link' => ['/en', 'en'],
-    'Indonesian guide' => ['/id/guide', 'id'],
-    'English guide' => ['/en/guide', 'en'],
+    'Indonesian FAQ' => ['/id/faq', 'id'],
+    'English FAQ' => ['/en/faq', 'en'],
 ]);
 
 it('rejects excessively long and multi segment payloads', function (): void {

@@ -70,7 +70,6 @@ export const homePageCopy = {
                 'Check revenue and added value per kg. If needed, adjust extraction rates or the exchange rate in Settings.',
             ],
         ],
-        guideLink: 'Guide',
         faqTitle: 'Common questions',
         faqItems: [
             [
@@ -86,7 +85,7 @@ export const homePageCopy = {
                 'No. Confirm eligible volumes and sale terms with your certification body and buyer.',
             ],
         ],
-        faqLink: 'Read FAQ',
+        faqLink: 'FAQ',
     },
     id: {
         guideTitle: 'Cara menggunakan kalkulator',
@@ -101,7 +100,6 @@ export const homePageCopy = {
                 'Periksa pendapatan dan tambahan per kg. Jika perlu, sesuaikan rendemen atau kurs di pengaturan.',
             ],
         ],
-        guideLink: 'Panduan',
         faqTitle: 'Pertanyaan umum',
         faqItems: [
             [
@@ -117,7 +115,7 @@ export const homePageCopy = {
                 'Tidak. Pastikan volume yang memenuhi syarat dan ketentuan penjualan kepada lembaga sertifikasi dan pembeli.',
             ],
         ],
-        faqLink: 'Baca FAQ',
+        faqLink: 'FAQ',
     },
 } as const;
 

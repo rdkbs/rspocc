@@ -9,9 +9,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
 
-Route::permanentRedirect('/guide', '/id/guide')->name('guide');
 Route::permanentRedirect('/faq', '/id/faq')->name('faq');
-Route::permanentRedirect('/about', '/id/about')->name('about');
 Route::permanentRedirect('/terms', '/id/terms')->name('terms');
 Route::permanentRedirect('/privacy', '/id/privacy')->name('privacy');
 
@@ -23,7 +21,7 @@ Route::get('/{language}/{page}', fn (string $language, string $page): Response =
     'slug' => $page,
 ]))
     ->whereIn('language', ['id', 'en'])
-    ->whereIn('page', ['guide', 'faq', 'about', 'terms', 'privacy', 'glossary'])
+    ->whereIn('page', ['faq', 'terms', 'privacy', 'glossary'])
     ->name('localizedContent');
 
 Route::get('/', fn (Request $request) => to_route('calculator.language', [

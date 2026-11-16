@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import ArrowForward from '@mui/icons-material/ArrowForward';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
@@ -184,24 +184,6 @@ export default function Index({
                                     </Box>
                                 ),
                             )}
-                        </Box>
-                        <Box sx={{ mt: 2, color: 'primary.main' }}>
-                            <Link
-                                href={localizedContent.url({
-                                    language: inputs.language,
-                                    page: 'guide',
-                                })}
-                                style={{
-                                    color: 'inherit',
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    minHeight: 44,
-                                    fontWeight: 600,
-                                    textUnderlineOffset: 4,
-                                }}
-                            >
-                                {homeText.guideLink}
-                            </Link>
                         </Box>
                     </Box>
                 </Box>
