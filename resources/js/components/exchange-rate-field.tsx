@@ -150,11 +150,10 @@ export default function ExchangeRateField({
                                     onChange(reference.rate);
                                 }}
                                 sx={{
-                                    minHeight: 44,
                                     minWidth: 0,
                                     px: 0.5,
                                     textTransform: 'none',
-                                    verticalAlign: 'middle',
+                                    verticalAlign: 'baseline',
                                 }}
                             >
                                 {id

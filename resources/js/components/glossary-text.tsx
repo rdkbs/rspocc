@@ -23,13 +23,12 @@ function Term({ text, definition }: { text: string; definition: string }) {
                     onClick={() => setOpen(true)}
                     sx={{
                         display: 'inline-flex',
-                        verticalAlign: 'middle',
+                        verticalAlign: 'baseline',
                         font: 'inherit',
                         color: 'inherit',
                         bgcolor: 'transparent',
                         border: 0,
                         p: 0,
-                        minHeight: 44,
                         textDecoration: 'underline dotted',
                         textUnderlineOffset: '4px',
                         cursor: 'help',
