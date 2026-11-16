@@ -5,7 +5,7 @@ import react, { reactCompilerPreset } from '@vitejs/plugin-react';
 import laravel from 'laravel-vite-plugin';
 import { bunny } from 'laravel-vite-plugin/fonts';
 import { defineConfig, lazyPlugins } from 'vite-plus';
-
+import { sentryVitePlugin } from '@sentry/bundler-plugins/vite';
 export default defineConfig({
     plugins: lazyPlugins(() => [
         laravel({
@@ -24,6 +24,14 @@ export default defineConfig({
         }),
         wayfinder({
             formVariants: true,
+        }),
+        sentryVitePlugin({
+            org: 'sensasi-apps',
+            project: 'rspocc',
+            authToken: process.env.SENTRY_AUTH_TOKEN,
+            sourcemaps: {
+                deleteSourcemapsAfterUpload: true,
+            },
         }),
     ]),
     server: {
