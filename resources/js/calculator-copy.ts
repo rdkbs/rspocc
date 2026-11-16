@@ -73,16 +73,16 @@ export const homePageCopy = {
         faqTitle: 'Common questions',
         faqItems: [
             [
-                'Are the preset prices fixed selling prices?',
-                'No. They show dated PRISMA references. Enter your estimated selling price.',
+                'What is the RSPO Credit Calculator?',
+                'This tool estimates RSPO credit revenue and added value per kilogram of fresh fruit bunches from your volume and credit prices. It is developed by Koperasi Perkebunan Belayan Sejahtera and is not an official RSPO calculator.',
             ],
             [
-                'Are calculator fees or taxes included?',
-                'No. Estimates exclude fees, taxes, certification costs, and other deductions.',
+                'Are the prices up to date?',
+                'The price cards show a dated PRISMA reference, not live market prices. Check the date on each card and enter your estimated selling price.',
             ],
             [
-                'Does this estimate confirm which credits I can sell?',
-                'No. Confirm eligible volumes and sale terms with your certification body and buyer.',
+                'Are the exchange rates up to date?',
+                'Frankfurter provides reference rates, not live trading rates. We reuse them for up to one hour and use the last successful result if the service is unavailable. Check the rate date in Settings. Shared links keep their saved rate, and you can enter a rate manually.',
             ],
         ],
         faqLink: 'FAQ',
@@ -103,16 +103,16 @@ export const homePageCopy = {
         faqTitle: 'Pertanyaan umum',
         faqItems: [
             [
-                'Apakah harga preset merupakan harga jual tetap?',
-                'Tidak. Nilainya adalah referensi PRISMA bertanggal. Masukkan perkiraan harga jual Anda.',
+                'Apa itu Kalkulator Kredit RSPO?',
+                'Alat ini memperkirakan pendapatan kredit RSPO dan nilai tambah per kilogram TBS berdasarkan volume dan harga kredit yang Anda masukkan. Alat ini dikembangkan oleh Koperasi Perkebunan Belayan Sejahtera dan bukan kalkulator resmi RSPO.',
             ],
             [
-                'Apakah biaya atau pajak sudah termasuk?',
-                'Tidak. Perkiraan belum memperhitungkan biaya, pajak, sertifikasi, dan potongan lain.',
+                'Apakah harganya terbaru?',
+                'Kartu harga menampilkan referensi PRISMA pada tanggal yang tercantum, bukan harga pasar langsung. Periksa tanggal pada kartu dan masukkan perkiraan harga jual Anda.',
             ],
             [
-                'Apakah perkiraan ini memastikan kredit yang dapat dijual?',
-                'Tidak. Pastikan volume yang memenuhi syarat dan ketentuan penjualan kepada lembaga sertifikasi dan pembeli.',
+                'Apakah kursnya terbaru?',
+                'Frankfurter menyediakan kurs referensi, bukan kurs transaksi langsung. Kurs digunakan kembali hingga satu jam. Jika layanan tidak tersedia, kalkulator memakai hasil terakhir yang berhasil diperoleh. Periksa tanggal kurs di pengaturan. Tautan yang dibagikan mempertahankan kurs tersimpan, dan Anda dapat memasukkan kurs sendiri.',
             ],
         ],
         faqLink: 'FAQ',
