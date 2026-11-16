@@ -10,7 +10,7 @@ RSPO Credit Calculator helps Indonesian cooperatives, farmers, and buyers estima
 - Use a compact hierarchy with generous spacing, readable sans-serif typography, and restrained decoration.
 - Keep the calculator focused on its four main inputs. Put exchange currency and extraction-rate settings behind the existing settings tabs.
 - Keep layouts responsive: stack on narrow screens and place inputs beside results when there is room.
-- Keep English and Indonesian UI copy internally consistent with the selected language.
+- Keep English and Indonesian UI copy internally consistent with the selected language. The header brand follows the selected language; the footer always keeps the product name `RSPO Credit Calculator` in English.
 
 ## Color
 
