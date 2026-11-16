@@ -364,7 +364,9 @@ export default function Layout({
                                         mt: 0.5,
                                     }}
                                 >
-                                    RSPO Credit Calculator
+                                    {language === 'id'
+                                        ? 'Kalkulator Kredit RSPO'
+                                        : 'RSPO Credit Calculator'}
                                 </Typography>
                             </Box>
                         </Link>
@@ -568,14 +570,27 @@ export default function Layout({
                         color="text.secondary"
                         variant="caption"
                         sx={{
-                            pt: 2,
+                            pt: 3,
                             borderTop: 1,
                             borderColor: 'divider',
                         }}
                     >
+                        RSPO Credit Calculator{' '}
                         {language === 'id'
-                            ? `© ${new Date().getFullYear()} Koperasi Perkebunan Belayan Sejahtera · Kalkulator Kredit RSPO oleh Tim Litbang.`
-                            : `© ${new Date().getFullYear()} Koperasi Perkebunan Belayan Sejahtera · RSPO Credit Calculator by the R&D Team.`}
+                            ? 'oleh Tim R&D.'
+                            : 'by the R&D Team.'}
+                    </Typography>
+                    <Typography
+                        component="p"
+                        color="text.secondary"
+                        variant="caption"
+                        sx={{
+                            // pt: 2,
+                            // borderTop: 1,
+                            // borderColor: 'divider',
+                        }}
+                    >
+                        {`© ${new Date().getFullYear()} Koperasi Perkebunan Belayan Sejahtera. ${language === 'id' ? 'Berlisensi MIT.' : 'MIT Licensed.'}`}
                     </Typography>
                 </Container>
             </Box>
