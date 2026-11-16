@@ -63,8 +63,8 @@ it('renders calculation previews without JavaScript while keeping canonical URLs
         ->assertSeeHtml('<meta property="og:url" content="'.config()->string('app.url').'/'.$language.'?'.http_build_query(['payload' => $payload], '', '&', PHP_QUERY_RFC3986).'">')
         ->assertSeeHtml('<meta name="twitter:title" content="'.$title.'">');
 })->with([
-    ['en', 'Estimated RSPO credit revenue: IDR 43,723,600', 'FFB volume: 1,000,000.00 kg. Premium revenue: USD 2,732.73. Added value: IDR 43.72/kg FFB. Results are estimates.'],
-    ['id', 'Perkiraan pendapatan kredit RSPO: IDR 43.723.600', 'Volume TBS: 1.000.000,00 kg. Pendapatan premi: USD 2.732,73. Nilai tambah: IDR 43,72/kg TBS. Hasil ini hanya perkiraan.'],
+    ['en', 'Estimated RSPO credit revenue: IDR 43,723,600', 'FFB volume: 1,000 t. Premium revenue: IDR 43,723,600. Added value: IDR 43.72/kg FFB. Results are estimates.'],
+    ['id', 'Perkiraan pendapatan kredit RSPO: IDR 43.723.600', 'Volume TBS: 1.000 t. Pendapatan premi: IDR 43.723.600. Nilai tambah: IDR 43,72/kg TBS. Hasil ini hanya perkiraan.'],
 ]);
 
 it('falls back to generic metadata for invalid or oversized decoded scenarios', function (string $payload): void {
@@ -120,3 +120,15 @@ it('includes a generic preview image on the index without a payload', function (
         ->assertSeeHtml('<meta property="og:image" content="'.config()->string('app.url').'/'.$language.'/share-preview.png">')
         ->assertSeeHtml('<meta name="twitter:card" content="summary_large_image">');
 })->with(['id', 'en']);
+
+it('omits zero decimals but preserves fractional preview amounts', function (float $value, string $language, string $expected): void {
+    expect(resolve(CalculatorPreview::class)->formatNumber($value, $language))->toBe($expected);
+})->with([
+    [1000.0, 'en', '1,000'],
+    [1000.0, 'id', '1.000'],
+    [43.7236, 'en', '43.72'],
+    [43.7236, 'id', '43,72'],
+    [43.5, 'en', '43.5'],
+    [0.0, 'id', '0'],
+    [1000.001, 'en', '1,000'],
+]);

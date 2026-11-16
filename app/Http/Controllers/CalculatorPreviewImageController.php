@@ -41,14 +41,13 @@ final class CalculatorPreviewImageController extends Controller
             $this->text($image, $language === 'id' ? 'Hasil berupa perkiraan.' : 'Results are estimates.', 720, 540, 18, $white, 420);
         } else {
             $this->text($image, $language === 'id' ? 'Perkiraan pendapatan kredit' : 'Estimated credit revenue', 56, 195, 25, $muted);
-            $format = static fn (float $value, int $decimals): string => number_format($value, $decimals, $language === 'id' ? ',' : '.', $language === 'id' ? '.' : ',');
-            $this->text($image, $result['currency'].' '.$format($result['converted'], $result['currency'] === 'IDR' ? 0 : 2), 56, 295, 64, $ink);
-            $this->text($image, 'USD '.$format($result['usd'], 2), 56, 350, 26, $muted);
+            $format = fn (float $value): string => $preview->formatNumber($value, $language);
+            $this->text($image, $result['currency'].' '.$format($result['converted']), 56, 295, 64, $ink);
             imageline($image, 56, 390, 1144, 390, 0xD9DDD2);
             $this->text($image, $language === 'id' ? 'Nilai tambah per kg TBS' : 'Added value per kg FFB', 56, 440, 22, $muted);
-            $this->text($image, $result['currency'].' '.$format($result['added'], 2), 56, 495, 36, 0x24593E, 608);
+            $this->text($image, $result['currency'].' '.$format($result['added']), 56, 495, 36, 0x24593E, 608);
             $this->text($image, $language === 'id' ? 'Volume TBS' : 'FFB volume', 720, 440, 22, $muted);
-            $this->text($image, $format($result['kg'] / 1000, 2).' t', 720, 495, 32, $ink, 420);
+            $this->text($image, $format($result['kg'] / 1000).' t', 720, 495, 32, $ink, 420);
             $this->text($image, $language === 'id' ? 'Hanya perkiraan. Bukan penawaran jual.' : 'Estimates only. Not a sales offer.', 56, 580, 18, $muted);
         }
         ob_start();

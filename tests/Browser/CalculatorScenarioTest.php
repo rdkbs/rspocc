@@ -155,3 +155,16 @@ it('renders shared image metadata directly in the document head', function (): v
         ->assertScript('document.querySelector(`head > meta[name="twitter:card"][data-inertia]`).content', 'summary_large_image')
         ->assertNoJavaScriptErrors();
 });
+
+it('keeps nonzero decimals in added revenue per kilogram', function (): void {
+    Http::fake(['api.frankfurter.dev/*' => Http::response([])]);
+    $payload = 'N4Igbg9gNgrgtgUxALgIwAZMBoQwHYCWALiiCThAgE4oBM6OA1tXQHS0CsOAngQlABM2Adi4gADlQIBjBAGcUoaXPEQUAZlYA2YTmXjGa5AA5jrYaj0rmKdK1QBfHAgAe0gBYBDPAHMkaLUwGEGkYKioEPGluUgBJABEAJRAcKG8fGE8-UgIhByA';
+
+    visit('/en?'.http_build_query(['payload' => $payload]))
+        ->assertScript('Array.from(document.querySelectorAll("p")).some((node) => node.textContent.replace(/\s/g, "") === "IDR43.72/kg")', true)
+        ->fill('CSPO Price', '0')
+        ->fill('CSPKO Price', '0')
+        ->fill('CSPKE Price', '0')
+        ->assertScript('Array.from(document.querySelectorAll("p")).some((node) => node.textContent.replace(/\s/g, "") === "IDR0/kg")', true)
+        ->assertNoJavaScriptErrors();
+});
