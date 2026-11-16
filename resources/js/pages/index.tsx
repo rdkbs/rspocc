@@ -215,7 +215,11 @@ export default function Index({
                                         <Typography
                                             component="h3"
                                             variant="body2"
-                                            sx={{ mb: 1, fontWeight: 650 }}
+                                            sx={{
+                                                mb: 1,
+                                                fontWeight: 650,
+                                                color: 'primary.main',
+                                            }}
                                         >
                                             {title}
                                         </Typography>
@@ -278,7 +282,11 @@ export default function Index({
                                     <Typography
                                         component="h3"
                                         variant="body2"
-                                        sx={{ mb: 1, fontWeight: 650 }}
+                                        sx={{
+                                            mb: 1,
+                                            fontWeight: 650,
+                                            color: 'primary.main',
+                                        }}
                                     >
                                         {question}
                                     </Typography>

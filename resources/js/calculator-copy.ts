@@ -17,8 +17,7 @@ export const calculatorCopy = {
         disclaimerBeforeEmphasis:
             'Results from the RSPO Credit Calculator are ',
         disclaimerEmphasis: 'estimates',
-        disclaimerAfterEmphasis:
-            ', not binding offers or contracts.',
+        disclaimerAfterEmphasis: ', not binding offers or contracts.',
         termsLink: 'Read the full terms',
         copied: 'Link copied.',
         shareFailed:

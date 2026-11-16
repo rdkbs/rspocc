@@ -471,7 +471,7 @@ export default function Content({
                                             alignItems: 'center',
                                             minHeight: 44,
                                             py: 1,
-                                            color: 'text.primary',
+                                            color: 'primary.main',
                                             textDecoration: 'none',
                                         }}
                                     >
@@ -490,7 +490,7 @@ export default function Content({
                                 position: { md: 'sticky' },
                                 top: 32,
                                 borderLeft: 2,
-                                borderColor: 'primary.main',
+                                borderColor: 'primary.dark',
                                 pl: 3,
                             }}
                         >
@@ -519,7 +519,7 @@ export default function Content({
                                         lineHeight: 1.5,
                                         py: 1,
                                         textDecoration: 'none',
-                                        color: 'text.primary',
+                                        color: 'primary.main',
                                         '&:hover': {
                                             color: 'primary.main',
                                             textDecoration: 'underline',
@@ -552,7 +552,11 @@ export default function Content({
                                     <Typography
                                         component="h2"
                                         variant="h5"
-                                        sx={{ mb: 2, lineHeight: 1.35 }}
+                                        sx={{
+                                            mb: 2,
+                                            lineHeight: 1.35,
+                                            color: 'primary.main',
+                                        }}
                                     >
                                         {heading}
                                     </Typography>
