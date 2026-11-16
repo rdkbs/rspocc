@@ -95,8 +95,8 @@ export default function ExchangeRateField({
                     },
                     input: {
                         readOnly: currency === 'USD',
-                        endAdornment: (
-                            <InputAdornment position="end">
+                        startAdornment: (
+                            <InputAdornment position="start">
                                 <Select
                                     variant="standard"
                                     disableUnderline
@@ -116,9 +116,9 @@ export default function ExchangeRateField({
                                     sx={{
                                         minHeight: 44,
                                         minWidth: 80,
-                                        borderLeft: 1,
+                                        borderRight: 1,
                                         borderColor: 'divider',
-                                        pl: 1,
+                                        pr: 1,
                                     }}
                                 >
                                     {['IDR', 'MYR'].map((code) => (

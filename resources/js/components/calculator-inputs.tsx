@@ -232,8 +232,17 @@ export default function CalculatorInputs({
                                     slotProps={{
                                         inputLabel: { shrink: true },
                                         input: {
-                                            endAdornment: (
-                                                <InputAdornment position="end">
+                                            startAdornment: (
+                                                <InputAdornment
+                                                    position="start"
+                                                    sx={{
+                                                        '& .MuiTypography-root':
+                                                            {
+                                                                fontSize:
+                                                                    '1rem',
+                                                            },
+                                                    }}
+                                                >
                                                     USD
                                                 </InputAdornment>
                                             ),
