@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Models\CreditPriceSnapshot;
+use App\Services\FrankfurterExchangeRateProvider;
+use Carbon\CarbonInterface;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -16,12 +18,34 @@ use UnexpectedValueException;
 #[Signature('credits:refresh-prices')]
 final class RefreshCreditPrices extends Command
 {
-    public function handle(): int
+    public function handle(FrankfurterExchangeRateProvider $exchangeRateProvider): int
     {
         $end = today('UTC');
         $start = $end->copy()->startOfYear();
         $previous = CreditPriceSnapshot::query()->orderByDesc('period_end')->first();
-        $prices = $previous->prices ?? CreditPriceSnapshot::BASELINE_PRICES;
+        $prices = $this->retrieveCreditPrices($start, $end, $previous->prices ?? CreditPriceSnapshot::BASELINE_PRICES);
+
+        $snapshot = CreditPriceSnapshot::query()->firstOrNew(['period_end' => $end->toDateString()]);
+        $snapshot->fill(
+            [
+                'period_start' => $start->toDateString(),
+                'prices' => $prices,
+                'exchange_rates' => $exchangeRateProvider->fetchUsdRates() ?? $snapshot->exchange_rates,
+                'retrieved_at' => now('UTC'),
+            ],
+        )->save();
+
+        $this->info('PRISMA credit prices updated.');
+
+        return self::SUCCESS;
+    }
+
+    /**
+     * @param  array<string, array<string, int|float>>  $prices
+     * @return array<string, array<string, int|float>>
+     */
+    private function retrieveCreditPrices(CarbonInterface $start, CarbonInterface $end, array $prices): array
+    {
         $isFirstRequest = true;
 
         foreach (['standard' => '', 'is' => 'IS_'] as $kind => $prefix) {
@@ -54,17 +78,6 @@ final class RefreshCreditPrices extends Command
             }
         }
 
-        CreditPriceSnapshot::updateOrCreate(
-            ['period_end' => $end->toDateString()],
-            [
-                'period_start' => $start->toDateString(),
-                'prices' => $prices,
-                'retrieved_at' => now('UTC'),
-            ],
-        );
-
-        $this->info('PRISMA credit prices updated.');
-
-        return self::SUCCESS;
+        return $prices;
     }
 }
