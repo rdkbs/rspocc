@@ -18,7 +18,7 @@ return [
     */
 
     'ssr' => [
-        'enabled' => (bool) env('INERTIA_SSR_ENABLED', true),
+        'enabled' => (bool) env('INERTIA_SSR_ENABLED', false),
         'runtime' => env('INERTIA_SSR_RUNTIME', 'bun'),
         'throw_on_error' => (bool) env('INERTIA_SSR_THROW_ON_ERROR', false),
         'url' => 'http://127.0.0.1:13714',

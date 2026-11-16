@@ -3,8 +3,8 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vp build && vp build --ssr",
-        "build:ssr": "bun run build",
+        "build": "vp build",
+        "build:ssr": "vp build --ssr",
         "dev": "vp dev",
         "test:calculator": "bun test tests/calculator.test.mjs"
     },

@@ -58,6 +58,7 @@ export const calculatorCopy = {
 
 export const homePageCopy = {
     en: {
+        title: 'Estimate RSPO credit revenue',
         guideTitle: 'How to use the calculator',
         guideSteps: [
             ['Enter FFB volume', 'Enter the volume in kilograms or tonnes.'],
@@ -88,6 +89,7 @@ export const homePageCopy = {
         faqLink: 'FAQ',
     },
     id: {
+        title: 'Perkirakan pendapatan kredit RSPO',
         guideTitle: 'Cara menggunakan kalkulator',
         guideSteps: [
             ['Masukkan volume TBS', 'Masukkan volume dalam kilogram atau ton.'],

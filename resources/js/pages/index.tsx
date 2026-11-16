@@ -44,7 +44,7 @@ export default function Index({
 
     return (
         <Layout
-            title="RSPO Credit Calculator"
+            title={homeText.title}
             path={`/${inputs.language}`}
             language={inputs.language}
             onLanguageChange={(language) => {
