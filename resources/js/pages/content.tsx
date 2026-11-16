@@ -1,7 +1,7 @@
 import { Head, router } from '@inertiajs/react';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-import Layout, { canonicalPageUrl } from '@/components/layout';
+import Layout, { useCanonicalPageUrl } from '@/components/layout';
 import GlossaryText from '@/components/glossary-text';
 import { glossaryEntries } from '@/glossary';
 import {
@@ -217,7 +217,7 @@ export default function Content({
               }
             : (lang === 'id' ? indonesianPages : englishPages)[slug];
     const path = `/${lang}/${slug}`;
-    const url = canonicalPageUrl(path);
+    const url = useCanonicalPageUrl(path);
     const structured =
         slug === 'faq'
             ? {

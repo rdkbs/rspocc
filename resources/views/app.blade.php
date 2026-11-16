@@ -30,9 +30,10 @@
     ];
     $fallback = $fallbackPages[$language][$slug] ?? $fallbackPages['id']['index'];
     $productName = $language === 'id' ? 'Kalkulator Kredit RSPO' : 'RSPO Credit Calculator';
-    $canonicalUrl = $slug === 'index'
-        ? route('calculator.language', ['language' => $language])
-        : route('localizedContent', ['language' => $language, 'page' => $slug]);
+    $canonicalPath = $slug === 'index'
+        ? route('calculator.language', ['language' => $language], absolute: false)
+        : route('localizedContent', ['language' => $language, 'page' => $slug], absolute: false);
+    $canonicalUrl = rtrim(config('app.url'), '/').$canonicalPath;
 @endphp
 <!DOCTYPE html>
 <html data-type="software" lang="{{ $language }}" @class(['dark' => $colorScheme === 'dark'])>
