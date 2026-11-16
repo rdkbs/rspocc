@@ -30,6 +30,7 @@
     "devDependencies": {
         "@laravel/vite-plugin-wayfinder": "^0.1.11",
         "@rolldown/plugin-babel": "^0.2.4",
+        "@sentry/bundler-plugins": "^11.12.0",
         "@types/node": "^22.20.5",
         "babel-plugin-react-compiler": "^1.0.0",
         "fontaine": "^1.0.3",
