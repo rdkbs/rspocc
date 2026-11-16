@@ -1,4 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
+import DarkMode from '@mui/icons-material/DarkMode';
+import LightMode from '@mui/icons-material/LightMode';
 import {
     forwardRef,
     useEffect,
@@ -506,18 +508,34 @@ export default function Layout({
                                 alignItems: 'center',
                             }}
                         >
-                            <Box
-                                component="img"
-                                src="/logo-white-green.svg"
-                                alt=""
-                                sx={{
-                                    width: 36,
-                                    height: 36,
-                                    objectFit: 'contain',
-                                    borderRadius: '12%',
-                                    mr: 1,
+                            <Link
+                                href={calculatorHomeUrl(language)}
+                                aria-label={
+                                    language === 'id'
+                                        ? 'Kalkulator Kredit RSPO'
+                                        : 'RSPO Credit Calculator'
+                                }
+                                style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    minWidth: 44,
+                                    minHeight: 44,
+                                    marginRight: 8,
                                 }}
-                            />
+                            >
+                                <Box
+                                    component="img"
+                                    src="/logo-white-green.svg"
+                                    alt=""
+                                    sx={{
+                                        width: 36,
+                                        height: 36,
+                                        objectFit: 'contain',
+                                        borderRadius: '12%',
+                                    }}
+                                />
+                            </Link>
                             {navigation.map((item) => (
                                 <Button
                                     key={item.title}
@@ -544,9 +562,16 @@ export default function Layout({
 
                         <Button
                             variant="outlined"
-                            color="inherit"
+                            color="primary"
                             onClick={() => setDark(!dark)}
                             aria-pressed={dark}
+                            startIcon={
+                                dark ? (
+                                    <LightMode aria-hidden="true" />
+                                ) : (
+                                    <DarkMode aria-hidden="true" />
+                                )
+                            }
                             sx={{
                                 fontSize: 14,
                                 alignSelf: { xs: 'flex-end', sm: 'auto' },
@@ -581,7 +606,18 @@ export default function Layout({
                         color="text.secondary"
                         variant="caption"
                     >
-                        {`© ${new Date().getFullYear()} Koperasi Perkebunan Belayan Sejahtera. ${language === 'id' ? 'Berlisensi MIT.' : 'MIT Licensed.'}`}
+                        {`© ${new Date().getFullYear()} `}
+                        <Box
+                            component="a"
+                            href="https://belayansejahtera.org"
+                            sx={{
+                                color: 'primary.main',
+                                textUnderlineOffset: 3,
+                            }}
+                        >
+                            Koperasi Perkebunan Belayan Sejahtera
+                        </Box>
+                        {`. ${language === 'id' ? 'Berlisensi MIT.' : 'MIT Licensed.'}`}
                     </Typography>
                 </Container>
             </Box>
