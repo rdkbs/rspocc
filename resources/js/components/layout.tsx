@@ -20,15 +20,8 @@ import MenuItem from '@mui/material/MenuItem';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import {
-    calculator,
-    guide,
-    faq,
-    about,
-    terms,
-    privacy,
-    glossary,
-} from '@/routes';
+import { localizedContent } from '@/routes';
+import { language as calculatorLanguage } from '@/routes/calculator';
 
 export const NavigationLink = forwardRef<
     HTMLAnchorElement,
@@ -37,34 +30,18 @@ export const NavigationLink = forwardRef<
     return <Link {...props} href={href} ref={ref} />;
 });
 const navigation = [
-    { title: 'Guide', titleId: 'Panduan', path: '/guide', route: guide },
-    { title: 'Read FAQ', titleId: 'Baca FAQ', path: '/faq', route: faq },
-    {
-        title: 'Glossary',
-        titleId: 'Istilah',
-        path: '/glossary',
-        route: glossary,
-    },
-    { title: 'About', titleId: 'Tentang', path: '/about', route: about },
-    {
-        title: 'Terms',
-        titleId: 'Ketentuan',
-        path: '/terms',
-        route: terms,
-    },
-    {
-        title: 'Privacy',
-        titleId: 'Privasi',
-        path: '/privacy',
-        route: privacy,
-    },
+    { title: 'Guide', titleId: 'Panduan', page: 'guide' },
+    { title: 'Read FAQ', titleId: 'Baca FAQ', page: 'faq' },
+    { title: 'Glossary', titleId: 'Istilah', page: 'glossary' },
+    { title: 'About', titleId: 'Tentang', page: 'about' },
+    { title: 'Terms', titleId: 'Ketentuan', page: 'terms' },
+    { title: 'Privacy', titleId: 'Privasi', page: 'privacy' },
 ];
 function calculatorHomeUrl(language: 'id' | 'en'): string {
-    const url = calculator.url(undefined, { query: { lang: language } });
-    return url.startsWith('?') ? `/${url}` : url || '/';
+    return calculatorLanguage.url({ language });
 }
-export function canonicalPageUrl(path: string, language: 'id' | 'en'): string {
-    return `https://rspocc.belayansejahtera.org${path}${language === 'en' ? '?lang=en' : ''}`;
+export function canonicalPageUrl(path: string): string {
+    return `https://rspocc.belayansejahtera.org${path}`;
 }
 export default function Layout({
     children,
@@ -273,7 +250,7 @@ export default function Layout({
             ),
         [dark],
     );
-    const pageUrl = canonicalPageUrl(path, language);
+    const pageUrl = canonicalPageUrl(path);
     return (
         <ThemeProvider theme={theme}>
             <CssBaseline />
@@ -397,7 +374,11 @@ export default function Layout({
                                 nativeButton={false}
                                 href={calculatorHomeUrl(language)}
                                 color="primary"
-                                aria-current={path === '/' ? 'page' : undefined}
+                                aria-current={
+                                    path === '/' || path === `/${language}`
+                                        ? 'page'
+                                        : undefined
+                                }
                             >
                                 {language === 'id'
                                     ? 'Kalkulator'
@@ -406,10 +387,15 @@ export default function Layout({
                             <Button
                                 component={NavigationLink}
                                 nativeButton={false}
-                                href={guide.url({ query: { lang: language } })}
+                                href={localizedContent.url({
+                                    language,
+                                    page: 'guide',
+                                })}
                                 color="primary"
                                 aria-current={
-                                    path === '/guide' ? 'page' : undefined
+                                    path === `/${language}/guide`
+                                        ? 'page'
+                                        : undefined
                                 }
                             >
                                 {language === 'id' ? 'Panduan' : 'Guide'}
@@ -417,10 +403,15 @@ export default function Layout({
                             <Button
                                 component={NavigationLink}
                                 nativeButton={false}
-                                href={faq.url({ query: { lang: language } })}
+                                href={localizedContent.url({
+                                    language,
+                                    page: 'faq',
+                                })}
                                 color="primary"
                                 aria-current={
-                                    path === '/faq' ? 'page' : undefined
+                                    path === `/${language}/faq`
+                                        ? 'page'
+                                        : undefined
                                 }
                             >
                                 {language === 'id' ? 'Baca FAQ' : 'Read FAQ'}
@@ -530,12 +521,15 @@ export default function Layout({
                                     key={item.title}
                                     component={NavigationLink}
                                     nativeButton={false}
-                                    href={item.route.url({
-                                        query: { lang: language },
+                                    href={localizedContent.url({
+                                        language,
+                                        page: item.page,
                                     })}
                                     color="primary"
                                     aria-current={
-                                        path === item.path ? 'page' : undefined
+                                        path === `/${language}/${item.page}`
+                                            ? 'page'
+                                            : undefined
                                     }
                                     sx={{ fontSize: 14 }}
                                 >

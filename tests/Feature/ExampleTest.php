@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-test('returns a successful response', function (): void {
-    $response = $this->get('/');
+test('redirects the homepage to the Indonesian calculator', function (): void {
+    $this->get('/')->assertMovedPermanently()->assertRedirect('/id');
 
-    $response->assertOk();
+    $this->get('/id')->assertOk();
 });

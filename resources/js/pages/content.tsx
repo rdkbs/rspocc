@@ -11,20 +11,11 @@ import {
     formatPercent,
     type Language,
 } from '@/calculator-assumptions';
-import { about, faq, glossary, guide, privacy, terms } from '@/routes';
+import { localizedContent } from '@/routes';
 
 type Section = [heading: string, text: string];
 type ContentPage = { title: string; sections: Section[] };
 type ContentSlug = 'guide' | 'faq' | 'about' | 'terms' | 'privacy';
-const contentRoutes = {
-    guide,
-    faq,
-    about,
-    terms,
-    privacy,
-    glossary,
-} satisfies Record<ContentSlug | 'glossary', { url: typeof guide.url }>;
-
 const priceList = (language: Language) => {
     const locale = language === 'id' ? 'id-ID' : 'en-US';
     const price = new Intl.NumberFormat(locale, {
@@ -178,11 +169,11 @@ const englishPages: Record<ContentSlug, ContentPage> = {
         sections: [
             [
                 'Your calculation data',
-                'Your inputs are stored in the URL, not in an application database or browser local storage. Anyone with the link can read them. Compression is not encryption.',
+                'Your browser remembers calculator inputs in its history so they can be restored when you return to the page. Editing inputs does not send them to our server. Selecting Share creates a link containing compressed inputs. Anyone with that link can read them. Compression is not encryption.',
             ],
             [
                 'History and logs',
-                'Calculation URLs may appear in browser history, shared messages, and hosting logs. Changing an input sends the URL to our server. Hosting systems may log the URL, your IP address, and the request time.',
+                'Opening a shared link sends its URL, including the compressed calculation, to our server. Shared URLs may appear in browser history, shared messages, and hosting logs. Hosting systems may also log your IP address and the request time. Calculation inputs are not saved in an application database or browser local storage.',
             ],
             [
                 'Exchange-rate requests',
@@ -311,11 +302,11 @@ const indonesianPages: Record<ContentSlug, ContentPage> = {
         sections: [
             [
                 'Data perhitungan Anda',
-                'Input disimpan di URL, bukan di basis data aplikasi atau penyimpanan lokal browser. Siapa pun yang memiliki tautan dapat membacanya. Kompresi bukan enkripsi.',
+                'Browser mengingat input kalkulator di riwayatnya agar dapat dipulihkan saat Anda kembali ke halaman. Mengubah input tidak mengirimkannya ke server kami. Memilih Bagikan membuat tautan berisi input yang dikompresi. Siapa pun yang memiliki tautan tersebut dapat membacanya. Kompresi bukan enkripsi.',
             ],
             [
                 'Riwayat dan log',
-                'URL perhitungan dapat muncul di riwayat browser, pesan yang dibagikan, dan log hosting. Perubahan input mengirim URL ke server kami. Sistem hosting dapat mencatat URL, alamat IP, dan waktu permintaan.',
+                'Membuka tautan yang dibagikan mengirim URL beserta perhitungan yang dikompresi ke server kami. URL tersebut dapat muncul di riwayat browser, pesan yang dibagikan, dan log hosting. Sistem hosting juga dapat mencatat alamat IP dan waktu permintaan. Input perhitungan tidak disimpan di basis data aplikasi atau local storage browser.',
             ],
             [
                 'Permintaan kurs valuta',
@@ -361,7 +352,8 @@ export default function Content({
                       ]),
               }
             : (lang === 'id' ? indonesianPages : englishPages)[slug];
-    const url = canonicalPageUrl(`/${slug}`, lang);
+    const path = `/${lang}/${slug}`;
+    const url = canonicalPageUrl(path);
     const structured =
         slug === 'faq'
             ? {
@@ -387,12 +379,12 @@ export default function Content({
     return (
         <Layout
             title={page.title}
-            path={`/${slug}`}
+            path={path}
             description={page.sections[0][1]}
             language={lang}
             onLanguageChange={(language) =>
                 router.get(
-                    contentRoutes[slug].url({ query: { lang: language } }),
+                    localizedContent.url({ language, page: slug }),
                     {},
                     { preserveScroll: true },
                 )

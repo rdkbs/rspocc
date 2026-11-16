@@ -7,7 +7,7 @@ namespace App\Http\Middleware;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
-class HandleInertiaRequests extends Middleware
+final class HandleInertiaRequests extends Middleware
 {
     /**
      * The root template that's loaded on the first page visit.
@@ -40,7 +40,7 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'name' => config('app.name'),
-            'lang' => $request->query('lang') === 'en' ? 'en' : 'id',
+            'lang' => app()->getLocale(),
             'auth' => [
                 'user' => $request->user(),
             ],

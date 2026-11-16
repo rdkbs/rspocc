@@ -4,18 +4,33 @@ declare(strict_types=1);
 
 use App\Http\Controllers\CalculatorController;
 use App\Http\Controllers\ExchangeRateController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
 
-Route::get('/guide', fn (): Response => Inertia::render('content', ['slug' => 'guide']))->name('guide');
-Route::get('/faq', fn (): Response => Inertia::render('content', ['slug' => 'faq']))->name('faq');
-Route::get('/about', fn (): Response => Inertia::render('content', ['slug' => 'about']))->name('about');
-Route::get('/terms', fn (): Response => Inertia::render('content', ['slug' => 'terms']))->name('terms');
-Route::get('/privacy', fn (): Response => Inertia::render('content', ['slug' => 'privacy']))->name('privacy');
+Route::permanentRedirect('/guide', '/id/guide')->name('guide');
+Route::permanentRedirect('/faq', '/id/faq')->name('faq');
+Route::permanentRedirect('/about', '/id/about')->name('about');
+Route::permanentRedirect('/terms', '/id/terms')->name('terms');
+Route::permanentRedirect('/privacy', '/id/privacy')->name('privacy');
 
-Route::get('/glossary', fn (): Response => Inertia::render('content', ['slug' => 'glossary']))->name('glossary');
+Route::permanentRedirect('/glossary', '/id/glossary')->name('glossary');
 
 Route::get('/exchange-rates', ExchangeRateController::class)->name('exchange-rates');
 
-Route::get('/{payload?}', [CalculatorController::class, 'index'])->name('calculator');
+Route::get('/{language}/{page}', fn (string $language, string $page): Response => Inertia::render('content', [
+    'slug' => $page,
+]))
+    ->whereIn('language', ['id', 'en'])
+    ->whereIn('page', ['guide', 'faq', 'about', 'terms', 'privacy', 'glossary'])
+    ->name('localizedContent');
+
+Route::get('/', fn (Request $request) => to_route('calculator.language', [
+    'language' => 'id',
+    ...$request->only('payload'),
+], 301))->name('calculator');
+
+Route::get('/{language}', [CalculatorController::class, 'index'])
+    ->whereIn('language', ['id', 'en'])
+    ->name('calculator.language');

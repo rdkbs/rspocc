@@ -16,7 +16,7 @@ import ExchangeRateField from '@/components/exchange-rate-field';
 import NumberField from '@/components/number-field';
 import { credits, type Inputs } from '@/hooks/use-calculator';
 import { useCalculatorScenario } from '@/hooks/use-calculator-scenario';
-import { calculator } from '@/routes';
+import { language as calculatorLanguage } from '@/routes/calculator';
 
 type Scenario = ReturnType<typeof useCalculatorScenario>;
 
@@ -94,11 +94,7 @@ export default function CalculatorInputs({
         <Paper
             component="form"
             aria-label={text.inputs}
-            action={
-                calculator.url(undefined, {
-                    query: { lang: inputs.language },
-                }) || '/'
-            }
+            action={calculatorLanguage.url({ language: inputs.language })}
             onSubmit={(event) => event.preventDefault()}
             variant="outlined"
             sx={{
