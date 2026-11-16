@@ -28,12 +28,12 @@ it('keeps edits off the URL and preserves inputs when switching language', funct
     $page->assertNoJavaScriptErrors();
 });
 
-it('restores calculator edits after returning from the guide', function (): void {
+it('restores calculator edits after returning from the FAQ', function (): void {
     Http::fake(['api.frankfurter.dev/*' => Http::response([])]);
     $page = visit('/en');
     $page->fill('FFB volume', '1234')->fill('CSPO Price', '12.5')
-        ->click('header a[href="/en/guide"]')
-        ->assertPathIs('/en/guide')
+        ->click('header a[href="/en/faq"]')
+        ->assertPathIs('/en/faq')
         ->back()
         ->assertPathIs('/en')
         ->assertValue('FFB volume', '1,234')
@@ -72,18 +72,18 @@ it('shares current inputs in a query URL that restores the calculation', functio
         ->assertNoJavaScriptErrors();
 });
 
-it('keeps canonical URLs language-specific and displays the cooperative mission', function (): void {
-    $page = visit('/en/about');
+it('keeps canonical URLs language-specific and explains the tool in the FAQ', function (): void {
+    $page = visit('/en/faq');
 
-    $page->assertSee('Belayan Sejahtera’s mission')
-        ->assertScript('document.querySelector("link[rel=canonical]").href', 'https://rspocc.belayansejahtera.org/en/about')
-        ->assertScript('document.querySelector(`meta[property="og:url"]`).content', 'https://rspocc.belayansejahtera.org/en/about')
-        ->assertScript('JSON.parse(document.querySelector(`script[type="application/ld+json"]`).textContent).url', 'https://rspocc.belayansejahtera.org/en/about');
+    $page->assertSee('What is the RSPO Credit Calculator?')
+        ->assertScript('document.querySelector("link[rel=canonical]").href', 'https://rspocc.belayansejahtera.org/en/faq')
+        ->assertScript('document.querySelector(`meta[property="og:url"]`).content', 'https://rspocc.belayansejahtera.org/en/faq')
+        ->assertScript('JSON.parse(document.querySelector(`script[type="application/ld+json"]`).textContent).url', 'https://rspocc.belayansejahtera.org/en/faq');
 
-    $page->navigate('/id/about')
-        ->assertSee('Misi')
-        ->assertScript('document.querySelector("link[rel=canonical]").href', 'https://rspocc.belayansejahtera.org/id/about')
-        ->assertScript('JSON.parse(document.querySelector(`script[type="application/ld+json"]`).textContent).url', 'https://rspocc.belayansejahtera.org/id/about');
+    $page->navigate('/id/faq')
+        ->assertSee('Apa itu Kalkulator Kredit RSPO?')
+        ->assertScript('document.querySelector("link[rel=canonical]").href', 'https://rspocc.belayansejahtera.org/id/faq')
+        ->assertScript('JSON.parse(document.querySelector(`script[type="application/ld+json"]`).textContent).url', 'https://rspocc.belayansejahtera.org/id/faq');
 
     $page->navigate('/en')
         ->assertPresent('header img[src="/logo-white-green.svg"]')
