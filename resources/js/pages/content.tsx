@@ -6,7 +6,6 @@ import GlossaryText from '@/components/glossary-text';
 import { glossaryEntries } from '@/glossary';
 import {
     defaultExtractionRates,
-    defaultPriceReference,
     extractionAssumptions,
     formatPercent,
     type Language,
@@ -16,62 +15,30 @@ import { localizedContent } from '@/routes';
 type Section = [heading: string, text: string, showRateSource?: boolean];
 type ContentPage = { title: string; sections: Section[] };
 type ContentSlug = 'faq' | 'terms' | 'privacy';
-const priceList = (language: Language) => {
-    const locale = language === 'id' ? 'id-ID' : 'en-US';
-    const price = new Intl.NumberFormat(locale, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    });
-
-    return (['is', 'standard'] as const)
-        .map((kind) => {
-            const label =
-                kind === 'is'
-                    ? 'IS'
-                    : language === 'id'
-                      ? 'Standar'
-                      : 'Standard';
-            const prices = (['cspo', 'cspko', 'cspke'] as const)
-                .map(
-                    (credit) =>
-                        `${credit.toUpperCase()} USD ${price.format(defaultPriceReference.prices[kind][credit])}`,
-                )
-                .join(', ');
-
-            return `${label}: ${prices}`;
-        })
-        .join('; ');
-};
-const checkedOn = (language: Language) =>
-    new Intl.DateTimeFormat(language === 'id' ? 'id-ID' : 'en-US', {
-        dateStyle: 'long',
-        timeZone: 'UTC',
-    }).format(new Date(`${defaultPriceReference.checkedOn}T00:00:00Z`));
 const conversionExplanation = (language: Language) =>
     `RSPO’s default kernel extraction rate (KER) is ${formatPercent(extractionAssumptions.kernel, language)} of FFB. Kernels yield ${formatPercent(extractionAssumptions.kernelOilRecovery, language)} oil and ${formatPercent(extractionAssumptions.kernelExpellerRecovery, language)} expeller, giving FFB conversion rates of ${formatPercent(defaultExtractionRates.cspko, language)} for CSPKO and ${formatPercent(defaultExtractionRates.cspke, language)} for CSPKE.`;
 const indonesianConversionExplanation = () =>
     `Default Kernel Extraction Rate (KER) RSPO adalah ${formatPercent(extractionAssumptions.kernel, 'id')} dari TBS. Inti sawit menghasilkan ${formatPercent(extractionAssumptions.kernelOilRecovery, 'id')} minyak dan ${formatPercent(extractionAssumptions.kernelExpellerRecovery, 'id')} bungkil, sehingga rendemen konversi TBS menjadi CSPKO ${formatPercent(defaultExtractionRates.cspko, 'id')} dan CSPKE ${formatPercent(defaultExtractionRates.cspke, 'id')}.`;
-const priceSnapshot = {
-    en: `No. The optional preset cards show ${defaultPriceReference.source} last-traded prices for ${defaultPriceReference.period}, checked on ${checkedOn('en')}: ${priceList('en')}. Select a card to fill the fields, then adjust them to your estimated selling prices.`,
-    id: `Tidak. Kartu preset menampilkan harga transaksi terakhir ${defaultPriceReference.source} untuk ${defaultPriceReference.period}, diperiksa ${checkedOn('id')}: ${priceList('id')}. Pilih kartu untuk mengisi kolom, lalu sesuaikan dengan perkiraan harga jual Anda.`,
-};
 
 const englishPages: Record<ContentSlug, ContentPage> = {
     faq: {
         title: 'Frequently Asked Questions',
         sections: [
             [
+                'Are the prices up to date?',
+                'The price cards show a dated PRISMA reference, not live market prices. Check the date on each card and enter your estimated selling price.',
+            ],
+            [
+                'Are the exchange rates up to date?',
+                'Frankfurter provides reference rates, not live trading rates. We reuse them for up to one hour and use the last successful result if the service is unavailable. Check the rate date in Settings. Shared links keep their saved rate, and you can enter a rate manually.',
+            ],
+            [
                 'What is the RSPO Credit Calculator?',
                 'This tool helps cooperative managers, farmers, and buyers estimate RSPO credit revenue and added value per kilogram of fresh fruit bunches. It is developed by the Research and Development Team at Koperasi Perkebunan Belayan Sejahtera, an RSPO member. It is not an official RSPO calculator, and membership does not imply RSPO endorsement. Results are estimates; check certified volumes, credit eligibility, and buyer terms before selling.',
             ],
-            ['Are these credit prices current?', priceSnapshot.en],
             [
-                'What exchange-rate source does the calculator use?',
-                'Frankfurter provides reference rates from central banks and official sources. We reuse rates for one hour and keep the last successful result if the service is unavailable. You can enter a rate manually. Saved links keep their original rate.',
-            ],
-            [
-                'Are fees and taxes for RSPO credits included?',
-                'No. The estimate is revenue before fees, taxes, certification costs, and other deductions.',
+                'Why was this tool created?',
+                'We created this tool to help farmers, cooperatives, and buyers understand potential RSPO credit revenue. It makes the calculation easier to use and share, so more people can assess the added value of certified production.',
             ],
             [
                 'Why are RSPO’s CSPKO and CSPKE extraction rates different?',
@@ -79,16 +46,8 @@ const englishPages: Record<ContentSlug, ContentPage> = {
                 true,
             ],
             [
-                'Does this calculator certify products?',
-                'No. It does not issue credits, verify certification, or confirm the number of credits you can sell.',
-            ],
-            [
                 'Can I save a calculator result?',
                 'Yes. Use Share to open your device’s sharing options or copy the link if sharing is not supported. The link contains your calculation data. Compression does not encrypt it.',
-            ],
-            [
-                'Is this RSPO credit estimate a sales agreement?',
-                'No. Confirm credit eligibility and commercial terms with your certification body and buyer. The result is an estimate, not a binding offer.',
             ],
         ],
     },
@@ -149,17 +108,20 @@ const indonesianPages: Record<ContentSlug, ContentPage> = {
         title: 'Pertanyaan Umum',
         sections: [
             [
+                'Apakah harganya terbaru?',
+                'Kartu harga menampilkan referensi PRISMA pada tanggal yang tercantum, bukan harga pasar langsung. Periksa tanggal pada kartu dan masukkan perkiraan harga jual Anda.',
+            ],
+            [
+                'Apakah kursnya terbaru?',
+                'Frankfurter menyediakan kurs referensi, bukan kurs transaksi langsung. Kurs digunakan kembali hingga satu jam. Jika layanan tidak tersedia, kalkulator memakai hasil terakhir yang berhasil diperoleh. Periksa tanggal kurs di pengaturan. Tautan yang dibagikan mempertahankan kurs tersimpan, dan Anda dapat memasukkan kurs sendiri.',
+            ],
+            [
                 'Apa itu Kalkulator Kredit RSPO?',
                 'Alat ini membantu pengurus koperasi, petani, dan pembeli memperkirakan pendapatan kredit RSPO serta nilai tambah per kilogram TBS. Alat ini dikembangkan oleh Tim Riset dan Pengembangan Koperasi Perkebunan Belayan Sejahtera, anggota RSPO. Alat ini bukan kalkulator resmi RSPO, dan keanggotaan tersebut tidak berarti RSPO mendukungnya. Hasil hanya perkiraan; pastikan volume tersertifikasi, kelayakan kredit, dan ketentuan pembeli sebelum menjual.',
             ],
-            ['Apakah harga kredit ini terkini?', priceSnapshot.id],
             [
-                'Sumber kurs apa yang digunakan kalkulator?',
-                'Frankfurter menyediakan kurs referensi dari bank sentral dan sumber resmi. Kalkulator memakai kembali kurs selama satu jam dan menyimpan hasil terakhir yang berhasil jika layanan tidak tersedia. Anda dapat memasukkan kurs sendiri. Tautan yang disimpan mempertahankan kursnya.',
-            ],
-            [
-                'Apakah biaya dan pajak kredit RSPO sudah termasuk?',
-                'Belum. Perkiraan ini adalah pendapatan sebelum biaya, pajak, biaya sertifikasi, dan potongan lainnya.',
+                'Mengapa alat ini dibuat?',
+                'Kami membuat alat ini untuk membantu petani, koperasi, dan pembeli memahami potensi pendapatan kredit RSPO. Perhitungannya lebih mudah digunakan dan dibagikan agar lebih banyak orang dapat menilai nilai tambah dari produksi bersertifikat.',
             ],
             [
                 'Mengapa RSPO memakai rendemen konversi CSPKO dan CSPKE ini?',
@@ -167,16 +129,8 @@ const indonesianPages: Record<ContentSlug, ContentPage> = {
                 true,
             ],
             [
-                'Apakah kalkulator ini mensertifikasi produk?',
-                'Tidak. Kalkulator tidak menerbitkan kredit, memverifikasi sertifikasi, atau memastikan jumlah kredit yang dapat dijual.',
-            ],
-            [
                 'Bagaimana cara menyimpan hasil kalkulator?',
                 'Gunakan Bagikan untuk membuka pilihan berbagi di perangkat atau menyalin tautan jika fitur berbagi tidak tersedia. Tautan memuat data perhitungan. Kompresi bukan enkripsi.',
-            ],
-            [
-                'Apakah perkiraan kredit RSPO ini merupakan perjanjian jual beli?',
-                'Bukan. Pastikan kelayakan kredit dan ketentuan komersial kepada lembaga sertifikasi dan pembeli. Hasil ini hanya perkiraan, bukan penawaran yang mengikat.',
             ],
         ],
     },
