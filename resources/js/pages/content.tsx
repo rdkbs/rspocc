@@ -52,8 +52,8 @@ const conversionExplanation = (language: Language) =>
 const indonesianConversionExplanation = () =>
     `Default Kernel Extraction Rate (KER) RSPO adalah ${formatPercent(extractionAssumptions.kernel, 'id')} dari TBS. Inti sawit menghasilkan ${formatPercent(extractionAssumptions.kernelOilRecovery, 'id')} minyak dan ${formatPercent(extractionAssumptions.kernelExpellerRecovery, 'id')} bungkil, sehingga rendemen konversi TBS menjadi CSPKO ${formatPercent(defaultExtractionRates.cspko, 'id')} dan CSPKE ${formatPercent(defaultExtractionRates.cspke, 'id')}.`;
 const priceSnapshot = {
-    en: `No. The optional preset cards show ${defaultPriceReference.source} last-traded prices for ${defaultPriceReference.period}, checked on ${checkedOn('en')}: ${priceList('en')}. Select a card to fill the fields, then adjust them to your agreed selling prices.`,
-    id: `Tidak. Kartu preset menampilkan harga transaksi terakhir ${defaultPriceReference.source} untuk ${defaultPriceReference.period}, diperiksa ${checkedOn('id')}: ${priceList('id')}. Pilih kartu untuk mengisi kolom, lalu sesuaikan dengan harga jual yang disepakati.`,
+    en: `No. The optional preset cards show ${defaultPriceReference.source} last-traded prices for ${defaultPriceReference.period}, checked on ${checkedOn('en')}: ${priceList('en')}. Select a card to fill the fields, then adjust them to your estimated selling prices.`,
+    id: `Tidak. Kartu preset menampilkan harga transaksi terakhir ${defaultPriceReference.source} untuk ${defaultPriceReference.period}, diperiksa ${checkedOn('id')}: ${priceList('id')}. Pilih kartu untuk mengisi kolom, lalu sesuaikan dengan perkiraan harga jual Anda.`,
 };
 
 const englishPages: Record<ContentSlug, ContentPage> = {
@@ -251,8 +251,7 @@ export default function Content({
                           ),
                       )
                       .map((entry) => [
-                          entry.heading?.[lang] ??
-                              (lang === 'id' ? entry.termId : entry.term),
+                          lang === 'id' ? entry.termId : entry.term,
                           entry[lang],
                           [
                               'OER',
