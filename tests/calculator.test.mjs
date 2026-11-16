@@ -199,8 +199,18 @@ describe('localized numeric inputs', () => {
 });
 
 describe('currency formatting', () => {
-    test('rounds IDR to whole rupiah and keeps minor units for other currencies', () => {
-        expect(formatCurrency(49.2, 'IDR', 'id')).toMatch(/49$/);
+    test('omits zero decimals and rounds large values in every currency', () => {
+        expect(formatCurrency(49.2, 'IDR', 'id')).toContain('49,2');
+        for (const currency of ['IDR', 'USD', 'MYR', 'EUR', 'CNY']) {
+            expect(formatCurrency(1000, currency, 'en')).toMatch(/1,000$/);
+            expect(formatCurrency(1000000.5, currency, 'en')).toMatch(
+                /1,000,001$/,
+            );
+            expect(formatCurrency(999999, currency, 'en')).toMatch(/999,999$/);
+            expect(formatCurrency(999999.5, currency, 'en')).toMatch(
+                /1,000,000$/,
+            );
+        }
         expect(formatCurrency(2700.25, 'USD', 'id')).toContain(',25');
         expect(formatCurrency(1.25, 'MYR', 'en')).toContain('.25');
     });
