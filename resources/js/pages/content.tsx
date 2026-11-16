@@ -12,7 +12,12 @@ import {
 } from '@/calculator-assumptions';
 import { localizedContent } from '@/routes';
 
-type Section = [heading: string, text: string, showRateSource?: boolean];
+type Section = [
+    heading: string,
+    text: string,
+    showRateSource?: boolean,
+    sourceUrl?: string,
+];
 type ContentPage = { title: string; sections: Section[] };
 type ContentSlug = 'faq' | 'terms' | 'privacy';
 const conversionExplanation = (language: Language) =>
@@ -86,6 +91,12 @@ const englishPages: Record<ContentSlug, ContentPage> = {
             [
                 'History and logs',
                 'Opening a shared link sends its URL, including the compressed calculation, to our server. Shared URLs may appear in browser history, shared messages, and hosting logs. Hosting systems may also log your IP address and the request time. Calculation inputs are not saved in an application database or browser local storage.',
+            ],
+            [
+                'Error monitoring',
+                'We use Sentry to detect and diagnose application errors. Sentry processes error reports and diagnostic logs on our behalf. These may include error messages, technical details, request URLs, and request times. If an error involves a shared calculation link, its compressed inputs may appear in the report. Avoid sharing links containing information you consider confidential.',
+                false,
+                'https://sentry.io/privacy/',
             ],
             [
                 'Exchange-rate requests',
@@ -169,6 +180,12 @@ const indonesianPages: Record<ContentSlug, ContentPage> = {
             [
                 'Riwayat dan log',
                 'Membuka tautan yang dibagikan mengirim URL beserta perhitungan yang dikompresi ke server kami. URL tersebut dapat muncul di riwayat browser, pesan yang dibagikan, dan log hosting. Sistem hosting juga dapat mencatat alamat IP dan waktu permintaan. Data perhitungan tidak disimpan di basis data aplikasi maupun local storage browser.',
+            ],
+            [
+                'Pemantauan kesalahan',
+                'Kami menggunakan Sentry untuk mendeteksi dan menelusuri kesalahan aplikasi. Sentry memproses laporan kesalahan dan log diagnostik untuk kami. Data ini dapat mencakup pesan kesalahan, informasi teknis, URL permintaan, dan waktu permintaan. Jika kesalahan terjadi saat membuka tautan perhitungan yang dibagikan, data perhitungan yang dikompresi dapat tercantum dalam laporan. Hindari membagikan tautan yang berisi informasi rahasia.',
+                false,
+                'https://sentry.io/privacy/',
             ],
             [
                 'Pengambilan data kurs',
@@ -401,7 +418,10 @@ export default function Content({
                             }}
                         >
                             {page.sections.map(
-                                ([heading, text, showRateSource], index) => (
+                                (
+                                    [heading, text, showRateSource, sourceUrl],
+                                    index,
+                                ) => (
                                     <Box
                                         component="section"
                                         id={`section-${index + 1}`}
@@ -436,6 +456,17 @@ export default function Content({
                                                 {text}
                                             </GlossaryText>
                                         </Typography>
+                                        {sourceUrl && (
+                                            <Box
+                                                component="a"
+                                                href={sourceUrl}
+                                                sx={{ color: 'primary.main' }}
+                                            >
+                                                {lang === 'id'
+                                                    ? 'Kebijakan privasi Sentry'
+                                                    : 'Sentry privacy policy'}
+                                            </Box>
+                                        )}
                                         {showRateSource && (
                                             <Typography
                                                 sx={{ fontSize: 14, mt: 3 }}
