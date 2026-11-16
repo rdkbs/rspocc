@@ -7,12 +7,17 @@ import { describe, expect, test } from 'bun:test';
 import LZString from 'lz-string';
 import {
     decode,
-    defaults,
+    defaults as initialDefaults,
     encode,
     useCalculator,
 } from '../resources/js/hooks/use-calculator.ts';
 import { formatCurrency } from '../resources/js/calculator-assumptions.ts';
 import { pageScenario } from '../resources/js/hooks/use-calculator-scenario.ts';
+
+const defaults = {
+    ...initialDefaults,
+    prices: { cspo: 3.67, cspko: 88.71, cspke: 0.1 },
+};
 
 describe('calculator scenarios', () => {
     test('converts tonnes, applies premiums and divides by FFB kg', () => {

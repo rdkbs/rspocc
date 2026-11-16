@@ -2,7 +2,6 @@ import LZString from 'lz-string';
 import {
     defaultExchangeRate,
     defaultExtractionRates,
-    defaultPriceReference,
 } from '@/calculator-assumptions';
 
 export const credits = ['cspo', 'cspko', 'cspke'] as const;
@@ -25,7 +24,7 @@ export const defaults: Inputs = {
     oer: defaultExtractionRates.cspo,
     ker: defaultExtractionRates.cspko,
     yield: defaultExtractionRates.cspke,
-    prices: defaultPriceReference.prices.is,
+    prices: { cspo: null, cspko: null, cspke: null },
     exchange: defaultExchangeRate,
     currency: 'IDR',
     language: 'id',

@@ -2,9 +2,7 @@
 
 declare(strict_types=1);
 
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
+use App\Console\Commands\RefreshCreditPrices;
+use Illuminate\Support\Facades\Schedule;
 
-Artisan::command('inspire', function (): void {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
+Schedule::command(RefreshCreditPrices::class)->dailyAt('01:00')->timezone('UTC')->withoutOverlapping(30);

@@ -11,7 +11,7 @@ it('redirects unprefixed content to Indonesian pages', function (string $slug): 
 
 it('passes calculator payloads without storing a scenario', function (): void {
     $this->get('/en?payload=scenario')->assertOk()->assertInertia(fn (Assert $page): Assert => $page->component('index')->where('payload', 'scenario'));
-    $this->get('/id')->assertOk()->assertInertia(fn (Assert $page): Assert => $page->component('index')->where('payload', null));
+    $this->get('/id')->assertOk()->assertInertia(fn (Assert $page): Assert => $page->component('index')->where('payload', null)->where('priceReference.prices.is.cspo', 3.67));
 });
 
 it('renders the selected language in Inertia props and the document', function (string $url, string $language): void {
