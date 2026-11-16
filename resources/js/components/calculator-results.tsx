@@ -42,6 +42,7 @@ export default function CalculatorResults({
         value: number,
         currency: string,
         currencySize = '0.78em',
+        perKg = false,
     ) => {
         const parts = new Intl.NumberFormat(
             inputs.language === 'id' ? 'id-ID' : 'en-US',
@@ -49,7 +50,8 @@ export default function CalculatorResults({
                 style: 'currency',
                 currency,
                 currencyDisplay: 'code',
-                maximumFractionDigits: currency === 'IDR' ? 0 : 2,
+                minimumFractionDigits: perKg ? 0 : undefined,
+                maximumFractionDigits: perKg || currency !== 'IDR' ? 2 : 0,
             },
         ).formatToParts(value);
         const currencyIndex = parts.findIndex(
@@ -205,6 +207,7 @@ export default function CalculatorResults({
                                         result.added,
                                         inputs.currency,
                                         '0.55em',
+                                        true,
                                     )}{' '}
                                     <Typography
                                         component="span"

@@ -74,6 +74,14 @@ final class CalculatorPreview
         return (\is_int($value) || \is_float($value)) && is_finite((float) $value) && $value >= 0 && $value <= 1e12;
     }
 
+    public function formatNumber(float $value, string $language): string
+    {
+        $decimal = $language === 'id' ? ',' : '.';
+        $formatted = number_format($value, 2, $decimal, $language === 'id' ? '.' : ',');
+
+        return rtrim(rtrim($formatted, '0'), $decimal);
+    }
+
     /** @return array{title: string, description: string}|null */
     public function metadata(string $payload, string $language): ?array
     {
@@ -81,14 +89,13 @@ final class CalculatorPreview
         if ($result === null) {
             return null;
         }
-        $format = static fn (float $value, int $decimals): string => number_format($value, $decimals, $language === 'id' ? ',' : '.', $language === 'id' ? '.' : ',');
-        $amount = $result['currency'].' '.$format($result['converted'], $result['currency'] === 'IDR' ? 0 : 2);
-        $volume = $format($result['kg'], 2);
-        $usd = 'USD '.$format($result['usd'], 2);
-        $added = $result['currency'].' '.$format($result['added'], 2);
+        $format = fn (float $value): string => $this->formatNumber($value, $language);
+        $amount = $result['currency'].' '.$format($result['converted']);
+        $volume = $format($result['kg'] / 1000);
+        $added = $result['currency'].' '.$format($result['added']);
 
         return $language === 'id'
-            ? ['title' => 'Perkiraan pendapatan kredit RSPO: '.$amount, 'description' => "Volume TBS: {$volume} kg. Pendapatan premi: {$usd}. Nilai tambah: {$added}/kg TBS. Hasil ini hanya perkiraan."]
-            : ['title' => 'Estimated RSPO credit revenue: '.$amount, 'description' => "FFB volume: {$volume} kg. Premium revenue: {$usd}. Added value: {$added}/kg FFB. Results are estimates."];
+            ? ['title' => 'Perkiraan pendapatan kredit RSPO: '.$amount, 'description' => "Volume TBS: {$volume} t. Pendapatan premi: {$amount}. Nilai tambah: {$added}/kg TBS. Hasil ini hanya perkiraan."]
+            : ['title' => 'Estimated RSPO credit revenue: '.$amount, 'description' => "FFB volume: {$volume} t. Premium revenue: {$amount}. Added value: {$added}/kg FFB. Results are estimates."];
     }
 }
