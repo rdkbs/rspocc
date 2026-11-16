@@ -104,12 +104,33 @@ it('keeps canonical URLs language-specific and explains the tool in the FAQ', fu
         ->click('Indonesia')
         ->assertPathIs('/id')
         ->assertScript('document.documentElement.lang', 'id');
+});
 
-    $page->navigate('/en')
-        ->click('Dark mode')
+it('persists the selected color scheme across page loads', function (): void {
+    Http::preventStrayRequests();
+    Http::fake(['api.frankfurter.dev/*' => Http::response([])]);
+
+    $page = visit('/en');
+    $page->script('localStorage.removeItem("rspocc:color-scheme");');
+    $page->script('document.cookie = "rspocc_color_scheme=; Max-Age=0; Path=/; SameSite=Lax";');
+    $page->refresh()->click('Dark mode')
+        ->assertScript('localStorage.getItem("rspocc:color-scheme")', 'dark')
+        ->assertScript('document.cookie.includes("rspocc_color_scheme=dark")', true);
+
+    $page->script('localStorage.removeItem("rspocc:color-scheme");');
+    $page->refresh()
+        ->assertScript('JSON.parse(document.getElementById("app").dataset.page).props.colorScheme', 'dark')
+        ->assertScript('document.documentElement.classList.contains("dark")', true)
         ->assertScript('getComputedStyle(document.documentElement).colorScheme', 'dark')
-        ->click('Light mode')
-        ->assertScript('getComputedStyle(document.documentElement).colorScheme', 'light');
+        ->assertSee('Light mode')
+        ->click('Light mode');
+
+    $page->script('localStorage.removeItem("rspocc:color-scheme");');
+    $page->refresh()
+        ->assertScript('JSON.parse(document.getElementById("app").dataset.page).props.colorScheme', 'light')
+        ->assertScript('document.documentElement.classList.contains("dark")', false)
+        ->assertScript('getComputedStyle(document.documentElement).colorScheme', 'light')
+        ->assertNoJavaScriptErrors();
 });
 
 it('sorts glossary titles alphabetically in each language', function (): void {

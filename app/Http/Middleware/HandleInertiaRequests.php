@@ -41,6 +41,7 @@ final class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'name' => config('app.name'),
             'lang' => app()->getLocale(),
+            'colorScheme' => $request->cookie('rspocc_color_scheme') === 'dark' ? 'dark' : 'light',
             'auth' => [
                 'user' => $request->user(),
             ],

@@ -1,5 +1,6 @@
 @php
     $language = $page['props']['lang'] ?? 'id';
+    $colorScheme = $page['props']['colorScheme'] ?? 'light';
     $slug = $page['component'] === 'content'
         ? ($page['props']['slug'] ?? 'faq')
         : 'index';
@@ -34,11 +35,25 @@
         : route('localizedContent', ['language' => $language, 'page' => $slug]);
 @endphp
 <!DOCTYPE html>
-<html data-type="software" lang="{{ $language }}" @class(['dark' => ($appearance ?? 'system') == 'dark'])>
+<html data-type="software" lang="{{ $language }}" @class(['dark' => $colorScheme === 'dark'])>
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="color-scheme" content="light dark">
+        <meta name="color-scheme" content="{{ $colorScheme }}">
+        @if (! config('inertia.ssr.enabled'))
+            <script>
+                try {
+                    const colorScheme = localStorage.getItem('rspocc:color-scheme');
+                    if (colorScheme === 'dark' || colorScheme === 'light') {
+                        document.documentElement.classList.toggle('dark', colorScheme === 'dark');
+                        const meta = document.querySelector('meta[name="color-scheme"]');
+                        if (meta) {
+                            meta.content = colorScheme;
+                        }
+                    }
+                } catch {}
+            </script>
+        @endif
 
         <link rel="icon" href="/logo-white-green.svg" type="image/svg+xml" sizes="any">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
