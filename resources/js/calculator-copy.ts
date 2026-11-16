@@ -59,23 +59,15 @@ export const calculatorCopy = {
 export const homePageCopy = {
     en: {
         guideTitle: 'How to use the calculator',
-        flowDescription:
-            'Calculator flow: FFB volume, extraction rates, credit volumes and prices, estimated revenue.',
-        flow: [
-            'FFB volume',
-            'Extraction rates',
-            'Credit volumes and prices',
-            'Estimated revenue',
-        ],
         guideSteps: [
             ['Enter FFB volume', 'Enter the volume in kilograms or tonnes.'],
             [
                 'Set credit prices',
-                'Enter your agreed USD price for each credit you sell. Leave other prices blank.',
+                'Enter an estimated USD price for each credit you plan to sell.',
             ],
             [
                 'Review the estimate',
-                'Check revenue and added value per kg. Adjust extraction rates or exchange rate under Rates.',
+                'Check revenue and added value per kg. If needed, adjust extraction rates or the exchange rate in Settings.',
             ],
         ],
         guideLink: 'Guide',
@@ -98,23 +90,15 @@ export const homePageCopy = {
     },
     id: {
         guideTitle: 'Cara menggunakan kalkulator',
-        flowDescription:
-            'Alur kalkulator: volume TBS, rendemen, volume dan harga kredit, perkiraan pendapatan.',
-        flow: [
-            'Volume TBS',
-            'Rendemen',
-            'Volume dan harga kredit',
-            'Perkiraan pendapatan',
-        ],
         guideSteps: [
             ['Masukkan volume TBS', 'Masukkan volume dalam kilogram atau ton.'],
             [
                 'Atur harga kredit',
-                'Masukkan harga USD yang disepakati untuk setiap kredit yang dijual. Kosongkan harga lainnya.',
+                'Masukkan perkiraan harga dalam USD untuk setiap kredit yang akan dijual.',
             ],
             [
                 'Periksa hasil perkiraan',
-                'Periksa pendapatan dan tambahan per kg. Ubah rendemen atau kurs di bagian Kurs.',
+                'Periksa pendapatan dan tambahan per kg. Jika perlu, sesuaikan rendemen atau kurs di pengaturan.',
             ],
         ],
         guideLink: 'Panduan',
