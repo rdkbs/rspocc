@@ -72,20 +72,20 @@ export default function CalculatorInputs({
         { dateStyle: 'medium', timeZone: 'UTC' },
     ).format(new Date(`${defaultPriceReference.checkedOn}T00:00:00Z`));
     const brandedNumberFieldSx = {
-        '& .MuiInputLabel-root': { color: 'primary.main' },
+        '& .MuiInputLabel-root': { color: 'primary.dark' },
         '& .MuiOutlinedInput-notchedOutline': {
-            borderColor: 'primary.main',
+            borderColor: 'primary.dark',
         },
         '& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline': {
             borderColor: 'primary.dark',
         },
         '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline':
             {
-                borderColor: 'primary.main',
+                borderColor: 'primary.dark',
                 borderWidth: 2,
             },
         '& .MuiOutlinedInput-root:active .MuiOutlinedInput-notchedOutline': {
-            borderColor: 'primary.main',
+            borderColor: 'primary.dark',
             borderWidth: 2,
         },
     };
@@ -317,7 +317,7 @@ export default function CalculatorInputs({
                                             alignItems: 'flex-start',
                                             border: 1,
                                             borderColor: selected
-                                                ? 'primary.main'
+                                                ? 'primary.dark'
                                                 : 'divider',
                                             borderRadius: 1,
                                             px: 1.25,
@@ -331,12 +331,12 @@ export default function CalculatorInputs({
                                                 : 'transparent',
                                             containerType: 'inline-size',
                                             '&:hover': {
-                                                borderColor: 'primary.main',
+                                                borderColor: 'primary.dark',
                                                 bgcolor: 'action.hover',
                                             },
                                             '&:focus-visible': {
                                                 outline: '2px solid',
-                                                outlineColor: 'primary.main',
+                                                outlineColor: 'primary.dark',
                                                 outlineOffset: 2,
                                             },
                                         }}
@@ -349,7 +349,7 @@ export default function CalculatorInputs({
                                                     fontWeight: 500,
                                                     lineHeight: 1.3,
                                                     ...(selected && {
-                                                        color: 'primary.main',
+                                                        color: 'primary.dark',
                                                     }),
                                                 }}
                                             >
@@ -386,7 +386,7 @@ export default function CalculatorInputs({
                                                             sx={{
                                                                 display:
                                                                     'block',
-                                                                color: 'primary.main',
+                                                                color: 'primary.dark',
                                                                 fontSize:
                                                                     'clamp(0.875rem, calc(0.5rem + 3.5cqi), 1rem)',
                                                                 fontVariantNumeric:
@@ -515,7 +515,11 @@ export default function CalculatorInputs({
                                 <Typography
                                     component="h3"
                                     variant="body2"
-                                    sx={{ fontSize: 16, fontWeight: 600 }}
+                                    sx={{
+                                        fontSize: 16,
+                                        fontWeight: 600,
+                                        color: 'primary.main',
+                                    }}
                                 >
                                     {inputs.language === 'id'
                                         ? 'Rendemen (% dari TBS)'

@@ -220,7 +220,12 @@ export default function CalculatorResults({
                         <Paper variant="outlined" sx={{ p: { xs: 3, md: 4 } }}>
                             <Typography
                                 component="h2"
-                                sx={{ mb: 2, fontSize: 24, fontWeight: 600 }}
+                                sx={{
+                                    mb: 2,
+                                    fontSize: 24,
+                                    fontWeight: 600,
+                                    color: 'primary.main',
+                                }}
                             >
                                 {text.outputs}
                             </Typography>
@@ -294,7 +299,11 @@ export default function CalculatorResults({
                                 color="primary"
                                 onClick={share}
                                 startIcon={<ShareIcon aria-hidden="true" />}
-                                sx={{ minHeight: 44 }}
+                                sx={{
+                                    minHeight: 44,
+                                    bgcolor: 'primary.main',
+                                    '&:hover': { bgcolor: 'primary.main' },
+                                }}
                             >
                                 {text.share}
                             </Button>
@@ -311,7 +320,7 @@ export default function CalculatorResults({
             )}
             {hasResults && (
                 <Typography
-                    variant='caption'
+                    variant="caption"
                     color="text.secondary"
                     sx={{ fontSize: 15, lineHeight: 1.7 }}
                 >
@@ -325,8 +334,7 @@ export default function CalculatorResults({
                     </strong>
                     <GlossaryText language={inputs.language}>
                         {text.disclaimerAfterEmphasis}
-                    </GlossaryText>
-                    {' '}
+                    </GlossaryText>{' '}
                     <Box
                         component="span"
                         sx={{

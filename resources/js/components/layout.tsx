@@ -82,6 +82,19 @@ export default function Layout({
     onLanguageChange: (language: 'id' | 'en') => void;
 }) {
     const [dark, setDark] = useState(false);
+    const primaryPalette = dark
+        ? {
+              main: '#e17e00',
+              light: '#ffc27d',
+              dark: '#e17e00',
+              contrastText: '#f2f1eb',
+          }
+        : {
+              main: '#e17e00',
+              light: '#f3ae43',
+              dark: '#9c5000',
+              contrastText: '#f2f1eb',
+          };
     useEffect(() => {
         document.documentElement.lang = language;
     }, [language]);
@@ -91,7 +104,7 @@ export default function Layout({
                 createTheme({
                     palette: {
                         mode: dark ? 'dark' : 'light',
-                        primary: { main: dark ? '#ffb77a' : '#aa450d' },
+                        primary: primaryPalette,
                         secondary: { main: dark ? '#abd6b4' : '#24593e' },
                         text: {
                             primary: dark ? '#f2f1eb' : '#252c25',
@@ -126,7 +139,7 @@ export default function Layout({
                                 body: { WebkitFontSmoothing: 'antialiased' },
                                 a: { color: 'inherit' },
                                 '*:focus-visible': {
-                                    outline: '3px solid #cf722b',
+                                    outline: `3px solid ${primaryPalette.dark}`,
                                     outlineOffset: 4,
                                 },
                                 '[data-enter]': {
@@ -160,6 +173,9 @@ export default function Layout({
                                     paddingInline: 18,
                                     transition:
                                         'transform 150ms ease, background-color 150ms ease',
+                                    '&.MuiButton-text.MuiButton-colorPrimary': {
+                                        color: primaryPalette.main,
+                                    },
                                     '&[aria-current="page"]': {
                                         textDecoration: 'underline',
                                         textDecorationThickness: 2,
@@ -174,6 +190,22 @@ export default function Layout({
                                                 transform: 'translateY(1px)',
                                             },
                                         },
+                                },
+                            },
+                        },
+                        MuiTab: {
+                            styleOverrides: {
+                                root: {
+                                    '&.Mui-selected': {
+                                        color: primaryPalette.dark,
+                                    },
+                                },
+                            },
+                        },
+                        MuiTabs: {
+                            styleOverrides: {
+                                indicator: {
+                                    backgroundColor: primaryPalette.dark,
                                 },
                             },
                         },
@@ -328,7 +360,7 @@ export default function Layout({
                                     sx={{
                                         display: 'block',
                                         fontSize: 13,
-                                        color: 'text.secondary',
+                                        color: 'primary.main',
                                         mt: 0.5,
                                     }}
                                 >
@@ -362,7 +394,7 @@ export default function Layout({
                                 component={NavigationLink}
                                 nativeButton={false}
                                 href={calculatorHomeUrl(language)}
-                                color={path === '/' ? 'primary' : 'inherit'}
+                                color="primary"
                                 aria-current={path === '/' ? 'page' : undefined}
                             >
                                 {language === 'id'
@@ -373,9 +405,7 @@ export default function Layout({
                                 component={NavigationLink}
                                 nativeButton={false}
                                 href={guide.url({ query: { lang: language } })}
-                                color={
-                                    path === '/guide' ? 'primary' : 'inherit'
-                                }
+                                color="primary"
                                 aria-current={
                                     path === '/guide' ? 'page' : undefined
                                 }
@@ -386,7 +416,7 @@ export default function Layout({
                                 component={NavigationLink}
                                 nativeButton={false}
                                 href={faq.url({ query: { lang: language } })}
-                                color={path === '/faq' ? 'primary' : 'inherit'}
+                                color="primary"
                                 aria-current={
                                     path === '/faq' ? 'page' : undefined
                                 }
@@ -501,11 +531,7 @@ export default function Layout({
                                     href={item.route.url({
                                         query: { lang: language },
                                     })}
-                                    color={
-                                        path === item.path
-                                            ? 'primary'
-                                            : 'inherit'
-                                    }
+                                    color="primary"
                                     aria-current={
                                         path === item.path ? 'page' : undefined
                                     }
