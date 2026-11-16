@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import ArrowForward from '@mui/icons-material/ArrowForward';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
@@ -15,7 +15,8 @@ import {
     type Inputs,
 } from '@/hooks/use-calculator';
 import { useCalculatorScenario } from '@/hooks/use-calculator-scenario';
-import { calculator, faq, guide } from '@/routes';
+import { localizedContent } from '@/routes';
+import { language as calculatorLanguage } from '@/routes/calculator';
 
 export default function Index({
     payload,
@@ -34,9 +35,9 @@ export default function Index({
         credits.some((credit) => inputs.prices[credit] !== null);
     const shareUrl = () =>
         new URL(
-            calculator.url(
-                { payload: encode(inputs) },
-                { query: { lang: inputs.language } },
+            calculatorLanguage.url(
+                { language: inputs.language },
+                { query: { payload: encode(inputs) } },
             ),
             window.location.origin,
         ).href;
@@ -44,8 +45,30 @@ export default function Index({
     return (
         <Layout
             title="RSPO Credit Calculator"
+            path={`/${inputs.language}`}
             language={inputs.language}
-            onLanguageChange={(language) => update('language', language)}
+            onLanguageChange={(language) => {
+                update('language', language);
+                router.get(
+                    calculatorLanguage.url(
+                        { language },
+                        {
+                            query: {
+                                payload:
+                                    new URLSearchParams(
+                                        window.location.search,
+                                    ).get('payload') ?? undefined,
+                            },
+                        },
+                    ),
+                    {},
+                    {
+                        preserveState: true,
+                        preserveScroll: true,
+                        replace: true,
+                    },
+                );
+            }}
         >
             <Head>
                 <script type="application/ld+json">
@@ -53,7 +76,7 @@ export default function Index({
                         '@context': 'https://schema.org',
                         '@type': 'WebApplication',
                         name: 'RSPO Credit Calculator',
-                        url: 'https://rspocc.belayansejahtera.org',
+                        url: `https://rspocc.belayansejahtera.org/${inputs.language}`,
                         applicationCategory: 'FinanceApplication',
                         operatingSystem: 'Web',
                     })}
@@ -164,8 +187,9 @@ export default function Index({
                         </Box>
                         <Box sx={{ mt: 2, color: 'primary.main' }}>
                             <Link
-                                href={guide.url({
-                                    query: { lang: inputs.language },
+                                href={localizedContent.url({
+                                    language: inputs.language,
+                                    page: 'guide',
                                 })}
                                 style={{
                                     color: 'inherit',
@@ -233,8 +257,9 @@ export default function Index({
                                 component={NavigationLink}
                                 nativeButton={false}
                                 variant="text"
-                                href={faq.url({
-                                    query: { lang: inputs.language },
+                                href={localizedContent.url({
+                                    language: inputs.language,
+                                    page: 'faq',
                                 })}
                                 endIcon={<ArrowForward aria-hidden="true" />}
                                 sx={{ px: 0 }}

@@ -58,13 +58,13 @@ describe('calculator scenarios', () => {
         expect(payload.length).toBeLessThan(4096);
         expect(decode(payload).invalid).toBe(true);
     });
-    test('uses the selected language when a scenario link is invalid', () => {
+    test('uses the page language for all scenarios', () => {
         expect(pageScenario('bad link', 'en').inputs.language).toBe('en');
         expect(pageScenario(null, 'en').inputs.language).toBe('en');
         expect(
             pageScenario(encode({ ...defaults, language: 'id' }), 'en').inputs
                 .language,
-        ).toBe('id');
+        ).toBe('en');
     });
     test('includes credits with prices and excludes credits with blank prices', () => {
         const inputs = {

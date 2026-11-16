@@ -10,7 +10,7 @@ import ShareIcon from '@mui/icons-material/Share';
 import type { CalculatorCopy } from '@/calculator-copy';
 import GlossaryText from '@/components/glossary-text';
 import { credits, useCalculator, type Inputs } from '@/hooks/use-calculator';
-import { terms } from '@/routes';
+import { localizedContent } from '@/routes';
 
 const creditColors = {
     cspo: 'primary.main',
@@ -345,8 +345,9 @@ export default function CalculatorResults({
                         }}
                     >
                         <Link
-                            href={terms.url({
-                                query: { lang: inputs.language },
+                            href={localizedContent.url({
+                                language: inputs.language,
+                                page: 'terms',
                             })}
                             style={{
                                 color: 'inherit',

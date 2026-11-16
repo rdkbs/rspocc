@@ -1,9 +1,7 @@
-import { router } from '@inertiajs/react';
+import { useRemember } from '@inertiajs/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { calculator } from '@/routes';
 import {
     decode,
-    encode,
     isValidExtractionRates,
     isValidInputs,
     type Inputs,
@@ -16,9 +14,7 @@ export function pageScenario(
     language: Inputs['language'],
 ) {
     const scenario = decode(payload);
-    return payload && !scenario.invalid
-        ? scenario
-        : { ...scenario, inputs: { ...scenario.inputs, language } };
+    return { ...scenario, inputs: { ...scenario.inputs, language } };
 }
 
 export function useCalculatorScenario(
@@ -29,10 +25,14 @@ export function useCalculatorScenario(
         () => pageScenario(payload, language),
         [payload, language],
     );
-    const [inputs, setInputs] = useState<Inputs>(initial.inputs);
+    const [inputs, setInputs] = useRemember<Inputs>(
+        initial.inputs,
+        'calculator.inputs',
+    );
     const [invalid, setInvalid] = useState(initial.invalid);
-    const [rateMode, setRateMode] = useState<RateMode>(
+    const [rateMode, setRateMode] = useRemember<RateMode>(
         payload ? 'saved' : 'auto',
+        'calculator.rateMode',
     );
     const lastPayload = useRef(payload);
     const ratesValid = isValidExtractionRates(inputs);
@@ -44,36 +44,18 @@ export function useCalculatorScenario(
             setInvalid(initial.invalid);
             setRateMode('saved');
             lastPayload.current = payload;
-        } else if (payload && !initial.invalid) {
-            setInvalid(false);
+        } else {
+            if (payload && !initial.invalid) {
+                setInvalid(false);
+            }
+
+            setInputs((previous) =>
+                previous.language === initial.inputs.language
+                    ? previous
+                    : { ...previous, language: initial.inputs.language },
+            );
         }
     }, [initial, payload]);
-
-    useEffect(() => {
-        if (
-            !valid ||
-            encode(inputs) === payload ||
-            (!payload &&
-                JSON.stringify(inputs) === JSON.stringify(initial.inputs))
-        ) {
-            return;
-        }
-
-        const timer = setTimeout(() => {
-            const nextPayload = encode(inputs);
-            lastPayload.current = nextPayload;
-            router.get(
-                calculator.url(
-                    { payload: nextPayload },
-                    { query: { lang: inputs.language } },
-                ),
-                {},
-                { preserveState: true, preserveScroll: true, replace: true },
-            );
-        }, 400);
-
-        return () => clearTimeout(timer);
-    }, [inputs, initial.inputs, payload, valid]);
 
     const update = (key: keyof Inputs, value: string | number | null) => {
         setInputs((previous) => ({ ...previous, [key]: value }));
