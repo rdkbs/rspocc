@@ -93,12 +93,12 @@ it('keeps canonical URLs language-specific and explains the tool in the FAQ', fu
         ->assertScript('JSON.parse(document.querySelector(`script[type="application/ld+json"]`).textContent).url', $origin.'/id/faq');
 
     $page->navigate('/en')
-        ->assertPresent('header img[src="/logo-white-green.svg"]')
+        ->assertPresent('header img[src="/logo.svg"]')
         ->assertScript('document.querySelector("header [role=combobox]") !== null', true)
         ->assertScript('document.querySelector("footer [role=combobox]") === null', true)
         ->assertScript('[...document.querySelectorAll("footer button")].some((button) => button.innerText.includes("Dark mode"))', true)
         ->assertScript('document.body.innerText.includes("before costs and taxes")', false)
-        ->assertScript('document.querySelector("link[rel=icon]").href.endsWith("/logo-white-green.svg")', true)
+        ->assertScript('document.querySelector("link[rel=icon]").href.endsWith("/logo.svg")', true)
         ->assertNoJavaScriptErrors();
 
     $page->navigate('/id')
@@ -144,4 +144,14 @@ it('sorts glossary titles alphabetically in each language', function (): void {
             ->assertScript('(() => { const titles = [...document.querySelectorAll("article section h2")].map((heading) => heading.textContent); return titles.length > 0 && titles.every((title, index) => index === 0 || titles[index - 1].localeCompare(title) <= 0); })()', true)
             ->assertNoJavaScriptErrors();
     }
+});
+
+it('renders shared image metadata directly in the document head', function (): void {
+    Http::fake(['api.frankfurter.dev/*' => Http::response([])]);
+    $payload = 'N4Igbg9gNgrgtgUxALgIwAZMBoQwHYCWALiiCThAgE4oBM6OA1tXQHS0CsOAngQlABM2Adi4gADlQIBjBAGcUoaXPEQUAZlYA2YTmXjGa5AA5jrYaj0rmKdK1QBfHAgAe0gBYBDPAHMkaY1paAE49GCoqBDxpblIASQARACUQHChvHxhPP1ICIQcgA';
+
+    visit('/en?'.http_build_query(['payload' => $payload]))
+        ->assertScript('document.querySelector(`head > meta[property="og:image"][data-inertia]`) !== null', true)
+        ->assertScript('document.querySelector(`head > meta[name="twitter:card"][data-inertia]`).content', 'summary_large_image')
+        ->assertNoJavaScriptErrors();
 });

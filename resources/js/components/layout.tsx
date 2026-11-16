@@ -340,6 +340,21 @@ export default function Layout({
         [dark],
     );
     const pageUrl = useCanonicalPageUrl(path);
+    const { sharePreview, payload, previewImageUrl } = usePage<{
+        sharePreview?: {
+            title: string;
+            description: string;
+            imageUrl: string | null;
+        } | null;
+        payload?: string | null;
+        previewImageUrl?: string | null;
+    }>().props;
+    const socialTitle = sharePreview?.title ?? title;
+    const socialDescription = sharePreview?.description ?? description;
+    const socialUrl =
+        sharePreview && payload
+            ? `${pageUrl}?${new URLSearchParams({ payload })}`
+            : pageUrl;
     return (
         <ThemeProvider theme={theme}>
             <CssBaseline />
@@ -348,10 +363,37 @@ export default function Layout({
                 <meta name="color-scheme" content={dark ? 'dark' : 'light'} />
                 <meta name="page-type" content="software" />
                 <meta name="site-kind" content="software" />
-                <meta property="og:title" content={title} />
-                <meta property="og:description" content={description} />
+                <meta property="og:title" content={socialTitle} />
+                <meta property="og:description" content={socialDescription} />
                 <meta property="og:type" content="website" />
-                <meta property="og:url" content={pageUrl} />
+                <meta property="og:url" content={socialUrl} />
+                {previewImageUrl && (
+                    <meta property="og:image" content={previewImageUrl} />
+                )}
+                {previewImageUrl && (
+                    <meta property="og:image:width" content="1200" />
+                )}
+                {previewImageUrl && (
+                    <meta property="og:image:height" content="630" />
+                )}
+                {previewImageUrl && (
+                    <meta property="og:image:alt" content={socialTitle} />
+                )}
+                {previewImageUrl && (
+                    <meta name="twitter:card" content="summary_large_image" />
+                )}
+                {previewImageUrl && (
+                    <meta name="twitter:image" content={previewImageUrl} />
+                )}
+                {previewImageUrl && (
+                    <meta name="twitter:title" content={socialTitle} />
+                )}
+                {previewImageUrl && (
+                    <meta
+                        name="twitter:description"
+                        content={socialDescription}
+                    />
+                )}
                 <link rel="canonical" href={pageUrl} />
             </Head>
             <Box
@@ -411,7 +453,7 @@ export default function Layout({
                         >
                             <Box
                                 component="img"
-                                src="/logo-white-green.svg"
+                                src="/logo.svg"
                                 alt=""
                                 sx={{
                                     width: 44,
@@ -615,7 +657,7 @@ export default function Layout({
                             >
                                 <Box
                                     component="img"
-                                    src="/logo-white-green.svg"
+                                    src="/logo.svg"
                                     alt=""
                                     sx={{
                                         width: 36,
