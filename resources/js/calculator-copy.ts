@@ -74,7 +74,7 @@ export const homePageCopy = {
         faqItems: [
             [
                 'Are the preset prices fixed selling prices?',
-                'No. They show dated PRISMA references. Enter the price agreed with your buyer.',
+                'No. They show dated PRISMA references. Enter your estimated selling price.',
             ],
             [
                 'Are calculator fees or taxes included?',
@@ -104,7 +104,7 @@ export const homePageCopy = {
         faqItems: [
             [
                 'Apakah harga preset merupakan harga jual tetap?',
-                'Tidak. Nilainya adalah referensi PRISMA bertanggal. Masukkan harga yang disepakati dengan pembeli.',
+                'Tidak. Nilainya adalah referensi PRISMA bertanggal. Masukkan perkiraan harga jual Anda.',
             ],
             [
                 'Apakah biaya atau pajak sudah termasuk?',

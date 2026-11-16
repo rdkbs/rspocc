@@ -109,3 +109,11 @@ it('keeps canonical URLs language-specific and explains the tool in the FAQ', fu
         ->click('Light mode')
         ->assertScript('getComputedStyle(document.documentElement).colorScheme', 'light');
 });
+
+it('sorts glossary titles alphabetically in each language', function (): void {
+    foreach (['en', 'id'] as $language) {
+        visit("/$language/glossary")
+            ->assertScript('(() => { const titles = [...document.querySelectorAll("article section h2")].map((heading) => heading.textContent); return titles.length > 0 && titles.every((title, index) => index === 0 || titles[index - 1].localeCompare(title) <= 0); })()', true)
+            ->assertNoJavaScriptErrors();
+    }
+});
