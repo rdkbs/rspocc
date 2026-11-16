@@ -27,6 +27,21 @@ it('renders the selected language in Inertia props and the document', function (
     'English FAQ' => ['/en/faq', 'en'],
 ]);
 
+it('renders a localized calculator fallback before JavaScript loads', function (string $url, string $language, string $title): void {
+    $response = $this->get($url);
+
+    $response->assertOk();
+    $response->assertSeeHtml('<title>'.$title.' - RSPO Credit Calculator</title>');
+    $response->assertSeeHtml('<div id="initial-page-fallback" lang="'.$language.'">');
+    expect($response->getContent())->toMatch(
+        '/<div id="app"><\/div>\s*<div id="initial-page-fallback" lang="'.$language.'">/',
+    );
+    $response->assertSeeHtml('#app:not(:empty) + #initial-page-fallback { display: none; }');
+})->with([
+    'Indonesian calculator' => ['/id', 'id', 'Perkirakan pendapatan kredit RSPO'],
+    'English calculator' => ['/en', 'en', 'Estimate RSPO credit revenue'],
+]);
+
 it('rejects excessively long and multi segment payloads', function (): void {
     $this->get('/en?payload='.\str_repeat('a', 4097))->assertStatus(414);
     $this->get('/en?payload[]=bad')->assertBadRequest();
