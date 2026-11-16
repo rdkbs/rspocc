@@ -74,8 +74,10 @@ function persistColorScheme(dark: boolean): void {
 function calculatorHomeUrl(language: 'id' | 'en'): string {
     return calculatorLanguage.url({ language });
 }
-export function canonicalPageUrl(path: string): string {
-    return `https://rspocc.belayansejahtera.org${path}`;
+export function useCanonicalPageUrl(path: string): string {
+    const { appUrl } = usePage<{ appUrl: string }>().props;
+
+    return `${appUrl.replace(/\/$/, '')}${path}`;
 }
 export default function Layout({
     children,
@@ -337,7 +339,7 @@ export default function Layout({
             ),
         [dark],
     );
-    const pageUrl = canonicalPageUrl(path);
+    const pageUrl = useCanonicalPageUrl(path);
     return (
         <ThemeProvider theme={theme}>
             <CssBaseline />

@@ -43,7 +43,7 @@ it('renders a localized calculator fallback before JavaScript loads', function (
 ]);
 
 it('renders the saved color scheme in the initial HTML', function (): void {
-    $response = $this->withCookie('rspocc_color_scheme', 'dark')->get('/en');
+    $response = $this->withUnencryptedCookie('rspocc_color_scheme', 'dark')->get('/en');
 
     $response->assertOk()
         ->assertSeeHtml('<html data-type="software" lang="en" class="dark">')

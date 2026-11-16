@@ -77,15 +77,20 @@ it('shares current inputs in a query URL that restores the calculation', functio
 it('keeps canonical URLs language-specific and explains the tool in the FAQ', function (): void {
     $page = visit('/en/faq');
 
+    $origin = $page->script('location.origin');
+    if (! is_string($origin)) {
+        $this->fail('The browser did not provide an origin URL.');
+    }
+
     $page->assertSee('What is the RSPO Credit Calculator?')
-        ->assertScript('document.querySelector("link[rel=canonical]").href', 'https://rspocc.belayansejahtera.org/en/faq')
-        ->assertScript('document.querySelector(`meta[property="og:url"]`).content', 'https://rspocc.belayansejahtera.org/en/faq')
-        ->assertScript('JSON.parse(document.querySelector(`script[type="application/ld+json"]`).textContent).url', 'https://rspocc.belayansejahtera.org/en/faq');
+        ->assertScript('document.querySelector("link[rel=canonical]").href', $origin.'/en/faq')
+        ->assertScript('document.querySelector(`meta[property="og:url"]`).content', $origin.'/en/faq')
+        ->assertScript('JSON.parse(document.querySelector(`script[type="application/ld+json"]`).textContent).url', $origin.'/en/faq');
 
     $page->navigate('/id/faq')
         ->assertSee('Apa itu Kalkulator Kredit RSPO?')
-        ->assertScript('document.querySelector("link[rel=canonical]").href', 'https://rspocc.belayansejahtera.org/id/faq')
-        ->assertScript('JSON.parse(document.querySelector(`script[type="application/ld+json"]`).textContent).url', 'https://rspocc.belayansejahtera.org/id/faq');
+        ->assertScript('document.querySelector("link[rel=canonical]").href', $origin.'/id/faq')
+        ->assertScript('JSON.parse(document.querySelector(`script[type="application/ld+json"]`).textContent).url', $origin.'/id/faq');
 
     $page->navigate('/en')
         ->assertPresent('header img[src="/logo-white-green.svg"]')
@@ -119,7 +124,7 @@ it('persists the selected color scheme across page loads', function (): void {
 
     $page->script('localStorage.removeItem("rspocc:color-scheme");');
     $page->refresh()
-        ->assertScript('JSON.parse(document.getElementById("app").dataset.page).props.colorScheme', 'dark')
+        ->assertScript('JSON.parse(document.querySelector(`script[data-page="app"]`).textContent).props.colorScheme', 'dark')
         ->assertScript('document.documentElement.classList.contains("dark")', true)
         ->assertScript('getComputedStyle(document.documentElement).colorScheme', 'dark')
         ->assertSee('Light mode')
@@ -127,7 +132,7 @@ it('persists the selected color scheme across page loads', function (): void {
 
     $page->script('localStorage.removeItem("rspocc:color-scheme");');
     $page->refresh()
-        ->assertScript('JSON.parse(document.getElementById("app").dataset.page).props.colorScheme', 'light')
+        ->assertScript('JSON.parse(document.querySelector(`script[data-page="app"]`).textContent).props.colorScheme', 'light')
         ->assertScript('document.documentElement.classList.contains("dark")', false)
         ->assertScript('getComputedStyle(document.documentElement).colorScheme', 'light')
         ->assertNoJavaScriptErrors();
