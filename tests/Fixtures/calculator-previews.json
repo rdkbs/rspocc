@@ -1,0 +1,72 @@
+[
+    {
+        "payload": "N4Igbg9gNgrgtgUxALgIwAZMBoQwHYCWALiiCThAgE4oBM6OA1tXQHS0CsOAngQlABM2Adi4gADlQIBjBAGcUoaXPEQUAZlYA2YTmXjGa5AA5jrYaj0rmKdK1QBfHAgAe0gBYBDPAHMkaLUwGEGkYKioEPGluUgBJABEAJRAcKG8fGE8-UgIhByA",
+        "result": {
+            "kg": 1000000,
+            "usd": 2732.725,
+            "converted": 43723600,
+            "added": 43.7236,
+            "currency": "IDR"
+        }
+    },
+    {
+        "payload": "N4Igbg9gNgrgtgUxALgIwAZNYDQhgOwEsAXFEAawHMRcIEAnFAJnV3IeYDomBWXAT0IIoAEy4B2PiAAO9QgGMEAZxSh5S6RBQBmTgDZxuddPJbkADnOdxqIxvYp0nVAF9cCAB7yAFgEN8lEhoejgg8jD09Aj48vxkAJIAIgBKNCBQ-pQwvoFkhGIuQA",
+        "result": {
+            "kg": 1000000,
+            "usd": 2732.725,
+            "converted": 43723600,
+            "added": 43.7236,
+            "currency": "IDR"
+        }
+    },
+    {
+        "payload": "N4Igbg9gNgrgtgUxALgIwAZMBoQwHYCWALiiCThAgE4oBM6OA1tXQHS0CsOAngQlABM2Adi4gADlQIBjBAGcUoaXPEQUAZlYA2YTmXjGa5AA5jrYaj0rmKdK1QBfHAgAe0gBYBDPAHMkaLUwGEGkYKioEPGluUgBVAGUAERAcKG8fGE8-UgIhByA",
+        "result": {
+            "kg": 1000000,
+            "usd": 2732.725,
+            "converted": 2732.725,
+            "added": 0.002732725,
+            "currency": "USD"
+        }
+    },
+    {
+        "payload": "N4Igbg9gNgrgtgUxALgIwAZMBoQwHYCWALiiCThAgE4oBM6OA1tXQHS0CsOAngQlABM2Adi4gADlQIBjBAGcUoaXPEQUAZlYA2YTmXjGa5AA5jrYaj0rmKdK1QBfHAgAe0gBYBDPAHMkyOwBOWj0YKioEPGluUgBRAFUAJRAcKG8fGE8-UgIhByA",
+        "result": {
+            "kg": 1000000,
+            "usd": 2732.725,
+            "converted": 2514.107,
+            "added": 0.002514107,
+            "currency": "EUR"
+        }
+    },
+    {
+        "payload": "N4Igbg9gNgrgtgUxALgIwAZMBoQwHYCWALiiCThAgE4oBM6OA1tXQHS0CsOAngQlABM2Adi4gADlQIBjBAGcUoaXPEQUDEMvGM1yPDChQcW5mw4BfHAgAe0gBYBDPAHMkaAGyYN0mFSoI8aW5SAEkAEQAlEBwoJ2cYB1dSAiFzIA",
+        "result": {
+            "kg": 1000000,
+            "usd": 68.75,
+            "converted": 1100000,
+            "added": 1.1,
+            "currency": "IDR"
+        }
+    },
+    {
+        "payload": "N4Igbg9gNgrgtgUxALgIwAZMBoQwHYCWALiiCThAgE4oBM6OA1tXQHS0CsOAngQlABM2Adi4gADlQIBjBAGcUoaXPEQUAZlYA2YTmXjGa5AA5jrYaj0rmKdK1QBfHAgAe0gBYBDPAHMkaLUwGEGkYKioEPGluUgBJABEAJRAcKG8fGE8-UgIhHAIo2AEEIWQlFSMiKhgEKwMjADNPKDlakOt-KpqHByA",
+        "result": {
+            "kg": 1000000,
+            "usd": 736.75,
+            "converted": 11788000,
+            "added": 11.788,
+            "currency": "IDR"
+        }
+    },
+    {
+        "payload": "N4Igbg9gNgrgtgUxALgIwAZMBoQwHYCWALiiCThAgE4oBM6OA1tXQHS0CsOAngQlABM2Adi4gEADwDGACwCGeAOZI0ANkwMQUmFSoI8U7qQCSAEQBKIHFAWKYc5aQJCcABz1wC8FBwC+QA",
+        "result": {
+            "kg": 1000000,
+            "usd": 1250,
+            "converted": 20000000,
+            "added": 20,
+            "currency": "IDR"
+        }
+    }
+]

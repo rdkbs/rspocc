@@ -1,3 +1,4 @@
+import previewFixtures from './Fixtures/calculator-previews.json';
 import { glossaryParts } from '../resources/js/glossary.ts';
 import {
     formatNumericInput,
@@ -224,4 +225,16 @@ describe('glossary term matching', () => {
                 .map((part) => part.entry.term),
         ).toEqual(['FFB / TBS', 'Exchange rate']);
     });
+});
+
+test('shared preview fixtures stay consistent with the JavaScript calculator', () => {
+    for (const { payload, result } of previewFixtures) {
+        const scenario = decode(payload);
+        expect(scenario.invalid).toBe(false);
+        const calculated = useCalculator(scenario.inputs);
+        for (const key of ['kg', 'usd', 'converted', 'added']) {
+            expect(calculated[key]).toBeCloseTo(result[key], 6);
+        }
+        expect(scenario.inputs.currency).toBe(result.currency);
+    }
 });

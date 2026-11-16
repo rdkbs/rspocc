@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\CalculatorController;
+use App\Http\Controllers\CalculatorPreviewImageController;
 use App\Http\Controllers\ExchangeRateController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -16,6 +17,11 @@ Route::permanentRedirect('/privacy', '/id/privacy')->name('privacy');
 Route::permanentRedirect('/glossary', '/id/glossary')->name('glossary');
 
 Route::get('/exchange-rates', ExchangeRateController::class)->name('exchange-rates');
+
+Route::get('/{language}/share-preview.png', CalculatorPreviewImageController::class)
+    ->whereIn('language', ['id', 'en'])
+    ->middleware('throttle:60,1')
+    ->name('calculator.preview-image');
 
 Route::get('/{language}/{page}', fn (string $language, string $page): Response => Inertia::render('content', [
     'slug' => $page,

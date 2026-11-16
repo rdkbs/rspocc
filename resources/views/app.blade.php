@@ -29,11 +29,19 @@
         ],
     ];
     $fallback = $fallbackPages[$language][$slug] ?? $fallbackPages['id']['index'];
+    $sharePreview = $page['props']['sharePreview'] ?? null;
+    $previewImageUrl = $page['props']['previewImageUrl'] ?? null;
+    $socialTitle = $sharePreview['title'] ?? $fallback['title'];
+    $socialDescription = $sharePreview['description'] ?? $fallback['description'];
     $productName = $language === 'id' ? 'Kalkulator Kredit RSPO' : 'RSPO Credit Calculator';
     $canonicalPath = $slug === 'index'
         ? route('calculator.language', ['language' => $language], absolute: false)
         : route('localizedContent', ['language' => $language, 'page' => $slug], absolute: false);
     $canonicalUrl = rtrim(config('app.url'), '/').$canonicalPath;
+    $shareUrl = $canonicalUrl;
+    if ($sharePreview !== null) {
+        $shareUrl .= '?'.http_build_query(['payload' => $page['props']['payload']], '', '&', PHP_QUERY_RFC3986);
+    }
 @endphp
 <!DOCTYPE html>
 <html data-type="software" lang="{{ $language }}" @class(['dark' => $colorScheme === 'dark'])>
@@ -56,7 +64,7 @@
             </script>
         @endif
 
-        <link rel="icon" href="/logo-white-green.svg" type="image/svg+xml" sizes="any">
+        <link rel="icon" href="/logo.svg" type="image/svg+xml" sizes="any">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
         @fonts
@@ -67,10 +75,23 @@
             <title>{{ $fallback['title'] }} - RSPO Credit Calculator</title>
             <meta name="description" content="{{ $fallback['description'] }}">
             <link rel="canonical" href="{{ $canonicalUrl }}">
-            <meta property="og:title" content="{{ $fallback['title'] }}">
-            <meta property="og:description" content="{{ $fallback['description'] }}">
+            <meta property="og:title" content="{{ $socialTitle }}">
+            <meta property="og:description" content="{{ $socialDescription }}">
             <meta property="og:type" content="website">
-            <meta property="og:url" content="{{ $canonicalUrl }}">
+            <meta property="og:url" content="{{ $shareUrl }}">
+            @if ($previewImageUrl)
+                <meta property="og:image" content="{{ $previewImageUrl }}">
+                <meta property="og:image:type" content="image/png">
+                <meta property="og:image:width" content="1200">
+                <meta property="og:image:height" content="630">
+                <meta property="og:image:alt" content="{{ $socialTitle }}">
+                <meta name="twitter:card" content="summary_large_image">
+                <meta name="twitter:image" content="{{ $previewImageUrl }}">
+            @else
+                <meta name="twitter:card" content="summary">
+            @endif
+            <meta name="twitter:title" content="{{ $socialTitle }}">
+            <meta name="twitter:description" content="{{ $socialDescription }}">
         </x-inertia::head>
         <style>
             #app:not(:empty) + #initial-page-fallback { display: none; }
