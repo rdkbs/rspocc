@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import DarkMode from '@mui/icons-material/DarkMode';
 import LightMode from '@mui/icons-material/LightMode';
 import {
@@ -37,6 +37,40 @@ const navigation = [
     { title: 'Terms', titleId: 'Ketentuan', page: 'terms' },
     { title: 'Privacy', titleId: 'Privasi', page: 'privacy' },
 ];
+const colorSchemeStorageKey = 'rspocc:color-scheme';
+function getSavedDarkMode(): boolean | null {
+    if (typeof window === 'undefined') {
+        return null;
+    }
+
+    try {
+        const colorScheme = window.localStorage.getItem(colorSchemeStorageKey);
+
+        if (colorScheme === 'dark') {
+            return true;
+        }
+
+        return colorScheme === 'light' ? false : null;
+    } catch {
+        return null;
+    }
+}
+function writeColorSchemeCookie(colorScheme: 'dark' | 'light'): void {
+    const secureCookie =
+        window.location.protocol === 'https:' ? '; Secure' : '';
+    document.cookie = `rspocc_color_scheme=${colorScheme}; Max-Age=31536000; Path=/; SameSite=Lax${secureCookie}`;
+}
+function persistColorScheme(dark: boolean): void {
+    const colorScheme = dark ? 'dark' : 'light';
+
+    try {
+        window.localStorage.setItem(colorSchemeStorageKey, colorScheme);
+    } catch {
+        // Keep cookie persistence available when browser storage is blocked.
+    }
+
+    writeColorSchemeCookie(colorScheme);
+}
 function calculatorHomeUrl(language: 'id' | 'en'): string {
     return calculatorLanguage.url({ language });
 }
@@ -58,7 +92,20 @@ export default function Layout({
     language?: 'id' | 'en';
     onLanguageChange: (language: 'id' | 'en') => void;
 }) {
-    const [dark, setDark] = useState(false);
+    const { colorScheme } = usePage<{
+        colorScheme: 'dark' | 'light';
+    }>().props;
+    const serverRenderedPage =
+        typeof document !== 'undefined' &&
+        document.getElementById('app')?.hasAttribute('data-server-rendered') ===
+            true;
+    const [dark, setDark] = useState(() => {
+        if (typeof window === 'undefined' || serverRenderedPage) {
+            return colorScheme === 'dark';
+        }
+
+        return getSavedDarkMode() ?? colorScheme === 'dark';
+    });
     const primaryPalette = dark
         ? {
               main: '#e17e00',
@@ -75,6 +122,46 @@ export default function Layout({
     useEffect(() => {
         document.documentElement.lang = language;
     }, [language]);
+    useEffect(() => {
+        if (serverRenderedPage) {
+            const savedDarkMode = getSavedDarkMode();
+            const initialDarkMode = savedDarkMode ?? colorScheme === 'dark';
+
+            setDark(initialDarkMode);
+            document.documentElement.classList.toggle('dark', initialDarkMode);
+            if (savedDarkMode !== null) {
+                persistColorScheme(savedDarkMode);
+            }
+            document
+                .getElementById('app')
+                ?.removeAttribute('data-server-rendered');
+        }
+    }, [serverRenderedPage, colorScheme]);
+    useEffect(() => {
+        if (!serverRenderedPage) {
+            document.documentElement.classList.toggle('dark', dark);
+        }
+    }, [dark, serverRenderedPage]);
+    useEffect(() => {
+        const syncColorScheme = (event: StorageEvent) => {
+            if (event.key === colorSchemeStorageKey || event.key === null) {
+                const colorScheme =
+                    event.newValue === 'dark' ? 'dark' : 'light';
+
+                setDark(colorScheme === 'dark');
+                writeColorSchemeCookie(colorScheme);
+            }
+        };
+
+        window.addEventListener('storage', syncColorScheme);
+
+        return () => window.removeEventListener('storage', syncColorScheme);
+    }, []);
+    const toggleDarkMode = () => {
+        const nextDark = !dark;
+        setDark(nextDark);
+        persistColorScheme(nextDark);
+    };
     const theme = useMemo(
         () =>
             responsiveFontSizes(
@@ -256,7 +343,7 @@ export default function Layout({
             <CssBaseline />
             <Head title={title}>
                 <meta name="description" content={description} />
-                <meta name="color-scheme" content="light dark" />
+                <meta name="color-scheme" content={dark ? 'dark' : 'light'} />
                 <meta name="page-type" content="software" />
                 <meta name="site-kind" content="software" />
                 <meta property="og:title" content={title} />
@@ -563,7 +650,7 @@ export default function Layout({
                         <Button
                             variant="outlined"
                             color="primary"
-                            onClick={() => setDark(!dark)}
+                            onClick={toggleDarkMode}
                             aria-pressed={dark}
                             startIcon={
                                 dark ? (

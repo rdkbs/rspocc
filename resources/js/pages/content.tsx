@@ -97,7 +97,7 @@ const englishPages: Record<ContentSlug, ContentPage> = {
             ],
             [
                 'Calculator preferences and cookies',
-                'The theme setting stays in memory for the current page. Laravel may use session and security cookies. These cookies do not store your calculations.',
+                'Your browser saves your light or dark theme choice for future visits. It keeps the choice in local storage until you clear site data and in a first-party cookie named rspocc_color_scheme, which is set to expire after one year. These settings store your theme choice, not your calculation inputs.',
             ],
         ],
     },
@@ -180,7 +180,7 @@ const indonesianPages: Record<ContentSlug, ContentPage> = {
             ],
             [
                 'Preferensi kalkulator dan cookie',
-                'Pengaturan tema hanya tersimpan selama halaman dibuka. Laravel dapat menggunakan cookie sesi dan keamanan. Cookie tersebut tidak menyimpan data perhitungan.',
+                'Browser menyimpan pilihan tema terang atau gelap agar tetap digunakan saat Anda kembali. Pilihan ini tersimpan di penyimpanan lokal sampai Anda menghapus data situs dan di cookie dari situs ini bernama rspocc_color_scheme, yang diatur agar kedaluwarsa setelah satu tahun. Data tersebut hanya berisi pilihan tema, bukan data perhitungan.',
             ],
         ],
     },

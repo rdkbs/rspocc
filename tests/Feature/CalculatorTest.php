@@ -42,6 +42,15 @@ it('renders a localized calculator fallback before JavaScript loads', function (
     'English calculator' => ['/en', 'en', 'Estimate RSPO credit revenue'],
 ]);
 
+it('renders the saved color scheme in the initial HTML', function (): void {
+    $response = $this->withCookie('rspocc_color_scheme', 'dark')->get('/en');
+
+    $response->assertOk()
+        ->assertSeeHtml('<html data-type="software" lang="en" class="dark">')
+        ->assertSeeHtml('<meta name="color-scheme" content="dark">')
+        ->assertInertia(fn (Assert $page): Assert => $page->where('colorScheme', 'dark'));
+});
+
 it('rejects excessively long and multi segment payloads', function (): void {
     $this->get('/en?payload='.\str_repeat('a', 4097))->assertStatus(414);
     $this->get('/en?payload[]=bad')->assertBadRequest();
