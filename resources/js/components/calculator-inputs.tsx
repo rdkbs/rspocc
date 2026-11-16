@@ -266,7 +266,7 @@ export default function CalculatorInputs({
                         <Typography
                             variant="body2"
                             color="text.secondary"
-                            sx={{ mt: 1.5 }}
+                            sx={{ mt: 3 }}
                         >
                             {inputs.language === 'id'
                                 ? 'Harga dapat diisi dari salah satu referensi di bawah.'

@@ -13,10 +13,16 @@ export const calculatorCopy = {
         excluded: 'Excluded',
         added: 'Extra revenue per kg FFB',
         outputs: 'Estimated product volumes',
-        copy: 'Copy link',
-        whatsapp: 'Share to WhatsApp',
-        disclaimer: 'Confirm certified volumes and prices with your buyer.',
+        share: 'Share the result',
+        disclaimerBeforeEmphasis:
+            'Results from the RSPO Credit Calculator are ',
+        disclaimerEmphasis: 'estimates',
+        disclaimerAfterEmphasis:
+            ', not binding offers or contracts.',
+        termsLink: 'Read the full terms',
         copied: 'Link copied.',
+        shareFailed:
+            'Sharing is unavailable. Copy the URL from your browser’s address bar.',
         invalid:
             'This link could not be read. Enter volume and credit prices to start a new estimate.',
         error: 'Values must be zero or more. The exchange rate must be above zero. Total extraction rates cannot exceed 100%.',
@@ -35,11 +41,16 @@ export const calculatorCopy = {
         excluded: 'Tidak dihitung',
         added: 'Tambahan pendapatan per kg TBS',
         outputs: 'Perkiraan volume produk',
-        copy: 'Salin tautan',
-        whatsapp: 'Bagikan ke WhatsApp',
-        disclaimer:
-            'Konfirmasikan volume bersertifikat dan harga kepada pembeli.',
+        share: 'Bagikan hasil',
+        disclaimerBeforeEmphasis:
+            'Hasil perhitungan Kalkulator Kredit RSPO hanya ',
+        disclaimerEmphasis: 'perkiraan',
+        disclaimerAfterEmphasis:
+            ', bukan penawaran atau kontrak yang mengikat.',
+        termsLink: 'Baca ketentuan lengkap',
         copied: 'Tautan disalin.',
+        shareFailed:
+            'Fitur berbagi tidak tersedia. Salin URL dari bilah alamat browser.',
         invalid:
             'Tautan tidak dapat dibaca. Masukkan volume dan harga kredit untuk memulai perhitungan baru.',
         error: 'Nilai tidak boleh negatif. Kurs harus lebih dari nol. Total rendemen maksimal 100%.',

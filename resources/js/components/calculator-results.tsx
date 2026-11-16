@@ -1,13 +1,16 @@
 import { Fragment, useState } from 'react';
+import { Link } from '@inertiajs/react';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
+import ShareIcon from '@mui/icons-material/Share';
 import type { CalculatorCopy } from '@/calculator-copy';
 import GlossaryText from '@/components/glossary-text';
 import { credits, useCalculator, type Inputs } from '@/hooks/use-calculator';
+import { terms } from '@/routes';
 
 const creditColors = {
     cspo: 'primary.main',
@@ -82,6 +85,38 @@ export default function CalculatorResults({
         });
     };
     const [shareMessage, setShareMessage] = useState('');
+    const hasResults = ready && valid;
+    const share = () => {
+        const url = shareUrl();
+
+        if (navigator.share) {
+            void navigator
+                .share({ title: document.title, url })
+                .catch((error: unknown) => {
+                    if (
+                        error instanceof DOMException &&
+                        error.name === 'AbortError'
+                    ) {
+                        return;
+                    }
+
+                    setShareMessage(text.shareFailed);
+                });
+
+            return;
+        }
+
+        if (!navigator.clipboard) {
+            setShareMessage(text.shareFailed);
+
+            return;
+        }
+
+        void navigator.clipboard
+            .writeText(url)
+            .then(() => setShareMessage(text.copied))
+            .catch(() => setShareMessage(text.shareFailed));
+    };
 
     return (
         <Stack
@@ -94,12 +129,10 @@ export default function CalculatorResults({
             ) : (
                 <>
                     <Paper
-                        variant="outlined"
                         sx={{
                             p: { xs: 3, md: 4 },
                             bgcolor: 'primary.main',
                             color: 'primary.contrastText',
-                            borderColor: 'primary.main',
                             '& .MuiTypography-root': { color: 'inherit' },
                         }}
                     >
@@ -145,54 +178,6 @@ export default function CalculatorResults({
                                 {text.estimatePrompt}
                             </Typography>
                         )}
-                        <Stack
-                            direction={{ xs: 'column', sm: 'row' }}
-                            sx={{ gap: 1.5, mt: 3 }}
-                        >
-                            <Button
-                                disabled={!valid}
-                                variant="contained"
-                                color="secondary"
-                                onClick={() => {
-                                    void navigator.clipboard
-                                        .writeText(shareUrl())
-                                        .then(() =>
-                                            setShareMessage(text.copied),
-                                        )
-                                        .catch(() =>
-                                            setShareMessage(
-                                                inputs.language === 'id'
-                                                    ? 'Tidak dapat menyalin. Salin URL dari bilah alamat.'
-                                                    : 'Unable to copy. Copy the URL from the address bar.',
-                                            ),
-                                        );
-                                }}
-                            >
-                                {text.copy}
-                            </Button>
-                            <Button
-                                disabled={!valid}
-                                variant="outlined"
-                                color="inherit"
-                                onClick={() =>
-                                    window.open(
-                                        'https://wa.me/?text=' +
-                                            encodeURIComponent(shareUrl()),
-                                        '_blank',
-                                        'noopener,noreferrer',
-                                    )
-                                }
-                            >
-                                {text.whatsapp}
-                            </Button>
-                        </Stack>
-                        <Typography
-                            role="status"
-                            aria-live="polite"
-                            sx={{ mt: 1 }}
-                        >
-                            {shareMessage}
-                        </Typography>
                         {ready && (
                             <Box
                                 sx={{
@@ -302,16 +287,71 @@ export default function CalculatorResults({
                             ))}
                         </Paper>
                     )}
+                    {hasResults && (
+                        <Stack sx={{ alignItems: 'flex-start', gap: 0.5 }}>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={share}
+                                startIcon={<ShareIcon aria-hidden="true" />}
+                                sx={{ minHeight: 44 }}
+                            >
+                                {text.share}
+                            </Button>
+                            <Typography
+                                role="status"
+                                aria-live="polite"
+                                color="text.secondary"
+                            >
+                                {shareMessage}
+                            </Typography>
+                        </Stack>
+                    )}
                 </>
             )}
-            <Typography
-                color="text.secondary"
-                sx={{ fontSize: 15, lineHeight: 1.7 }}
-            >
-                <GlossaryText language={inputs.language}>
-                    {text.disclaimer}
-                </GlossaryText>
-            </Typography>
+            {hasResults && (
+                <Typography
+                    variant='caption'
+                    color="text.secondary"
+                    sx={{ fontSize: 15, lineHeight: 1.7 }}
+                >
+                    <GlossaryText language={inputs.language}>
+                        {text.disclaimerBeforeEmphasis}
+                    </GlossaryText>
+                    <strong>
+                        <GlossaryText language={inputs.language}>
+                            {text.disclaimerEmphasis}
+                        </GlossaryText>
+                    </strong>
+                    <GlossaryText language={inputs.language}>
+                        {text.disclaimerAfterEmphasis}
+                    </GlossaryText>
+                    {' '}
+                    <Box
+                        component="span"
+                        sx={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            minHeight: 44,
+                            color: 'primary.main',
+                            verticalAlign: 'middle',
+                        }}
+                    >
+                        <Link
+                            href={terms.url({
+                                query: { lang: inputs.language },
+                            })}
+                            style={{
+                                color: 'inherit',
+                                fontWeight: 600,
+                                textUnderlineOffset: 4,
+                            }}
+                        >
+                            {text.termsLink}
+                        </Link>
+                    </Box>
+                </Typography>
+            )}
         </Stack>
     );
 }
