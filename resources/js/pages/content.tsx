@@ -93,7 +93,7 @@ const englishPages: Record<ContentSlug, ContentPage> = {
             ],
             [
                 'Save or share a calculator result',
-                'Use Copy link or Share to WhatsApp. The link contains your inputs, prices, currency, and language. Anyone with the link can read them.',
+                'Use Share to open your device’s sharing options, such as WhatsApp. If your browser does not support sharing, the button copies the link. Anyone with the link can read your inputs, prices, currency, and language.',
             ],
             [
                 'Before selling RSPO credits',
@@ -123,7 +123,7 @@ const englishPages: Record<ContentSlug, ContentPage> = {
             ],
             [
                 'Can I save a calculator result?',
-                'Yes. Copy the link to save it or share it through WhatsApp. The link contains your calculation data. Compression does not encrypt it.',
+                'Yes. Use Share to open your device’s sharing options or copy the link if sharing is not supported. The link contains your calculation data. Compression does not encrypt it.',
             ],
             [
                 'Is this RSPO credit estimate a sales agreement?',
@@ -185,8 +185,8 @@ const englishPages: Record<ContentSlug, ContentPage> = {
                 'Our server asks Frankfurter for public USD/IDR and USD/MYR rates. It does not send your harvest volume, credit prices, or other calculation inputs to Frankfurter. We keep public rates and their update time.',
             ],
             [
-                'Sharing calculator links on WhatsApp',
-                'Copy link writes the URL to your clipboard when you press the button. Share to WhatsApp sends the link to WhatsApp, which applies its own privacy terms.',
+                'Sharing calculator links',
+                'Share opens your device’s sharing options. If sharing is unavailable, the button copies the URL to your clipboard. The app you choose applies its own privacy terms.',
             ],
             [
                 'Calculator preferences and cookies',
@@ -222,7 +222,7 @@ const indonesianPages: Record<ContentSlug, ContentPage> = {
             ],
             [
                 'Simpan atau bagikan hasil kalkulator',
-                'Gunakan Salin tautan atau Bagikan ke WhatsApp. Tautan memuat input, harga, mata uang, dan bahasa. Siapa pun yang memiliki tautan dapat membacanya.',
+                'Gunakan Bagikan untuk membuka pilihan berbagi di perangkat, seperti WhatsApp. Jika browser tidak mendukung fitur berbagi, tombol akan menyalin tautan. Siapa pun yang memiliki tautan dapat membaca input, harga, mata uang, dan bahasa Anda.',
             ],
             [
                 'Sebelum menjual kredit RSPO',
@@ -252,7 +252,7 @@ const indonesianPages: Record<ContentSlug, ContentPage> = {
             ],
             [
                 'Bagaimana cara menyimpan hasil kalkulator?',
-                'Salin tautan untuk menyimpan atau membagikannya melalui WhatsApp. Tautan memuat data perhitungan. Kompresi bukan enkripsi.',
+                'Gunakan Bagikan untuk membuka pilihan berbagi di perangkat atau menyalin tautan jika fitur berbagi tidak tersedia. Tautan memuat data perhitungan. Kompresi bukan enkripsi.',
             ],
             [
                 'Apakah perkiraan kredit RSPO ini merupakan perjanjian jual beli?',
@@ -314,8 +314,8 @@ const indonesianPages: Record<ContentSlug, ContentPage> = {
                 'Server kami meminta kurs publik USD/IDR dan USD/MYR dari Frankfurter. Server tidak mengirim volume panen, harga kredit, atau input perhitungan lainnya ke Frankfurter. Kami menyimpan kurs publik dan waktu pembaruannya.',
             ],
             [
-                'Membagikan tautan kalkulator melalui WhatsApp',
-                'Tombol Salin tautan menyalin URL ke clipboard saat Anda menekannya. Tombol Bagikan ke WhatsApp mengirim tautan ke WhatsApp, yang memiliki ketentuan privasinya sendiri.',
+                'Membagikan tautan kalkulator',
+                'Bagikan membuka pilihan berbagi di perangkat. Jika fitur berbagi tidak tersedia, tombol akan menyalin URL ke clipboard. Aplikasi yang Anda pilih memiliki ketentuan privasinya sendiri.',
             ],
             [
                 'Preferensi kalkulator dan cookie',
