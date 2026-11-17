@@ -20,13 +20,14 @@ function referenceRateRows(): array
         ['date' => '2026-11-13', 'base' => 'USD', 'quote' => 'MYR', 'rate' => 4.5],
         ['date' => '2026-11-12', 'base' => 'USD', 'quote' => 'CNY', 'rate' => 7.2],
         ['date' => '2026-11-11', 'base' => 'USD', 'quote' => 'EUR', 'rate' => 0.92],
+        ['date' => '2026-11-11', 'base' => 'USD', 'quote' => 'SGD', 'rate' => 1.35],
     ];
 }
 
 it('fetches and caches reference rates without calling the provider again', function (): void {
     Http::fake(['api.frankfurter.dev/*' => Http::response(referenceRateRows())]);
     $this->getJson('/exchange-rates')->assertOk()->assertJsonPath('rates.IDR.rate', 16000)->assertJsonPath('rates.IDR.date', '2026-11-13')->assertJsonPath('stale', false);
-    $this->getJson('/exchange-rates')->assertOk()->assertJsonPath('rates.MYR.rate', 4.5);
+    $this->getJson('/exchange-rates')->assertOk()->assertJsonPath('rates.MYR.rate', 4.5)->assertJsonPath('rates.SGD.rate', 1.35);
     $this->getJson('/exchange-rates')->assertOk()->assertJsonPath('rates.CNY.date', '2026-11-12')->assertJsonPath('rates.EUR.date', '2026-11-11');
     Http::assertSentCount(1);
 });
@@ -54,6 +55,7 @@ it('uses the latest saved snapshot when the provider and caches are unavailable'
         'MYR' => ['rate' => 4.5, 'date' => '2026-11-13'],
         'CNY' => ['rate' => 7.2, 'date' => '2026-11-12'],
         'EUR' => ['rate' => 0.92, 'date' => '2026-11-11'],
+        'SGD' => ['rate' => 1.35, 'date' => '2026-11-11'],
     ];
     $snapshot = CreditPriceSnapshot::factory()->create([
         'period_end' => '2026-11-14',

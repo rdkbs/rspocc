@@ -15,7 +15,7 @@ export type Inputs = {
     yield: number;
     prices: Record<Credit, number | null>;
     exchange: number;
-    currency: 'IDR' | 'MYR' | 'CNY' | 'EUR' | 'USD';
+    currency: 'IDR' | 'MYR' | 'CNY' | 'EUR' | 'SGD' | 'USD';
     language: 'id' | 'en';
 };
 export const defaults: Inputs = {
@@ -77,6 +77,7 @@ export function isValidInputs(value: unknown): value is SerializedInputs {
             value.currency === 'MYR' ||
             value.currency === 'CNY' ||
             value.currency === 'EUR' ||
+            value.currency === 'SGD' ||
             value.currency === 'USD') &&
         (value.language === 'id' || value.language === 'en') &&
         isOptionalNumber(prices.cspo) &&

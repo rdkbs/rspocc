@@ -29,7 +29,7 @@ final class CalculatorPreview
             $numbers[$key] = $value;
         }
         if (! \in_array($data['unit'] ?? null, ['kg', 't'], true)
-            || ! \in_array($data['currency'] ?? null, ['IDR', 'MYR', 'CNY', 'EUR', 'USD'], true)
+            || ! \in_array($data['currency'] ?? null, ['IDR', 'MYR', 'CNY', 'EUR', 'SGD', 'USD'], true)
             || ! \in_array($data['language'] ?? null, ['id', 'en'], true)
             || $numbers['exchange'] <= 0
             || $numbers['oer'] + $numbers['ker'] + $numbers['yield'] > 100
