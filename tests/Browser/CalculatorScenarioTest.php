@@ -2,12 +2,10 @@
 
 declare(strict_types=1);
 
-use Illuminate\Support\Facades\Cache;
+use App\Models\CreditPriceSnapshot;
 use Illuminate\Support\Facades\Http;
 
 it('keeps edits off the URL and preserves inputs when switching language', function (): void {
-    config(['cache.stores.file' => ['driver' => 'array']]);
-    Cache::purge('file');
     Http::fake([
         'api.frankfurter.dev/*' => Http::response([
             ['date' => '2026-11-13', 'base' => 'USD', 'quote' => 'IDR', 'rate' => 16000],
@@ -28,7 +26,12 @@ it('keeps edits off the URL and preserves inputs when switching language', funct
     $page->click('header [role=combobox]')->click('Indonesia')
         ->assertPathIs('/id')
         ->assertValue('Volume TBS', '1.234');
-    $page->assertNoJavaScriptErrors();
+    $page->assertScript('document.cookie.includes("rspocc_language=id")', true)
+        ->navigate('/')
+        ->assertPathIs('/id')
+        ->navigate('/en')
+        ->assertPathIs('/en')
+        ->assertNoJavaScriptErrors();
 });
 
 it('restores calculator edits after returning from the FAQ', function (): void {
@@ -168,4 +171,38 @@ it('keeps nonzero decimals in added revenue per kilogram', function (): void {
         ->fill('CSPKE Price', '0')
         ->assertScript('Array.from(document.querySelectorAll("p")).some((node) => node.textContent.replace(/\s/g, "") === "IDR0/kg")', true)
         ->assertNoJavaScriptErrors();
+});
+
+it('remembers a currency choice while preserving shared calculation rates', function (): void {
+    Http::preventStrayRequests();
+    CreditPriceSnapshot::factory()->create(['exchange_rates' => ['IDR' => ['rate' => 16000, 'date' => '2026-11-13'], 'SGD' => ['rate' => 1.35, 'date' => '2026-11-13']]]);
+    $page = visit('/en');
+    $page->click('Currency and Extraction Rate Settings')
+        ->click('[role="combobox"][aria-label="Currency"]')
+        ->click('SGD')
+        ->assertValue('Rate per USD', '1.35')
+        ->assertScript('localStorage.getItem("rspocc:currency")', 'SGD');
+
+    $page->script('history.replaceState(null, "", location.href);');
+    $page->refresh()->click('Currency and Extraction Rate Settings')
+        ->assertValue('Rate per USD', '1.35');
+
+    $payload = 'N4Igbg9gNgrgtgUxALgIwAZMBoQwHYCWALiiCThAgE4oBM6OA1tXQHS0CsOAngQlABM2Adi4gADlQIBjBAGcUoaXPEQUAZlYA2YTmXjGa5AA5jrYaj0rmKdK1QBfHAgAe0gBYBDPAHMkaLUwGEGkYKioEPGluUgBJABEAJRAcKG8fGE8-UgIhByA';
+    $page->navigate('/en?'.http_build_query(['payload' => $payload]))
+        ->click('Currency and Extraction Rate Settings')
+        ->assertValue('Rate per USD', '16,000')
+        ->assertScript('localStorage.getItem("rspocc:currency")', 'SGD')
+        ->assertNoJavaScriptErrors();
+});
+
+it('preserves the IDR fallback when no reference rates are stored', function (): void {
+    Http::preventStrayRequests();
+    $page = visit('/en');
+    $page->script('localStorage.setItem("rspocc:currency", "IDR"); history.replaceState(null, "", location.href);');
+    $page->refresh()->click('Currency and Extraction Rate Settings')
+        ->assertValue('Rate per USD', '16,000')
+        ->fill('FFB volume', '1000')->fill('CSPO Price', '10')
+        ->assertSee('Share the result')
+        ->assertNoJavaScriptErrors();
+    Http::assertNothingSent();
 });

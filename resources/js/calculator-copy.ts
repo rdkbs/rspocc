@@ -83,7 +83,7 @@ export const homePageCopy = {
             ],
             [
                 'Are the exchange rates up to date?',
-                'We use exchange rates from Frankfurter. Check the date beside the rate in Settings to see how recent it is. You can also enter your own rate. A shared calculation keeps the rate used when it was shared.',
+                'We use exchange rates from Frankfurter, checked daily. Check the date beside the rate in Settings to see how recent it is. You can also enter your own rate. A shared calculation keeps the rate used when it was shared.',
             ],
         ],
         faqLink: 'FAQ',
@@ -114,7 +114,7 @@ export const homePageCopy = {
             ],
             [
                 'Apakah kursnya terbaru?',
-                'Kurs berasal dari Frankfurter. Lihat tanggal di samping kurs pada pengaturan untuk mengetahui kapan kurs tersebut diperbarui. Anda juga bisa mengisi kurs sendiri. Perhitungan yang dibagikan tetap memakai kurs saat tautan dibuat.',
+                'Kurs berasal dari Frankfurter dan diperiksa setiap hari. Lihat tanggal di samping kurs pada pengaturan untuk mengetahui kapan kurs tersebut diperbarui. Anda juga bisa mengisi kurs sendiri. Perhitungan yang dibagikan tetap memakai kurs saat tautan dibuat.',
             ],
         ],
         faqLink: 'FAQ',

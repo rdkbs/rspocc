@@ -43,7 +43,7 @@ const englishPages: Record<ContentSlug, ContentPage> = {
             ],
             [
                 'Are the exchange rates up to date?',
-                'We use exchange rates from Frankfurter. Check the date beside the rate in Settings to see how recent it is. You can also enter your own rate. A shared calculation keeps the rate used when it was shared.',
+                'We use exchange rates from Frankfurter, checked daily. Check the date beside the rate in Settings to see how recent it is. You can also enter your own rate. A shared calculation keeps the rate used when it was shared.',
             ],
             [
                 'Why are RSPO’s CSPKO and CSPKE extraction rates different?',
@@ -108,7 +108,7 @@ const englishPages: Record<ContentSlug, ContentPage> = {
             ],
             [
                 'Calculator preferences and cookies',
-                'Your browser saves your light or dark theme choice for future visits. It keeps the choice in local storage until you clear site data and in a first-party cookie named rspocc_color_scheme, which is set to expire after one year. These settings store your theme choice, not your calculation inputs.',
+                'Your browser saves your light or dark theme choice for future visits. It keeps the choice in local storage until you clear site data and in a first-party cookie named rspocc_color_scheme, which is set to expire after one year. Your language choice is saved for one year in a first-party cookie named rspocc_language. When you open the homepage without a language in its URL, we use this choice or your browser’s language preferences; Indonesian takes priority over English. Links containing /id or /en keep that language. Your selected currency is also saved in local storage. For a new calculation without a saved currency, we suggest one from your browser’s language and region settings. Shared links keep their saved currency. These preferences do not store your calculation inputs.',
             ],
         ],
     },
@@ -132,7 +132,7 @@ const indonesianPages: Record<ContentSlug, ContentPage> = {
             ],
             [
                 'Apakah kursnya terbaru?',
-                'Kurs berasal dari Frankfurter. Lihat tanggal di samping kurs pada pengaturan untuk mengetahui kapan kurs tersebut diperbarui. Anda juga bisa mengisi kurs sendiri. Perhitungan yang dibagikan tetap memakai kurs saat tautan dibuat.',
+                'Kurs berasal dari Frankfurter dan diperiksa setiap hari. Lihat tanggal di samping kurs pada pengaturan untuk mengetahui kapan kurs tersebut diperbarui. Anda juga bisa mengisi kurs sendiri. Perhitungan yang dibagikan tetap memakai kurs saat tautan dibuat.',
             ],
             [
                 'Bagaimana rendemen CSPKO dan CSPKE dihitung?',
@@ -197,7 +197,7 @@ const indonesianPages: Record<ContentSlug, ContentPage> = {
             ],
             [
                 'Preferensi kalkulator dan cookie',
-                'Browser menyimpan pilihan tema terang atau gelap agar tetap digunakan saat Anda kembali. Pilihan ini tersimpan di penyimpanan lokal sampai Anda menghapus data situs dan di cookie dari situs ini bernama rspocc_color_scheme, yang diatur agar kedaluwarsa setelah satu tahun. Data tersebut hanya berisi pilihan tema, bukan data perhitungan.',
+                'Browser menyimpan pilihan tema terang atau gelap agar tetap digunakan saat Anda kembali. Pilihan ini tersimpan di penyimpanan lokal sampai Anda menghapus data situs dan di cookie dari situs ini bernama rspocc_color_scheme, yang diatur agar kedaluwarsa setelah satu tahun. Pilihan bahasa disimpan selama satu tahun di cookie dari situs ini bernama rspocc_language. Saat Anda membuka beranda tanpa bahasa pada URL, kami memakai pilihan ini atau pengaturan bahasa browser; bahasa Indonesia didahulukan dari bahasa Inggris. Tautan yang memuat /id atau /en tetap memakai bahasa tersebut. Pilihan mata uang juga disimpan di penyimpanan lokal. Untuk perhitungan baru tanpa pilihan tersimpan, mata uang disarankan berdasarkan pengaturan bahasa dan wilayah browser. Tautan yang dibagikan tetap memakai mata uang yang tersimpan di dalamnya. Preferensi ini tidak menyimpan data perhitungan Anda.',
             ],
         ],
     },

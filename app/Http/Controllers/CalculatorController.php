@@ -35,6 +35,9 @@ final class CalculatorController extends Controller
             'prices' => $snapshot->prices,
         ];
 
+        $rateSnapshot = CreditPriceSnapshot::query()->whereNotNull('exchange_rates')->orderByDesc('period_end')->first();
+        $exchangeRates = $rateSnapshot->exchange_rates ?? [];
+
         $sharePreview = $payload === null ? null : $preview->metadata($payload, app()->getLocale());
         if ($sharePreview !== null) {
             $sharePreview['imageUrl'] = function_exists('imagecreatetruecolor') && function_exists('imagettftext')
@@ -44,6 +47,7 @@ final class CalculatorController extends Controller
 
         return Inertia::render('index', [
             'payload' => $payload,
+            'exchangeRates' => $exchangeRates,
             'sharePreview' => $sharePreview,
             'previewImageUrl' => function_exists('imagecreatetruecolor') && function_exists('imagettftext')
                 ? ($sharePreview['imageUrl'] ?? rtrim(config()->string('app.url'), '/').route('calculator.preview-image', ['language' => app()->getLocale()], absolute: false))

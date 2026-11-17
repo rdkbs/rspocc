@@ -61,5 +61,31 @@ it('rejects excessively long and multi segment payloads', function (): void {
 });
 
 it('redirects the root while preserving a shared payload', function (): void {
-    $this->get('/?payload=scenario')->assertRedirect('/id?payload=scenario');
+    $this->withHeader('Accept-Language', 'id-ID')->get('/?payload=scenario')->assertRedirect('/id?payload=scenario');
+});
+
+it('detects a language only at the unprefixed homepage', function (string $languages, string $expected): void {
+    $response = $this->withHeader('Accept-Language', $languages)->get('/?payload=scenario');
+    $response->assertFound()->assertRedirect('/'.$expected.'?payload=scenario');
+    expect($response->headers->get('Vary'))->toContain('Accept-Language')->toContain('Cookie');
+    $this->get('/en')->assertOk()->assertInertia(fn (Assert $page): Assert => $page->where('lang', 'en'));
+    $this->get('/id')->assertOk()->assertInertia(fn (Assert $page): Assert => $page->where('lang', 'id'));
+})->with([
+    ['en-US,en;q=0.9,id;q=0.8', 'id'],
+    ['en-US,en;q=0.9,id;q=0', 'en'],
+    ['en-US,id-ID;q=0', 'en'],
+    ['en-SG,en;q=0.9', 'en'],
+    ['id-ID,id;q=0.9', 'id'],
+    ['zh-CN', 'id'],
+    ['', 'id'],
+]);
+
+it('prefers a saved language over browser preferences', function (): void {
+    $this->withUnencryptedCookie('rspocc_language', 'en')
+        ->withHeader('Accept-Language', 'id-ID')->get('/')->assertRedirect('/en');
+});
+
+it('ignores unsupported saved languages', function (): void {
+    $this->withUnencryptedCookie('rspocc_language', 'invalid')
+        ->withHeader('Accept-Language', 'en-US')->get('/')->assertRedirect('/en');
 });

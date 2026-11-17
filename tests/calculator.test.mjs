@@ -1,3 +1,4 @@
+import { defaultCurrency } from '../resources/js/currency-preference.ts';
 import previewFixtures from './Fixtures/calculator-previews.json';
 import { glossaryParts } from '../resources/js/glossary.ts';
 import {
@@ -247,4 +248,33 @@ test('shared preview fixtures stay consistent with the JavaScript calculator', (
         }
         expect(scenario.inputs.currency).toBe(result.currency);
     }
+});
+
+test('currency defaults prefer saved choices and explicit supported browser regions', () => {
+    expect(defaultCurrency('MYR', ['en-SG'])).toBe('MYR');
+    for (const [locale, currency] of [
+        ['id-ID', 'IDR'],
+        ['en-SG', 'SGD'],
+        ['ms-MY', 'MYR'],
+        ['zh-Hans-CN', 'CNY'],
+        ['nl-NL', 'EUR'],
+        ['en-US', 'USD'],
+    ]) {
+        expect(defaultCurrency(null, [locale])).toBe(currency);
+    }
+    expect(defaultCurrency('invalid', ['broken_tag', 'en-SG'])).toBe('SGD');
+    expect(defaultCurrency(null, ['en'])).toBe('IDR');
+    expect(defaultCurrency(null, ['en-GB'])).toBe('IDR');
+    expect(defaultCurrency(null, [])).toBe('IDR');
+});
+
+test('currency detection prioritizes non-English preferences without overriding saved choices', () => {
+    expect(defaultCurrency(null, ['en-US', 'en', 'id'])).toBe('IDR');
+    expect(defaultCurrency(null, ['en-US', 'ms'])).toBe('MYR');
+    expect(defaultCurrency(null, ['en-US', 'zh-CN'])).toBe('CNY');
+    expect(defaultCurrency(null, ['en-US', 'nl-NL'])).toBe('EUR');
+    expect(defaultCurrency('USD', ['en-US', 'id'])).toBe('USD');
+    expect(defaultCurrency(null, ['en-SG', 'zh'])).toBe('SGD');
+    expect(defaultCurrency(null, ['en-US', 'broken_tag', 'ms-SG'])).toBe('SGD');
+    expect(defaultCurrency(null, ['en-US', 'ms-BN'])).toBe('USD');
 });
