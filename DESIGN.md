@@ -32,3 +32,11 @@ The selected brand orange does not meet WCAG AA contrast for normal text on the 
 - Keep explanatory copy short. Put technical definitions in the glossary and reveal them where terms appear.
 - Keep result disclaimers near results, with a link to the full terms.
 - Keep theme and language controls available site-wide, with language selection in the header and theme selection in the footer.
+
+## Initial loading on shared hosting
+
+- Keep SEO and social-preview metadata in the initial Blade response; loading must not require a persistent SSR process.
+- Show the logo, localized app name, and owner immediately, matching the frontend header's dimensions, spacing, and colors.
+- Show static skeletons immediately for the calculator, guide, and FAQ while React loads. Match their responsive layout and hide them when React mounts; do not add a reveal delay or force a minimum loading time.
+- Keep the text fallback inside `<noscript>` so JavaScript users do not see a different page before the app loads.
+- Apply the saved theme and matching page background before the first paint to avoid a light-to-dark flash.
