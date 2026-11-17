@@ -36,7 +36,7 @@ export function defaultCurrency(
 ): Inputs['currency'] {
     if (
         typeof saved === 'string' &&
-        ['IDR', 'MYR', 'SGD', 'CNY', 'EUR', 'USD'].includes(saved)
+        ['CNY', 'EUR', 'IDR', 'MYR', 'SGD', 'USD'].includes(saved)
     ) {
         return saved as Inputs['currency'];
     }

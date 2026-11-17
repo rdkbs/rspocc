@@ -28,8 +28,15 @@ export default function CalculatorInputs({
     scenario: Scenario;
     text: CalculatorCopy;
 }) {
-    const { inputs, setInputs, update, rateMode, setRateMode, ratesValid } =
-        scenario;
+    const {
+        inputs,
+        setInputs,
+        update,
+        rateMode,
+        setRateMode,
+        ratesValid,
+        changeCurrency,
+    } = scenario;
     const configDetails = useRef<HTMLDetailsElement>(null);
     const [activeConfig, setActiveConfig] = useState<'rates' | 'currency'>(
         'currency',
@@ -615,9 +622,7 @@ export default function CalculatorInputs({
                                     onChange={(value) =>
                                         update('exchange', value)
                                     }
-                                    onCurrencyChange={(currency) =>
-                                        update('currency', currency)
-                                    }
+                                    onCurrencyChange={changeCurrency}
                                 />
                             </Box>
                         )}

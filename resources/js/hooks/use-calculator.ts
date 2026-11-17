@@ -15,7 +15,7 @@ export type Inputs = {
     yield: number;
     prices: Record<Credit, number | null>;
     exchange: number;
-    currency: 'IDR' | 'MYR' | 'CNY' | 'EUR' | 'SGD' | 'USD';
+    currency: 'CNY' | 'EUR' | 'IDR' | 'MYR' | 'SGD' | 'USD';
     language: 'id' | 'en';
 };
 export const defaults: Inputs = {
@@ -73,10 +73,10 @@ export function isValidInputs(value: unknown): value is SerializedInputs {
         isNumber(value.exchange) &&
         value.exchange > 0 &&
         (value.unit === 'kg' || value.unit === 't') &&
-        (value.currency === 'IDR' ||
-            value.currency === 'MYR' ||
-            value.currency === 'CNY' ||
+        (value.currency === 'CNY' ||
             value.currency === 'EUR' ||
+            value.currency === 'IDR' ||
+            value.currency === 'MYR' ||
             value.currency === 'SGD' ||
             value.currency === 'USD') &&
         (value.language === 'id' || value.language === 'en') &&
