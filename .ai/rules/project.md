@@ -35,7 +35,9 @@ When adding a currency, keep the selector, reference-rate provider, persisted sn
 Keep interactive calculations in browser JavaScript without per-edit API calls. PHP separately calculates social previews on shared hosting without a persistent Node process; this is the approved exception to single-source calculations. Keep formulas, scenario validation, and legacy-link handling aligned and maintain cross-language parity tests.
 
 ## Language and currency preference priority
+
 Keep explicit /id and /en URLs authoritative, and preserve shared or history-restored calculation currencies and rates. Use saved manual choices before browser preferences for fresh defaults; prefer supported non-English preferences, without guessing from ambiguous language-only tags. Detect language only at / using a temporary, non-shared-cacheable redirect; ignore Accept-Language entries with q=0. Remember manual language choices in the first-party language cookie and currency choices in local storage, and keep privacy disclosures aligned.
 
 ## Database-backed exchange rates in page props
+
 Pass the latest database snapshot containing exchange rates to the calculator through Inertia props. Refresh reference rates through the existing cron-scheduled command; do not fetch rates through a browser API, during page rendering, or from a file-cache fallback. Preserve shared/manual rates and the existing rate when detected currency is unchanged; when no reference rate is available, retain the existing IDR default and allow manual entry.
