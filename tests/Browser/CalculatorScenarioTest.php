@@ -14,6 +14,7 @@ it('keeps edits off the URL and preserves inputs when switching language', funct
             ['date' => '2026-11-13', 'base' => 'USD', 'quote' => 'MYR', 'rate' => 4.5],
             ['date' => '2026-11-13', 'base' => 'USD', 'quote' => 'CNY', 'rate' => 7.2],
             ['date' => '2026-11-13', 'base' => 'USD', 'quote' => 'EUR', 'rate' => 0.92],
+            ['date' => '2026-11-13', 'base' => 'USD', 'quote' => 'SGD', 'rate' => 1.35],
         ]),
     ]);
 

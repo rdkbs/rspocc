@@ -16,6 +16,7 @@ function snapshotExchangeRateRows(): array
         ['date' => '2026-11-13', 'base' => 'USD', 'quote' => 'MYR', 'rate' => 4.5],
         ['date' => '2026-11-12', 'base' => 'USD', 'quote' => 'CNY', 'rate' => 7.2],
         ['date' => '2026-11-11', 'base' => 'USD', 'quote' => 'EUR', 'rate' => 0.92],
+        ['date' => '2026-11-11', 'base' => 'USD', 'quote' => 'SGD', 'rate' => 1.35],
     ];
 }
 
@@ -35,6 +36,7 @@ it('stores a complete snapshot and supplies it to the calculator', function (): 
             'MYR' => ['rate' => 4.5, 'date' => '2026-11-13'],
             'CNY' => ['rate' => 7.2, 'date' => '2026-11-12'],
             'EUR' => ['rate' => 0.92, 'date' => '2026-11-11'],
+            'SGD' => ['rate' => 1.35, 'date' => '2026-11-11'],
         ]);
     $this->get('/en')->assertInertia(fn (AssertableInertia $page) => $page->where('priceReference.prices.is.cspo', 3.67));
 
@@ -107,6 +109,7 @@ it('preserves same-day exchange rates when Frankfurter is unavailable', function
         'MYR' => ['rate' => 4.5, 'date' => '2026-11-13'],
         'CNY' => ['rate' => 7.2, 'date' => '2026-11-12'],
         'EUR' => ['rate' => 0.92, 'date' => '2026-11-11'],
+        'SGD' => ['rate' => 1.35, 'date' => '2026-11-11'],
     ];
     $snapshot = CreditPriceSnapshot::factory()->create([
         'period_start' => $today->copy()->startOfYear()->toDateString(),

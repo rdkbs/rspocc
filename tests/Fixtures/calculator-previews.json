@@ -68,5 +68,15 @@
             "added": 20,
             "currency": "IDR"
         }
+    },
+    {
+        "payload": "N4Igbg9gNgrgtgUxALgIwAZMBoQwHYCWALiiCThAgE4oBM6OA1tXQHS0CsOAngQlABM2Adi4gADlQIBjBAGcUoaXPEQUAZlYA2YTmXjGa5AA5jrYaj0rmKdK1QBfHAgAe0gBYBDPAHMkaVnUxaRgqKgQ8aW5SAGUAcQAREBwobx8YTz9SAiEHIA",
+        "result": {
+            "kg": 1000000,
+            "usd": 2732.725,
+            "converted": 3689.17875,
+            "added": 0.00368917875,
+            "currency": "SGD"
+        }
     }
 ]
