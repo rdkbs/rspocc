@@ -30,20 +30,20 @@ const englishPages: Record<ContentSlug, ContentPage> = {
         title: 'Frequently Asked Questions',
         sections: [
             [
-                'Are the prices up to date?',
-                'The cards use PRISMA’s last-traded price for each credit type. If no trade is reported during the current period, we keep the last available price. We check PRISMA daily; the date on each card is the retrieval date, not the trade date. Actual selling prices may differ.',
-            ],
-            [
-                'Are the exchange rates up to date?',
-                'Frankfurter provides reference rates, not live trading rates. We reuse them for up to one hour and use the last successful result if the service is unavailable. Check the rate date in Settings. Shared links keep their saved rate, and you can enter a rate manually.',
-            ],
-            [
                 'What is the RSPO Credit Calculator?',
-                'This tool helps cooperative managers, farmers, and buyers estimate RSPO credit revenue and added value per kilogram of fresh fruit bunches. It is developed by the Research and Development Team at Koperasi Perkebunan Belayan Sejahtera, an RSPO member. It is not an official RSPO calculator, and membership does not imply RSPO endorsement. Results are estimates; check certified volumes, credit eligibility, and buyer terms before selling.',
+                'This calculator estimates RSPO credit revenue and added value per kilogram of fresh fruit bunches from the volume and credit prices you enter. It is developed by the Research and Development Team at Koperasi Perkebunan Belayan Sejahtera, an RSPO member. It is not an official RSPO calculator, and membership does not imply RSPO endorsement.',
             ],
             [
                 'Why was this tool created?',
-                'We created this tool to help farmers, cooperatives, and buyers understand potential RSPO credit revenue. It makes the calculation easier to use and share, so more people can assess the added value of certified production.',
+                'We want to help farmers, cooperatives, buyers, and Internal Control System (ICS) teams understand the potential additional revenue from RSPO credits. ICS teams can compare this estimate with certification costs to assess whether the benefits are worth the expense.',
+            ],
+            [
+                'Are the credit prices up to date?',
+                'We check PRISMA daily for the latest selling price of each credit type. The price stays the same until a newer sale is recorded. The date shown tells you when we checked the data, not when the sale took place.',
+            ],
+            [
+                'Are the exchange rates up to date?',
+                'We use exchange rates from Frankfurter. Check the date beside the rate in Settings to see how recent it is. You can also enter your own rate. A shared calculation keeps the rate used when it was shared.',
             ],
             [
                 'Why are RSPO’s CSPKO and CSPKE extraction rates different?',
@@ -119,20 +119,20 @@ const indonesianPages: Record<ContentSlug, ContentPage> = {
         title: 'Pertanyaan Umum',
         sections: [
             [
-                'Apakah harganya terbaru?',
-                'Kartu menampilkan harga transaksi terakhir di PRISMA untuk setiap jenis kredit. Jika tidak ada transaksi pada periode berjalan, harga terakhir yang tersedia tetap digunakan. Kami memeriksa data setiap hari; tanggal pada kartu adalah tanggal pengambilan data, bukan tanggal transaksi. Harga jual sebenarnya bisa berbeda.',
-            ],
-            [
-                'Apakah kursnya terbaru?',
-                'Kurs acuan berasal dari Frankfurter dan disimpan hingga satu jam sebelum diambil kembali. Jika layanan tidak tersedia, kalkulator memakai data terakhir yang berhasil diambil. Lihat tanggal kurs di pengaturan. Hasil yang dibuka dari tautan tetap memakai kurs saat dibagikan. Anda juga dapat mengisi kurs sendiri.',
-            ],
-            [
                 'Apa itu Kalkulator Kredit RSPO?',
-                'Alat ini membantu pengurus koperasi, petani, dan pembeli memperkirakan pendapatan kredit RSPO serta nilai tambah per kilogram TBS. Alat ini dikembangkan oleh Tim Riset dan Pengembangan Koperasi Perkebunan Belayan Sejahtera, anggota RSPO. Alat ini bukan kalkulator resmi RSPO, dan status keanggotaan ini tidak berarti kalkulator mendapat dukungan resmi dari RSPO. Hasilnya berupa perkiraan. Sebelum menjual kredit, periksa volume yang tersertifikasi, kredit yang boleh dijual, dan ketentuan pembeli.',
+                'Kalkulator ini memperkirakan pendapatan kredit RSPO dan nilai tambah per kilogram TBS dari volume serta harga kredit yang Anda masukkan. Pengembangnya adalah Tim Riset dan Pengembangan Koperasi Perkebunan Belayan Sejahtera, anggota RSPO. Kalkulator ini bukan alat resmi RSPO. Keanggotaan koperasi tidak berarti kalkulator ini mendapat dukungan resmi dari RSPO.',
             ],
             [
                 'Mengapa alat ini dibuat?',
-                'Kami membuat alat ini untuk membantu petani, koperasi, dan pembeli memahami potensi pendapatan kredit RSPO. Melalui kalkulator ini, kami ingin memudahkan perhitungan dan berbagi hasil agar manfaat produksi bersertifikat lebih mudah dipahami.',
+                'Kami ingin membantu petani, koperasi, pembeli, dan tim ICS memahami potensi tambahan pendapatan dari kredit RSPO. Tim ICS dapat membandingkan perkiraan ini dengan biaya sertifikasi untuk menilai apakah manfaatnya sepadan dengan biaya yang dikeluarkan.',
+            ],
+            [
+                'Apakah harga kreditnya terbaru?',
+                'Kami memeriksa PRISMA setiap hari untuk melihat harga jual terakhir setiap jenis kredit. Harga tetap sama sampai ada penjualan yang lebih baru. Tanggal yang tertera menunjukkan kapan kami memeriksa data, bukan kapan penjualan terjadi.',
+            ],
+            [
+                'Apakah kursnya terbaru?',
+                'Kurs berasal dari Frankfurter. Lihat tanggal di samping kurs pada pengaturan untuk mengetahui kapan kurs tersebut diperbarui. Anda juga bisa mengisi kurs sendiri. Perhitungan yang dibagikan tetap memakai kurs saat tautan dibuat.',
             ],
             [
                 'Bagaimana rendemen CSPKO dan CSPKE dihitung?',

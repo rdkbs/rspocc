@@ -75,15 +75,15 @@ export const homePageCopy = {
         faqItems: [
             [
                 'What is the RSPO Credit Calculator?',
-                'This tool estimates RSPO credit revenue and added value per kilogram of fresh fruit bunches from your volume and credit prices. It is developed by Koperasi Perkebunan Belayan Sejahtera and is not an official RSPO calculator.',
+                'This calculator estimates additional RSPO credit revenue from your FFB volume and credit prices. It helps you and your ICS team compare potential revenue with certification costs. It is not an official RSPO calculator.',
             ],
             [
-                'Are the prices up to date?',
-                'The cards use PRISMA’s last-traded price for each credit type. If no trade is reported during the current period, we keep the last available price. We check PRISMA daily; the date on each card is the retrieval date, not the trade date. Actual selling prices may differ.',
+                'Are the credit prices up to date?',
+                'We check PRISMA daily for the latest selling price of each credit type. The price stays the same until a newer sale is recorded. The date shown tells you when we checked the data, not when the sale took place.',
             ],
             [
                 'Are the exchange rates up to date?',
-                'Frankfurter provides reference rates, not live trading rates. We reuse them for up to one hour and use the last successful result if the service is unavailable. Check the rate date in Settings. Shared links keep their saved rate, and you can enter a rate manually.',
+                'We use exchange rates from Frankfurter. Check the date beside the rate in Settings to see how recent it is. You can also enter your own rate. A shared calculation keeps the rate used when it was shared.',
             ],
         ],
         faqLink: 'FAQ',
@@ -106,15 +106,15 @@ export const homePageCopy = {
         faqItems: [
             [
                 'Apa itu Kalkulator Kredit RSPO?',
-                'Alat ini memperkirakan pendapatan kredit RSPO dan nilai tambah per kilogram TBS berdasarkan volume dan harga kredit yang Anda masukkan. Alat ini dikembangkan oleh Koperasi Perkebunan Belayan Sejahtera dan bukan kalkulator resmi RSPO.',
+                'Kalkulator ini memperkirakan tambahan pendapatan dari kredit RSPO berdasarkan volume TBS dan harga kredit yang Anda masukkan. Perkiraan ini membantu Anda dan tim ICS membandingkan potensi pendapatan dengan biaya sertifikasi. Alat ini bukan kalkulator resmi RSPO.',
             ],
             [
-                'Apakah harganya terbaru?',
-                'Kartu menampilkan harga transaksi terakhir di PRISMA untuk setiap jenis kredit. Jika tidak ada transaksi pada periode berjalan, harga terakhir yang tersedia tetap digunakan. Kami memeriksa data setiap hari; tanggal pada kartu adalah tanggal pengambilan data, bukan tanggal transaksi. Harga jual sebenarnya bisa berbeda.',
+                'Apakah harga kreditnya terbaru?',
+                'Kami memeriksa PRISMA setiap hari untuk melihat harga jual terakhir setiap jenis kredit. Harga tetap sama sampai ada penjualan yang lebih baru. Tanggal yang tertera menunjukkan kapan kami memeriksa data, bukan kapan penjualan terjadi.',
             ],
             [
                 'Apakah kursnya terbaru?',
-                'Kurs acuan berasal dari Frankfurter dan disimpan hingga satu jam sebelum diambil kembali. Jika layanan tidak tersedia, kalkulator memakai data terakhir yang berhasil diambil. Lihat tanggal kurs di pengaturan. Hasil yang dibuka dari tautan tetap memakai kurs saat dibagikan. Anda juga dapat mengisi kurs sendiri.',
+                'Kurs berasal dari Frankfurter. Lihat tanggal di samping kurs pada pengaturan untuk mengetahui kapan kurs tersebut diperbarui. Anda juga bisa mengisi kurs sendiri. Perhitungan yang dibagikan tetap memakai kurs saat tautan dibuat.',
             ],
         ],
         faqLink: 'FAQ',
