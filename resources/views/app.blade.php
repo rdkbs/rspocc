@@ -51,6 +51,7 @@
         <meta name="color-scheme" content="{{ $colorScheme }}">
         @if (! config('inertia.ssr.enabled'))
             <script>
+                document.documentElement.classList.add('js');
                 try {
                     const colorScheme = localStorage.getItem('rspocc:color-scheme');
                     if (colorScheme === 'dark' || colorScheme === 'light') {
@@ -94,11 +95,66 @@
             <meta name="twitter:description" content="{{ $socialDescription }}">
         </x-inertia::head>
         <style>
-            #app:not(:empty) + #initial-page-fallback { display: none; }
+            html { background: #f6f6ef; color-scheme: light; }
+            html.dark { background: #121212; color-scheme: dark; }
+            #app-loading { display: none; }
+            .js #app-loading { display: block; }
+            #app:not(:empty) + #app-loading { display: none; }
+            #app-loading {
+                box-sizing: border-box;
+                min-height: 100vh;
+                padding: 0;
+                font: 400 16px/1.5 "Instrument Sans", Arial, sans-serif;
+                color: #62685e;
+            }
+            #app-loading .loading-header {
+                box-sizing: border-box;
+                min-height: 95px;
+                display: flex;
+                align-items: center;
+                padding: 16px max(16px, calc((100vw - 1200px) / 2));
+                background: #ffffff;
+                border-bottom: 1px solid #e1e3d9;
+            }
+            #app-loading .loading-grid {
+                display: grid;
+                gap: 24px;
+                margin: 48px max(16px, calc((100vw - 1200px) / 2));
+            }
+            .fallback-brand { display: inline-flex; gap: 12px; align-items: center; text-decoration: none; color: inherit; }
+            .fallback-brand img { width: 44px; height: 44px; border-radius: 12%; }
+            .fallback-brand strong { display: block; font-size: 13px; color: #e17e00; line-height: 1.5; }
+            .fallback-brand small { display: block; font-size: 15.4286px; line-height: 1; }
+            @media (min-width: 600px) {
+                .fallback-brand strong { font-size: 20.5712px; }
+            }
+            html.dark #app-loading .loading-header { background: #1d201c; }
+            #app-loading .loading-content { margin: 48px max(16px, calc((100vw - 1200px) / 2)); }
+            #app-loading .loading-content .loading-grid { margin: 0; }
+            #app-loading .loading-content-title { max-width: 240px; }
+            #app-loading .loading-content .loading-copy { height: 72px; }
+            @media (min-width: 600px) {
+                #app-loading .loading-guide { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            }
+            @media (min-width: 900px) {
+                #app-loading .loading-faq { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            }
+            #app-loading .loading-panel { padding: 24px; border: 1px solid #e1e3d9; border-radius: 12px; }
+            #app-loading .loading-line { height: 24px; background: #e1e3d9; border-radius: 6px; margin-bottom: 24px; }
+            #app-loading .loading-line:last-child { margin-bottom: 0; }
+            #app-loading .loading-field { height: 56px; }
+            #app-loading .loading-result { height: 96px; }
+            html.dark #app-loading { color: #bebfb6; }
+            html.dark #app-loading .loading-header,
+            html.dark #app-loading .loading-panel { border-color: #353535; }
+            html.dark #app-loading .loading-line { background: #292929; }
+            @media (min-width: 900px) {
+                #app-loading .loading-grid.calculator { grid-template-columns: 1fr 1fr; }
+            }
             #initial-page-fallback {
                 box-sizing: border-box;
                 min-height: 100vh;
-                padding: 24px max(20px, calc((100vw - 1120px) / 2));
+                padding: 0;
                 background: #f6f6ef;
                 color: #252c25;
                 font: 400 18px/1.6 system-ui, sans-serif;
@@ -111,11 +167,13 @@
                 align-items: center;
                 justify-content: space-between;
                 gap: 24px;
-                padding-bottom: 20px;
+                min-height: 95px;
+                padding: 16px max(16px, calc((100vw - 1200px) / 2));
+                background: #ffffff;
                 border-bottom: 1px solid #e1e3d9;
             }
             #initial-page-fallback .brand {
-                display: grid;
+                display: flex;
                 min-height: 44px;
                 color: #252c25;
                 text-decoration: none;
@@ -153,6 +211,7 @@
             #initial-page-fallback li { padding-top: 12px; border-top: 2px solid #e17e00; }
             #initial-page-fallback footer { padding-top: 20px; border-top: 1px solid #e1e3d9; font-size: 14px; }
             #initial-page-fallback footer a { display: inline-flex; min-height: 44px; align-items: center; color: #52594d; }
+            html.dark #initial-page-fallback header { background: #1d201c; }
             html.dark #initial-page-fallback { background: #121212; color: #f2f1eb; }
             html.dark #initial-page-fallback .brand { color: #f2f1eb; }
             html.dark #initial-page-fallback .brand span,
@@ -169,11 +228,59 @@
     </head>
     <body class="font-sans antialiased">
         <x-inertia::app />
+        <div id="app-loading" role="status" aria-label="{{ $language === 'id' ? 'Memuat halaman' : 'Loading page' }}">
+            <div aria-hidden="true">
+                <div class="loading-header">
+                    <div class="fallback-brand">
+                        <img src="/logo.svg" alt="" width="44" height="44">
+                        <div>
+                            <strong>{{ $productName }}</strong>
+                            <small>{{ $language === 'id' ? 'oleh Belayan Sejahtera' : 'by Belayan Sejahtera' }}</small>
+                        </div>
+                    </div>
+                </div>
+                <div @class(['loading-grid', 'calculator' => $slug === 'index'])>
+                    <div class="loading-panel">
+                        <div class="loading-line"></div>
+                        <div class="loading-line loading-field"></div>
+                        <div class="loading-line loading-field"></div>
+                        <div class="loading-line loading-field"></div>
+                        <div class="loading-line loading-field"></div>
+                    </div>
+                    @if ($slug === 'index')
+                        <div class="loading-panel">
+                            <div class="loading-line"></div>
+                            <div class="loading-line loading-result"></div>
+                            <div class="loading-line"></div>
+                        </div>
+                    @endif
+                </div>
+                @if ($slug === 'index')
+                    @foreach (['guide', 'faq'] as $loadingSection)
+                        <div class="loading-content">
+                            <div class="loading-line loading-content-title"></div>
+                            <div class="loading-grid loading-{{ $loadingSection }}">
+                                @for ($item = 0; $item < 3; $item++)
+                                    <div>
+                                        <div class="loading-line"></div>
+                                        <div class="loading-line loading-copy"></div>
+                                    </div>
+                                @endfor
+                            </div>
+                        </div>
+                    @endforeach
+                @endif
+            </div>
+        </div>
+        <noscript>
         <div id="initial-page-fallback" lang="{{ $language }}">
             <header>
-                <a class="brand" href="{{ route('calculator.language', ['language' => $language]) }}">
+                <a class="brand fallback-brand" href="{{ route('calculator.language', ['language' => $language]) }}">
+                    <img src="/logo.svg" alt="" width="44" height="44">
+                    <div>
                     <strong>{{ $productName }}</strong>
                     <span>{{ $language === 'id' ? 'oleh Belayan Sejahtera' : 'by Belayan Sejahtera' }}</span>
+                    </div>
                 </a>
                 <nav aria-label="{{ $language === 'id' ? 'Navigasi utama' : 'Main navigation' }}">
                     @foreach (['faq' => ['FAQ', 'FAQ'], 'glossary' => ['Glosarium', 'Glossary'], 'terms' => ['Ketentuan', 'Terms'], 'privacy' => ['Privasi', 'Privacy']] as $pageSlug => [$indonesianLabel, $englishLabel])
@@ -196,5 +303,6 @@
                 <a href="https://belayansejahtera.org">Koperasi Perkebunan Belayan Sejahtera</a>
             </footer>
         </div>
+        </noscript>
     </body>
 </html>
