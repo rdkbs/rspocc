@@ -27,16 +27,18 @@ it('renders the selected language in Inertia props and the document', function (
     'English FAQ' => ['/en/faq', 'en'],
 ]);
 
-it('renders a localized calculator fallback before JavaScript loads', function (string $url, string $language, string $title): void {
+it('keeps the localized text fallback inside noscript', function (string $url, string $language, string $title): void {
     $response = $this->get($url);
 
     $response->assertOk();
     $response->assertSeeHtml('<title>'.$title.' - RSPO Credit Calculator</title>');
     $response->assertSeeHtml('<div id="initial-page-fallback" lang="'.$language.'">');
     expect($response->getContent())->toMatch(
-        '/<div id="app"><\/div>\s*<div id="initial-page-fallback" lang="'.$language.'">/',
+        '/<noscript>\s*<div id="initial-page-fallback" lang="'.$language.'">/',
     );
-    $response->assertSeeHtml('#app:not(:empty) + #initial-page-fallback { display: none; }');
+    $response->assertSeeHtml('#app:not(:empty) + #app-loading { display: none; }');
+    $response->assertSeeHtml("document.documentElement.classList.add('js');");
+    $response->assertSeeHtml('<img src="/logo.svg" alt="" width="44" height="44">');
 })->with([
     'Indonesian calculator' => ['/id', 'id', 'Perkirakan pendapatan kredit RSPO'],
     'English calculator' => ['/en', 'en', 'Estimate RSPO credit revenue'],
