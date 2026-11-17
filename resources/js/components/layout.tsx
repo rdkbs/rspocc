@@ -551,11 +551,17 @@ export default function Layout({
                             label={language === 'id' ? 'Bahasa' : 'Language'}
                             size="small"
                             value={language}
-                            onChange={(event) =>
-                                onLanguageChange(
-                                    event.target.value as 'id' | 'en',
-                                )
-                            }
+                            onChange={(event) => {
+                                const selected = event.target.value;
+                                if (selected !== 'id' && selected !== 'en')
+                                    return;
+                                const secure =
+                                    location.protocol === 'https:'
+                                        ? '; Secure'
+                                        : '';
+                                document.cookie = `rspocc_language=${selected}; Max-Age=31536000; Path=/; SameSite=Lax${secure}`;
+                                onLanguageChange(selected);
+                            }}
                             slotProps={{
                                 select: {
                                     SelectDisplayProps: {

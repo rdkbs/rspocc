@@ -3,12 +3,11 @@
 declare(strict_types=1);
 
 use App\Models\CreditPriceSnapshot;
-use Illuminate\Support\Facades\Cache;
+use App\Services\FrankfurterExchangeRateProvider;
 use Illuminate\Support\Facades\Http;
+use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function (): void {
-    config(['cache.stores.file' => ['driver' => 'array']]);
-    Cache::purge('file');
     Http::preventStrayRequests();
 });
 
@@ -24,19 +23,17 @@ function referenceRateRows(): array
     ];
 }
 
-it('fetches and caches reference rates without calling the provider again', function (): void {
+it('fetches complete reference rates for scheduled refreshes', function (): void {
     Http::fake(['api.frankfurter.dev/*' => Http::response(referenceRateRows())]);
-    $this->getJson('/exchange-rates')->assertOk()->assertJsonPath('rates.IDR.rate', 16000)->assertJsonPath('rates.IDR.date', '2026-11-13')->assertJsonPath('stale', false);
-    $this->getJson('/exchange-rates')->assertOk()->assertJsonPath('rates.MYR.rate', 4.5)->assertJsonPath('rates.SGD.rate', 1.35);
-    $this->getJson('/exchange-rates')->assertOk()->assertJsonPath('rates.CNY.date', '2026-11-12')->assertJsonPath('rates.EUR.date', '2026-11-11');
+    $rates = resolve(FrankfurterExchangeRateProvider::class)->fetchUsdRates();
+    expect($rates)->not->toBeNull()
+        ->and($rates['SGD']['rate'] ?? null)->toBe(1.35);
     Http::assertSentCount(1);
 });
 
-it('uses the last successful rates when refreshing fails', function (array $rows, int $status): void {
-    Http::fake(['api.frankfurter.dev/*' => Http::sequence()->push(referenceRateRows())->push($rows, $status)]);
-    $previous = $this->getJson('/exchange-rates')->json('fetchedAt');
-    Cache::store('file')->forget('exchange-rates:fresh');
-    $this->getJson('/exchange-rates')->assertOk()->assertJsonPath('stale', true)->assertJsonPath('rates.IDR.rate', 16000)->assertJsonPath('fetchedAt', $previous);
+it('rejects failed or invalid reference responses', function (array $rows, int $status): void {
+    Http::fake(['api.frankfurter.dev/*' => Http::response($rows, $status)]);
+    expect(resolve(FrankfurterExchangeRateProvider::class)->fetchUsdRates())->toBeNull();
 })->with([
     'server error' => [[], 503],
     'incomplete response' => [array_slice(referenceRateRows(), 0, 3), 200],
@@ -44,42 +41,29 @@ it('uses the last successful rates when refreshing fails', function (array $rows
     'invalid date' => [[['date' => '2026-02-30', 'base' => 'USD', 'quote' => 'IDR', 'rate' => 16000], ...array_slice(referenceRateRows(), 1)], 200],
 ]);
 
-it('leaves manual entry available on a first request network failure', function (): void {
+it('handles a reference provider network failure', function (): void {
     Http::fake(['api.frankfurter.dev/*' => Http::failedConnection()]);
-    $this->getJson('/exchange-rates')->assertOk()->assertJsonPath('rates', [])->assertJsonPath('fetchedAt', null)->assertJsonPath('stale', true);
+    expect(resolve(FrankfurterExchangeRateProvider::class)->fetchUsdRates())->toBeNull();
 });
 
-it('uses the latest saved snapshot when the provider and caches are unavailable', function (): void {
-    $rates = [
-        'IDR' => ['rate' => 16000, 'date' => '2026-11-13'],
-        'MYR' => ['rate' => 4.5, 'date' => '2026-11-13'],
-        'CNY' => ['rate' => 7.2, 'date' => '2026-11-12'],
-        'EUR' => ['rate' => 0.92, 'date' => '2026-11-11'],
-        'SGD' => ['rate' => 1.35, 'date' => '2026-11-11'],
-    ];
-    $snapshot = CreditPriceSnapshot::factory()->create([
-        'period_end' => '2026-11-14',
-        'exchange_rates' => $rates,
-        'retrieved_at' => '2026-11-14 09:00:00 UTC',
-    ]);
-    CreditPriceSnapshot::factory()->create([
-        'period_end' => '2026-11-15',
-        'exchange_rates' => null,
-    ]);
-    Http::fake(['api.frankfurter.dev/*' => Http::failedConnection()]);
+it('passes the latest available snapshot rates without requesting Frankfurter', function (): void {
+    $rates = ['IDR' => ['rate' => 17000, 'date' => '2026-11-14'], 'SGD' => ['rate' => 1.35, 'date' => '2026-11-14']];
+    CreditPriceSnapshot::factory()->create(['period_end' => '2026-11-13', 'exchange_rates' => ['IDR' => ['rate' => 16000, 'date' => '2026-11-13']]]);
+    CreditPriceSnapshot::factory()->create(['period_end' => '2026-11-14', 'exchange_rates' => $rates]);
+    CreditPriceSnapshot::factory()->create(['period_end' => '2026-11-15', 'exchange_rates' => null]);
 
-    $this->getJson('/exchange-rates')
-        ->assertOk()
-        ->assertJsonPath('rates', $rates)
-        ->assertJsonPath('fetchedAt', $snapshot->retrieved_at->toIso8601String())
-        ->assertJsonPath('stale', true);
+    $this->get('/en')->assertOk()->assertInertia(fn (Assert $page): Assert => $page->where('exchangeRates', $rates));
+    Http::assertNothingSent();
 });
 
-it('replaces an expired reference with the latest successful response', function (): void {
-    $rows = referenceRateRows();
-    $rows[0]['rate'] = 17000;
-    Http::fake(['api.frankfurter.dev/*' => Http::sequence()->push(referenceRateRows())->push($rows)]);
-    $this->getJson('/exchange-rates')->assertOk();
-    Cache::store('file')->forget('exchange-rates:fresh');
-    $this->getJson('/exchange-rates')->assertOk()->assertJsonPath('rates.IDR.rate', 17000)->assertJsonPath('stale', false);
+it('returns no reference rates when snapshots have no rate data', function (): void {
+    CreditPriceSnapshot::factory()->create(['exchange_rates' => null]);
+    $this->get('/en')->assertOk()->assertInertia(fn (Assert $page): Assert => $page->where('exchangeRates', []));
+    Http::assertNothingSent();
+});
+
+it('keeps the calculator available without stored rates', function (): void {
+    $this->get('/en')->assertOk()->assertInertia(fn (Assert $page): Assert => $page->where('exchangeRates', []));
+    $this->get('/exchange-rates')->assertNotFound();
+    Http::assertNothingSent();
 });

@@ -1,3 +1,4 @@
+import { currencyPreferenceKey, defaultCurrency } from '@/currency-preference';
 import { useRemember } from '@inertiajs/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -34,9 +35,39 @@ export function useCalculatorScenario(
         payload ? 'saved' : 'auto',
         'calculator.rateMode',
     );
+    const [currencyInitialized, setCurrencyInitialized] = useRemember(
+        false,
+        'calculator.currencyInitialized',
+    );
     const lastPayload = useRef(payload);
     const ratesValid = isValidExtractionRates(inputs);
     const valid = isValidInputs(inputs);
+
+    useEffect(() => {
+        if (currencyInitialized || payload) return;
+        setCurrencyInitialized(true);
+        if (
+            inputs.volume !== null ||
+            rateMode !== 'auto' ||
+            inputs.currency !== 'IDR'
+        )
+            return;
+        let saved: string | null = null;
+        try {
+            saved = localStorage.getItem(currencyPreferenceKey);
+        } catch {}
+        const currency = defaultCurrency(saved, navigator.languages);
+        setInputs((previous) => ({
+            ...previous,
+            currency,
+            exchange:
+                currency === previous.currency
+                    ? previous.exchange
+                    : currency === 'USD'
+                      ? 1
+                      : 0,
+        }));
+    }, [currencyInitialized, payload]);
 
     useEffect(() => {
         if (payload !== lastPayload.current) {
@@ -58,6 +89,11 @@ export function useCalculatorScenario(
     }, [initial, payload]);
 
     const update = (key: keyof Inputs, value: string | number | null) => {
+        if (key === 'currency' && typeof value === 'string') {
+            try {
+                localStorage.setItem(currencyPreferenceKey, value);
+            } catch {}
+        }
         setInputs((previous) => ({ ...previous, [key]: value }));
     };
 

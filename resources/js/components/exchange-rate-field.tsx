@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { usePage } from '@inertiajs/react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -6,19 +7,12 @@ import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import Typography from '@mui/material/Typography';
 import NumberField from '@/components/number-field';
-import { exchangeRates } from '@/routes';
 import type { Inputs } from '@/hooks/use-calculator';
 import type { RateMode } from '@/hooks/use-calculator-scenario';
 
-type RateResponse = {
-    rates: Partial<
-        Record<
-            'IDR' | 'MYR' | 'CNY' | 'EUR' | 'SGD',
-            { rate: number; date: string }
-        >
-    >;
-    stale: boolean;
-};
+type ExchangeRates = Partial<
+    Record<Exclude<Inputs['currency'], 'USD'>, { rate: number; date: string }>
+>;
 export default function ExchangeRateField({
     value,
     currency,
@@ -36,27 +30,9 @@ export default function ExchangeRateField({
     onCurrencyChange: (currency: Inputs['currency']) => void;
     onModeChange: (mode: RateMode) => void;
 }) {
-    const [result, setResult] = useState<RateResponse | null>(null);
-    const [failed, setFailed] = useState(false);
+    const { exchangeRates } = usePage<{ exchangeRates: ExchangeRates }>().props;
     const id = language === 'id';
-    const reference =
-        currency !== 'USD' ? result?.rates?.[currency] : undefined;
-    useEffect(() => {
-        const controller = new AbortController();
-        void fetch(exchangeRates.url(), {
-            signal: controller.signal,
-            headers: { Accept: 'application/json' },
-        })
-            .then(async (response) => {
-                if (!response.ok) throw new Error('Exchange rates unavailable');
-                const data: RateResponse = await response.json();
-                setResult(data);
-            })
-            .catch(() => {
-                if (!controller.signal.aborted) setFailed(true);
-            });
-        return () => controller.abort();
-    }, []);
+    const reference = currency !== 'USD' ? exchangeRates[currency] : undefined;
     useEffect(() => {
         if (
             mode === 'auto' &&
@@ -192,13 +168,9 @@ export default function ExchangeRateField({
                                 ? id
                                     ? `Diperbarui ${rateDate}`
                                     : `Updated ${rateDate}`
-                                : failed || result
-                                  ? id
-                                      ? 'Pembaruan tidak tersedia'
-                                      : 'Update unavailable'
-                                  : id
-                                    ? 'Memuat pembaruan…'
-                                    : 'Loading update…'}
+                                : id
+                                  ? 'Pembaruan tidak tersedia'
+                                  : 'Update unavailable'}
                         </Box>
                     </Typography>
                 </Box>
