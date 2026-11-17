@@ -118,6 +118,7 @@ export default function Index({
                                 valid={valid}
                                 ready={ready}
                                 shareUrl={shareUrl}
+                                onCurrencyChange={scenario.changeCurrency}
                             />
                         </Box>
                     </Box>

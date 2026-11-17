@@ -10,6 +10,7 @@ export const calculatorCopy = {
         total: 'Estimated credit revenue',
         estimatePrompt:
             'Enter FFB volume and a price for each credit you sell.',
+        missingRate: 'Enter an exchange rate in Settings to see your estimate.',
         excluded: 'Excluded',
         added: 'Extra revenue per kg FFB',
         outputs: 'Estimated product volumes',
@@ -37,6 +38,8 @@ export const calculatorCopy = {
         total: 'Perkiraan pendapatan kredit',
         estimatePrompt:
             'Masukkan volume TBS dan harga untuk setiap kredit yang dijual.',
+        missingRate:
+            'Isi kurs di pengaturan untuk melihat perkiraan pendapatan.',
         excluded: 'Tidak dihitung',
         added: 'Tambahan pendapatan per kg TBS',
         outputs: 'Perkiraan volume produk',

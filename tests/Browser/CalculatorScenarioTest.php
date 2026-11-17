@@ -177,9 +177,9 @@ it('remembers a currency choice while preserving shared calculation rates', func
     Http::preventStrayRequests();
     CreditPriceSnapshot::factory()->create(['exchange_rates' => ['IDR' => ['rate' => 16000, 'date' => '2026-11-13'], 'SGD' => ['rate' => 1.35, 'date' => '2026-11-13']]]);
     $page = visit('/en');
-    $page->click('Currency and Extraction Rate Settings')
-        ->click('[role="combobox"][aria-label="Currency"]')
-        ->click('SGD')
+    $page->click('[role="combobox"][aria-label="Result currency"]')
+        ->click('[role="option"][data-value="SGD"]')
+        ->click('Currency and Extraction Rate Settings')
         ->assertValue('Rate per USD', '1.35')
         ->assertScript('localStorage.getItem("rspocc:currency")', 'SGD');
 
@@ -205,4 +205,26 @@ it('preserves the IDR fallback when no reference rates are stored', function ():
         ->assertSee('Share the result')
         ->assertNoJavaScriptErrors();
     Http::assertNothingSent();
+});
+
+it('switches result currency and keeps settings synchronized', function (): void {
+    CreditPriceSnapshot::factory()->create(['exchange_rates' => [
+        'IDR' => ['rate' => 16000, 'date' => '2026-11-13'],
+        'SGD' => ['rate' => 1.35, 'date' => '2026-11-13'],
+    ]]);
+    $page = visit('/en');
+    $page->fill('FFB volume', '1000')->fill('CSPO Price', '10')
+        ->click('[role="combobox"][aria-label="Result currency"]')->click('[role="option"][data-value="SGD"]')
+        ->assertScript('localStorage.getItem("rspocc:currency")', 'SGD')
+        ->assertScript('Array.from(document.querySelectorAll("p")).some(node => node.textContent.replace(/\s/g, "") === "SGD2,700")', true)
+        ->click('Currency and Extraction Rate Settings')
+        ->assertValue('Rate per USD', '1.35')
+        ->click('[role="combobox"][aria-label="Result currency"]')->click('[role="option"][data-value="EUR"]')
+        ->assertSee('Estimated credit revenue')
+        ->assertSee('Enter an exchange rate in Settings to see your estimate.')
+        ->assertDontSee('Share the result')
+        ->click('[role="combobox"][aria-label="Result currency"]')->click('[role="option"][data-value="USD"]')
+        ->assertSee('No exchange rate is needed for USD.')
+        ->assertScript('document.querySelector(`input[aria-label="Rate per USD"]`) === null', true)
+        ->assertNoJavaScriptErrors();
 });

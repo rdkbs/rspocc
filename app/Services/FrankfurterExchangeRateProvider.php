@@ -13,10 +13,10 @@ use UnexpectedValueException;
 final class FrankfurterExchangeRateProvider
 {
     /** @var list<string> */
-    private const array CURRENCIES = ['IDR', 'MYR', 'CNY', 'EUR', 'SGD'];
+    private const array CURRENCIES = ['CNY', 'EUR', 'IDR', 'MYR', 'SGD'];
 
     /**
-     * @return array{IDR: array{rate: int|float, date: string}, MYR: array{rate: int|float, date: string}, CNY: array{rate: int|float, date: string}, EUR: array{rate: int|float, date: string}, SGD: array{rate: int|float, date: string}}|null
+     * @return array{CNY: array{rate: int|float, date: string}, EUR: array{rate: int|float, date: string}, IDR: array{rate: int|float, date: string}, MYR: array{rate: int|float, date: string}, SGD: array{rate: int|float, date: string}}|null
      */
     public function fetchUsdRates(): ?array
     {
@@ -48,7 +48,7 @@ final class FrankfurterExchangeRateProvider
                 $rates[$row['quote']] = ['rate' => $row['rate'], 'date' => $row['date']];
             }
 
-            if (! isset($rates['IDR'], $rates['MYR'], $rates['CNY'], $rates['EUR'], $rates['SGD'])) {
+            if (! isset($rates['CNY'], $rates['EUR'], $rates['IDR'], $rates['MYR'], $rates['SGD'])) {
                 throw new UnexpectedValueException('Missing exchange rate.');
             }
 

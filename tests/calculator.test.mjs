@@ -202,7 +202,7 @@ describe('localized numeric inputs', () => {
 describe('currency formatting', () => {
     test('omits zero decimals and rounds large values in every currency', () => {
         expect(formatCurrency(49.2, 'IDR', 'id')).toContain('49,2');
-        for (const currency of ['IDR', 'USD', 'MYR', 'EUR', 'CNY', 'SGD']) {
+        for (const currency of ['CNY', 'EUR', 'IDR', 'MYR', 'SGD', 'USD']) {
             expect(formatCurrency(1000, currency, 'en')).toMatch(/1,000$/);
             expect(formatCurrency(1000000.5, currency, 'en')).toMatch(
                 /1,000,001$/,

@@ -50,3 +50,10 @@ export function formatCurrency(
         maximumFractionDigits: value > 999999 ? 0 : 2,
     }).format(value);
 }
+
+export type ExchangeRates = Partial<
+    Record<
+        'CNY' | 'EUR' | 'IDR' | 'MYR' | 'SGD',
+        { rate: number; date: string }
+    >
+>;

@@ -1,5 +1,6 @@
 import { currencyPreferenceKey, defaultCurrency } from '@/currency-preference';
-import { useRemember } from '@inertiajs/react';
+import type { ExchangeRates } from '@/calculator-assumptions';
+import { usePage, useRemember } from '@inertiajs/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
     decode,
@@ -22,6 +23,7 @@ export function useCalculatorScenario(
     payload: string | null,
     language: Inputs['language'],
 ) {
+    const { exchangeRates } = usePage<{ exchangeRates: ExchangeRates }>().props;
     const initial = useMemo(
         () => pageScenario(payload, language),
         [payload, language],
@@ -89,15 +91,27 @@ export function useCalculatorScenario(
     }, [initial, payload]);
 
     const update = (key: keyof Inputs, value: string | number | null) => {
-        if (key === 'currency' && typeof value === 'string') {
-            try {
-                localStorage.setItem(currencyPreferenceKey, value);
-            } catch {}
-        }
         setInputs((previous) => ({ ...previous, [key]: value }));
     };
 
+    const changeCurrency = (currency: Inputs['currency']) => {
+        try {
+            localStorage.setItem(currencyPreferenceKey, currency);
+        } catch {}
+        setRateMode('auto');
+        setInputs((previous) => ({
+            ...previous,
+            currency,
+            exchange:
+                currency === 'USD'
+                    ? 1
+                    : (exchangeRates[currency]?.rate ??
+                      (currency === previous.currency ? previous.exchange : 0)),
+        }));
+    };
+
     return {
+        changeCurrency,
         inputs,
         setInputs,
         update,
