@@ -7,6 +7,10 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import ShareIcon from '@mui/icons-material/Share';
+import {
+    formatCurrencyParts,
+    formatDisplayNumber,
+} from '@/calculator-assumptions';
 import type { CalculatorCopy } from '@/calculator-copy';
 import ExchangeRateField from '@/components/exchange-rate-field';
 import GlossaryText from '@/components/glossary-text';
@@ -45,26 +49,14 @@ export default function CalculatorResults({
     onExchangeRateChange: (rate: number) => void;
     onViewExtractionRates: () => void;
 }) {
-    const locale = inputs.language === 'id' ? 'id-ID' : 'en-US';
     const number = (value: number) =>
-        new Intl.NumberFormat(locale, {
-            maximumFractionDigits: value > 999999 ? 0 : 2,
-        }).format(value);
+        formatDisplayNumber(value, inputs.language);
     const money = (
         value: number,
         currency: string,
         currencySize = '0.78em',
     ) => {
-        const parts = new Intl.NumberFormat(
-            inputs.language === 'id' ? 'id-ID' : 'en-US',
-            {
-                style: 'currency',
-                currency,
-                currencyDisplay: 'code',
-                minimumFractionDigits: 0,
-                maximumFractionDigits: value > 999999 ? 0 : 2,
-            },
-        ).formatToParts(value);
+        const parts = formatCurrencyParts(value, currency, inputs.language);
         const currencyIndex = parts.findIndex(
             (part) => part.type === 'currency',
         );
