@@ -6,6 +6,7 @@ import Button from '@mui/material/Button';
 import InputAdornment from '@mui/material/InputAdornment';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
+import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import NumberField from '@/components/number-field';
 import type { Inputs } from '@/hooks/use-calculator';
@@ -31,6 +32,43 @@ export default function ExchangeRateField({
     const { exchangeRates } = usePage<{ exchangeRates: ExchangeRates }>().props;
     const id = language === 'id';
     const reference = currency !== 'USD' ? exchangeRates[currency] : undefined;
+    const currencySelect = (
+        <Select
+            name="currency"
+            variant="standard"
+            disableUnderline
+            value={currency}
+            displayEmpty
+            renderValue={() => currency}
+            onChange={(event) => onCurrencyChange(event.target.value)}
+            inputProps={{
+                'aria-label': id ? 'Mata uang' : 'Currency',
+            }}
+            sx={{
+                minHeight: 44,
+                minWidth: 80,
+                color:
+                    currency === 'USD'
+                        ? 'primary.contrastText'
+                        : 'text.primary',
+                borderRight: currency === 'USD' ? 0 : 1,
+                borderColor: 'primary.main',
+                pr: 1,
+                '& .MuiSelect-icon': { color: 'inherit' },
+                '&.Mui-focused': {
+                    outline: '2px solid currentColor',
+                    outlineOffset: 1,
+                    borderRadius: 1,
+                },
+            }}
+        >
+            {['CNY', 'EUR', 'IDR', 'MYR', 'SGD', 'USD'].map((code) => (
+                <MenuItem key={code} value={code}>
+                    {code}
+                </MenuItem>
+            ))}
+        </Select>
+    );
     useEffect(() => {
         if (
             mode === 'auto' &&
@@ -43,11 +81,21 @@ export default function ExchangeRateField({
     }, [mode, reference, value, onChange]);
     if (currency === 'USD') {
         return (
-            <Typography sx={{ pt: 1 }}>
-                {id
-                    ? 'Tidak perlu kurs untuk hasil dalam USD.'
-                    : 'No exchange rate is needed for USD.'}
-            </Typography>
+            <Stack
+                direction="row"
+                sx={{
+                    alignItems: 'center',
+                    gap: 1,
+                    color: 'primary.contrastText',
+                }}
+            >
+                {currencySelect}
+                <Typography sx={{ opacity: 0.8 }}>
+                    {id
+                        ? 'Tidak perlu kurs untuk hasil dalam USD.'
+                        : 'No exchange rate is needed for USD.'}
+                </Typography>
+            </Stack>
         );
     }
     const rateDate = reference?.date
@@ -59,7 +107,7 @@ export default function ExchangeRateField({
     const formattedReferenceRate = reference
         ? `${new Intl.NumberFormat(id ? 'id-ID' : 'en-US', {
               maximumFractionDigits: reference.rate > 999999 ? 0 : 4,
-          }).format(reference.rate)} ${currency}`
+          }).format(reference.rate)} ${currency}/USD`
         : null;
     return (
         <Box
@@ -70,9 +118,25 @@ export default function ExchangeRateField({
             <NumberField
                 fullWidth
                 size="small"
-                label={id ? 'Kurs per USD' : 'Rate per USD'}
+                variant="outlined"
                 language={language}
                 value={value}
+                sx={(theme) => ({
+                    '& .MuiOutlinedInput-root': {
+                        minHeight: 48,
+                        bgcolor: theme.palette.background.paper,
+                        color: theme.palette.text.primary,
+                        '& fieldset': { border: 0 },
+                        '&.Mui-focused': {
+                            outline: `2px solid ${theme.palette.mode === 'light' ? theme.palette.primary.dark : theme.palette.primary.contrastText}`,
+                            outlineOffset: 1,
+                            borderRadius: 1,
+                        },
+                    },
+                    '& .MuiInputAdornment-root': {
+                        color: theme.palette.text.secondary,
+                    },
+                })}
                 onValueChange={(rate) => {
                     onModeChange('manual');
                     onChange(rate ?? 0);
@@ -80,41 +144,16 @@ export default function ExchangeRateField({
                 slotProps={{
                     htmlInput: {
                         'aria-label': id ? 'Kurs per USD' : 'Rate per USD',
+                        name: 'exchange',
                     },
                     input: {
                         startAdornment: (
                             <InputAdornment position="start">
-                                <Select
-                                    variant="standard"
-                                    disableUnderline
-                                    value={currency}
-                                    displayEmpty
-                                    renderValue={() => currency}
-                                    onChange={(event) => {
-                                        onCurrencyChange(event.target.value);
-                                    }}
-                                    inputProps={{
-                                        'aria-label': id
-                                            ? 'Mata uang'
-                                            : 'Currency',
-                                    }}
-                                    sx={{
-                                        minHeight: 44,
-                                        minWidth: 80,
-                                        borderRight: 1,
-                                        borderColor: 'divider',
-                                        pr: 1,
-                                    }}
-                                >
-                                    {['CNY', 'EUR', 'IDR', 'MYR', 'SGD'].map(
-                                        (code) => (
-                                            <MenuItem key={code} value={code}>
-                                                {code}
-                                            </MenuItem>
-                                        ),
-                                    )}
-                                </Select>
+                                {currencySelect}
                             </InputAdornment>
+                        ),
+                        endAdornment: (
+                            <InputAdornment position="end">/USD</InputAdornment>
                         ),
                     },
                 }}
@@ -125,57 +164,67 @@ export default function ExchangeRateField({
                 }}
             >
                 {reference &&
-                    Number.isFinite(reference.rate) &&
-                    reference.rate > 0 &&
-                    reference.rate !== value && (
-                        <Button
-                            type="button"
-                            size="small"
-                            onClick={() => {
-                                onModeChange('auto');
-                                onChange(reference.rate);
-                            }}
-                            sx={{
-                                minWidth: 0,
-                                px: 0.5,
-                                textTransform: 'none',
-                                verticalAlign: 'baseline',
-                            }}
-                        >
-                            {id
-                                ? `Gunakan kurs ini: ${formattedReferenceRate} untuk 1 USD`
-                                : `Use this rate: ${formattedReferenceRate} for 1 USD`}
-                        </Button>
-                    )}
-                <Typography
-                    component="div"
-                    variant="caption"
-                    color="text.secondary"
-                >
-                    <Box
-                        component="a"
-                        href="https://frankfurter.dev/"
-                        target="_blank"
-                        rel="noopener noreferrer"
+                Number.isFinite(reference.rate) &&
+                reference.rate > 0 &&
+                reference.rate !== value ? (
+                    <Button
+                        type="button"
+                        size="small"
+                        color="inherit"
+                        variant="text"
+                        onClick={() => {
+                            onModeChange('auto');
+                            onChange(reference.rate);
+                        }}
                         sx={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
+                            minWidth: 0,
                             minHeight: 44,
+                            px: 0,
+                            justifyContent: 'flex-start',
+                            textTransform: 'none',
+                            color: 'primary.contrastText',
+                            textDecoration: 'underline',
+                            '&:hover': {
+                                bgcolor: 'rgba(242, 241, 235, 0.06)',
+                            },
                         }}
                     >
-                        Frankfurter
-                    </Box>
-                    {' · '}
-                    <Box component="span" role="status">
-                        {rateDate
-                            ? id
-                                ? `Diperbarui ${rateDate}`
-                                : `Updated ${rateDate}`
-                            : id
-                              ? 'Pembaruan tidak tersedia'
-                              : 'Update unavailable'}
-                    </Box>
-                </Typography>
+                        {id
+                            ? `Gunakan kurs terbaru dari Frankfuter: ${formattedReferenceRate}`
+                            : `Use latest rate from Frankfuter: ${formattedReferenceRate}`}
+                    </Button>
+                ) : (
+                    <Typography
+                        component="div"
+                        variant="caption"
+                        sx={{ color: 'rgba(242, 241, 235, 0.72)' }}
+                    >
+                        <Box
+                            component="a"
+                            href="https://frankfurter.dev/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            sx={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                color: 'inherit',
+                                textDecoration: 'underline',
+                            }}
+                        >
+                            Frankfurter
+                        </Box>
+                        {' · '}
+                        <Box component="span" role="status">
+                            {rateDate
+                                ? id
+                                    ? `Diperbarui ${rateDate}`
+                                    : `Updated ${rateDate}`
+                                : id
+                                  ? 'Pembaruan tidak tersedia'
+                                  : 'Update unavailable'}
+                        </Box>
+                    </Typography>
+                )}
             </Box>
         </Box>
     );
