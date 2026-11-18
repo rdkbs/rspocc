@@ -237,7 +237,7 @@ it('switches result currency and keeps settings synchronized', function (): void
         ->assertScript('document.querySelector("input[name=exchange]")?.value', '1.35')
         ->click('[role="combobox"][aria-label="Currency"]')->click('[role="option"][data-value="EUR"]')
         ->assertSee('Estimated credit revenue')
-        ->assertSee('Enter an exchange rate in Settings to see your estimate.')
+        ->assertSee('Enter a rate above zero on the result card. If the field is not visible yet, enter FFB volume and a credit price first.')
         ->assertDontSee('Share the result')
         ->click('[role="combobox"][aria-label="Currency"]')->click('[role="option"][data-value="USD"]')
         ->assertSee('No exchange rate is needed for USD.')

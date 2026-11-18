@@ -9,7 +9,7 @@ paths:
 
 # RSPO Credit Calculator
 
-- Before changing UI, layout, or visual styling, read the root `DESIGN.md`; it defines the product's visual direction and accepted color choices.
+- Before changing UI, layout, or visual styling, read the root `DESIGN.md`; it defines the product's visual direction, accepted colors, and control placement.
 - Use Wayfinder-generated route helpers when frontend code calls Laravel routes.
 - Write PHP tests in Pest. Cover calculation boundaries, rounding, and invalid inputs when calculation behavior is added or changed.
 - Keep the current Laravel/Inertia structure; introduce domain modules or extra tooling only when the feature needs them.

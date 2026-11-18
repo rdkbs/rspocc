@@ -43,7 +43,7 @@ const englishPages: Record<ContentSlug, ContentPage> = {
             ],
             [
                 'Are the exchange rates up to date?',
-                'We use exchange rates from Frankfurter, checked daily. Check the date beside the rate in Settings to see how recent it is. You can also enter your own rate. A shared calculation keeps the rate used when it was shared.',
+                'We check Frankfurter rates daily. To use the latest rate and see its update date, select the suggestion below the currency field. You can also enter your own rate. Shared calculations keep the rate used when they were created.',
             ],
             [
                 'Why are RSPO’s CSPKO and CSPKE extraction rates different?',
@@ -132,7 +132,7 @@ const indonesianPages: Record<ContentSlug, ContentPage> = {
             ],
             [
                 'Apakah kursnya terbaru?',
-                'Kurs berasal dari Frankfurter dan diperiksa setiap hari. Lihat tanggal di samping kurs pada pengaturan untuk mengetahui kapan kurs tersebut diperbarui. Anda juga bisa mengisi kurs sendiri. Perhitungan yang dibagikan tetap memakai kurs saat tautan dibuat.',
+                'Kurs Frankfurter diperiksa setiap hari. Untuk memakai kurs terbaru dan melihat tanggal pembaruannya, pilih saran di bawah kolom mata uang. Anda juga bisa mengisi kurs sendiri. Tautan yang dibagikan tetap memakai kurs saat dibuat.',
             ],
             [
                 'Bagaimana rendemen CSPKO dan CSPKE dihitung?',

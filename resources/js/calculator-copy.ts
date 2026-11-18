@@ -10,7 +10,8 @@ export const calculatorCopy = {
         total: 'Estimated credit revenue',
         estimatePrompt:
             'Enter FFB volume and a price for each credit you sell.',
-        missingRate: 'Enter an exchange rate in Settings to see your estimate.',
+        missingRate:
+            'Enter a rate above zero on the result card. If the field is not visible yet, enter FFB volume and a credit price first.',
         excluded: 'Excluded',
         added: 'Extra revenue per kg FFB',
         outputs: 'Estimated product volumes',
@@ -39,7 +40,7 @@ export const calculatorCopy = {
         estimatePrompt:
             'Masukkan volume TBS dan harga untuk setiap kredit yang dijual.',
         missingRate:
-            'Isi kurs di pengaturan untuk melihat perkiraan pendapatan.',
+            'Isi kurs lebih dari nol pada kartu hasil. Jika kolomnya belum muncul, masukkan volume TBS dan satu harga kredit terlebih dahulu.',
         excluded: 'Tidak dihitung',
         added: 'Tambahan pendapatan per kg TBS',
         outputs: 'Perkiraan volume produk',
@@ -71,7 +72,7 @@ export const homePageCopy = {
             ],
             [
                 'Review the estimate',
-                'Check revenue and added value per kg. If needed, adjust extraction rates or the exchange rate in Settings.',
+                'Review revenue and added value per kg. Change the exchange rate in the result card, or select a product’s percentage under Estimated product volumes to edit its extraction rate.',
             ],
         ],
         faqTitle: 'Common questions',
@@ -86,7 +87,7 @@ export const homePageCopy = {
             ],
             [
                 'Are the exchange rates up to date?',
-                'We use exchange rates from Frankfurter, checked daily. Check the date beside the rate in Settings to see how recent it is. You can also enter your own rate. A shared calculation keeps the rate used when it was shared.',
+                'We check Frankfurter rates daily. To use the latest rate and see its update date, select the suggestion below the currency field. You can also enter your own rate. Shared calculations keep the rate used when they were created.',
             ],
         ],
         faqLink: 'FAQ',
@@ -102,7 +103,7 @@ export const homePageCopy = {
             ],
             [
                 'Lihat hasil perhitungan',
-                'Lihat perkiraan pendapatan dan nilai tambah per kg TBS. Jika perlu, ubah rendemen atau kurs di pengaturan.',
+                'Periksa pendapatan dan nilai tambah per kg TBS. Ubah kurs pada kartu hasil. Untuk mengubah rendemen, pilih persentasenya di bagian Perkiraan volume produk.',
             ],
         ],
         faqTitle: 'Pertanyaan umum',
@@ -117,7 +118,7 @@ export const homePageCopy = {
             ],
             [
                 'Apakah kursnya terbaru?',
-                'Kurs berasal dari Frankfurter dan diperiksa setiap hari. Lihat tanggal di samping kurs pada pengaturan untuk mengetahui kapan kurs tersebut diperbarui. Anda juga bisa mengisi kurs sendiri. Perhitungan yang dibagikan tetap memakai kurs saat tautan dibuat.',
+                'Kurs Frankfurter diperiksa setiap hari. Untuk memakai kurs terbaru dan melihat tanggal pembaruannya, pilih saran di bawah kolom mata uang. Anda juga bisa mengisi kurs sendiri. Tautan yang dibagikan tetap memakai kurs saat dibuat.',
             ],
         ],
         faqLink: 'FAQ',
