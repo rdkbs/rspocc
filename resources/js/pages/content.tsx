@@ -17,6 +17,7 @@ type Section = [
     text: string,
     showRateSource?: boolean,
     sourceUrl?: string,
+    sourceLabel?: string,
 ];
 type ContentPage = { title: string; sections: Section[] };
 type ContentSlug = 'faq' | 'terms' | 'privacy';
@@ -91,6 +92,13 @@ const englishPages: Record<ContentSlug, ContentPage> = {
             [
                 'History and logs',
                 'Opening a shared link sends its URL, including the compressed calculation, to our server. Shared URLs may appear in browser history, shared messages, and hosting logs. Hosting systems may also log your IP address and the request time. Calculation inputs are not saved in an application database or browser local storage.',
+            ],
+            [
+                'Google Analytics',
+                'We use Google Analytics to measure visits and site usage. Page URLs and referrers sent to Google do not include calculation payloads, and we do not send calculation inputs. Google may use cookies or similar identifiers and process technical information, such as your browser, device, and IP address, under its own privacy policy.',
+                false,
+                'https://policies.google.com/privacy',
+                'Google privacy policy',
             ],
             [
                 'Error monitoring',
@@ -180,6 +188,13 @@ const indonesianPages: Record<ContentSlug, ContentPage> = {
             [
                 'Riwayat dan log',
                 'Membuka tautan yang dibagikan mengirim URL beserta perhitungan yang dikompresi ke server kami. URL tersebut dapat muncul di riwayat browser, pesan yang dibagikan, dan log hosting. Sistem hosting juga dapat mencatat alamat IP dan waktu permintaan. Data perhitungan tidak disimpan di basis data aplikasi maupun local storage browser.',
+            ],
+            [
+                'Google Analytics',
+                'Kami menggunakan Google Analytics untuk mengukur kunjungan dan penggunaan situs. URL halaman dan sumber kunjungan yang dikirim ke Google tidak memuat payload perhitungan. Kami tidak mengirim data perhitungan ke Google. Google dapat menggunakan cookie atau teknologi serupa serta memproses informasi teknis, seperti browser, perangkat, dan alamat IP, sesuai kebijakan privasinya.',
+                false,
+                'https://policies.google.com/privacy?hl=id',
+                'Kebijakan privasi Google',
             ],
             [
                 'Pemantauan kesalahan',
@@ -419,7 +434,13 @@ export default function Content({
                         >
                             {page.sections.map(
                                 (
-                                    [heading, text, showRateSource, sourceUrl],
+                                    [
+                                        heading,
+                                        text,
+                                        showRateSource,
+                                        sourceUrl,
+                                        sourceLabel,
+                                    ],
                                     index,
                                 ) => (
                                     <Box
@@ -462,9 +483,10 @@ export default function Content({
                                                 href={sourceUrl}
                                                 sx={{ color: 'primary.main' }}
                                             >
-                                                {lang === 'id'
-                                                    ? 'Kebijakan privasi Sentry'
-                                                    : 'Sentry privacy policy'}
+                                                {sourceLabel ??
+                                                    (lang === 'id'
+                                                        ? 'Kebijakan privasi Sentry'
+                                                        : 'Sentry privacy policy')}
                                             </Box>
                                         )}
                                         {showRateSource && (
