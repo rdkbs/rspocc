@@ -6,5 +6,6 @@ Before planning or editing, find the row whose globs match the file's path and r
 | --------------------------------------------------------- | --------------------- |
 | resources/js/hooks/use-calculator.ts                      | .ai/rules/hooks.md    |
 | app/**, routes/**, resources/js/**, database/**, tests/** | .ai/rules/project.md  |
+| config/services.php, resources/views/app.blade.php        | .ai/rules/project.md  |
 | app/Services/CalculatorPreview.php                        | .ai/rules/services.md |
 | resources/views/**                                        | .ai/rules/views.md    |

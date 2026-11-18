@@ -5,6 +5,8 @@ paths:
     - 'resources/js/**'
     - 'database/**'
     - 'tests/**'
+    - 'config/services.php'
+    - 'resources/views/app.blade.php'
 ---
 
 # RSPO Credit Calculator
@@ -41,3 +43,7 @@ Keep explicit /id and /en URLs authoritative, and preserve shared or history-res
 ## Database-backed exchange rates in page props
 
 Pass the latest database snapshot containing exchange rates to the calculator through Inertia props. Refresh reference rates through the existing cron-scheduled command; do not fetch rates through a browser API, during page rendering, or from a file-cache fallback. Preserve shared/manual rates and the existing rate when detected currency is unchanged; when no reference rate is available, retain the existing IDR default and allow manual entry.
+
+## Analytics and calculation privacy
+
+Load Google Tag Manager only in production and send manual page views with `payload` removed from page URLs and referrers. Keep `referrerpolicy="no-referrer"` on its script, disable automatic and history-based page views in the GTM configuration, and keep English and Indonesian privacy disclosures aligned with collected data. Cover URL sanitization with a Bun test.

@@ -68,6 +68,28 @@
         <link rel="icon" href="/logo.svg" type="image/svg+xml" sizes="any">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
+        @if (app()->environment('production') && filled(config('services.google.tag_manager_id')))
+            <script>
+                window.dataLayer = window.dataLayer || [];
+                window.gtag = function () { window.dataLayer.push(arguments); };
+                window.gtag('js', new Date());
+                window.gtag('set', {
+                    page_location: (() => {
+                        const url = new URL(window.location.href);
+                        url.searchParams.delete('payload');
+                        return url.href;
+                    })(),
+                    page_referrer: (() => {
+                        if (!document.referrer) return '';
+                        const url = new URL(document.referrer);
+                        url.searchParams.delete('payload');
+                        return url.href;
+                    })(),
+                });
+            </script>
+            <script async src="https://www.googletagmanager.com/gtm.js?id={{ urlencode(config('services.google.tag_manager_id')) }}" referrerpolicy="no-referrer"></script>
+        @endif
+
         @fonts
 
         @viteReactRefresh

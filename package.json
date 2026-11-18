@@ -6,6 +6,7 @@
         "build": "vp build",
         "build:ssr": "vp build --ssr",
         "dev": "vp dev",
+        "test:analytics": "bun test tests/analytics.test.mjs",
         "test:calculator": "bun test tests/calculator.test.mjs"
     },
     "dependencies": {
