@@ -1,11 +1,11 @@
 import { Fragment, useState } from 'react';
+import type { RefObject } from 'react';
 import { Link } from '@inertiajs/react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import ShareIcon from '@mui/icons-material/Share';
 import {
     formatCurrencyParts,
@@ -13,9 +13,18 @@ import {
 } from '@/calculator-assumptions';
 import type { CalculatorCopy } from '@/calculator-copy';
 import ExchangeRateField from '@/components/exchange-rate-field';
+import ExtractionRateSettings from '@/components/extraction-rate-settings';
 import GlossaryText from '@/components/glossary-text';
-import { credits, useCalculator, type Inputs } from '@/hooks/use-calculator';
-import type { RateMode } from '@/hooks/use-calculator-scenario';
+import {
+    credits,
+    useCalculator,
+    type Credit,
+    type Inputs,
+} from '@/hooks/use-calculator';
+import type {
+    RateMode,
+    useCalculatorScenario,
+} from '@/hooks/use-calculator-scenario';
 import { localizedContent } from '@/routes';
 
 const creditColors = {
@@ -23,9 +32,9 @@ const creditColors = {
     cspko: 'secondary.main',
     cspke: '#929e78',
 } as const;
-
 export default function CalculatorResults({
     inputs,
+    scenario,
     text,
     result,
     valid,
@@ -35,9 +44,14 @@ export default function CalculatorResults({
     onCurrencyChange,
     onRateModeChange,
     onExchangeRateChange,
-    onViewExtractionRates,
+    configDetails,
+    showRateSettings,
+    rateSettingsOpen,
+    onRateSettingsToggle,
+    onEditExtractionRate,
 }: {
     inputs: Inputs;
+    scenario: ReturnType<typeof useCalculatorScenario>;
     text: CalculatorCopy;
     result: ReturnType<typeof useCalculator>;
     valid: boolean;
@@ -47,8 +61,19 @@ export default function CalculatorResults({
     onCurrencyChange: (currency: Inputs['currency']) => void;
     onRateModeChange: (mode: RateMode) => void;
     onExchangeRateChange: (rate: number) => void;
-    onViewExtractionRates: () => void;
+    configDetails: RefObject<HTMLDetailsElement | null>;
+    showRateSettings: boolean;
+    rateSettingsOpen: boolean;
+    onRateSettingsToggle: (open: boolean) => void;
+    onEditExtractionRate: (credit: Credit) => void;
 }) {
+    const extractionRates: Record<Credit, number> = {
+        cspo: inputs.oer,
+        cspko: inputs.ker,
+        cspke: inputs.yield,
+    };
+    const getRateLabel = (credit: Credit) =>
+        `${formatDisplayNumber(extractionRates[credit], inputs.language)}% ${inputs.language === 'id' ? 'dari TBS' : 'of FFB'}`;
     const number = (value: number) =>
         formatDisplayNumber(value, inputs.language);
     const money = (
@@ -279,14 +304,15 @@ export default function CalculatorResults({
                             />
                         ))}
                     </Box>
-                    {credits.map((credit) => (
+                    {credits.map((credit, index) => (
                         <Stack
                             key={credit}
                             direction="row"
                             sx={{
                                 justifyContent: 'space-between',
                                 py: 1.5,
-                                borderBottom: 1,
+                                borderBottom:
+                                    index < credits.length - 1 ? 1 : 0,
                                 borderColor: 'divider',
                                 color:
                                     inputs.prices[credit] === null
@@ -316,7 +342,52 @@ export default function CalculatorResults({
                                                     : creditColors[credit],
                                         }}
                                     />
-                                    {credit.toUpperCase()}
+                                    <Button
+                                        type="button"
+                                        color="inherit"
+                                        aria-label={
+                                            inputs.language === 'id'
+                                                ? `Ubah rendemen ${credit.toUpperCase()}: ${getRateLabel(credit)}`
+                                                : `Edit ${credit.toUpperCase()} rate: ${getRateLabel(credit)}`
+                                        }
+                                        onClick={() =>
+                                            onEditExtractionRate(credit)
+                                        }
+                                        sx={{
+                                            minWidth: 0,
+                                            minHeight: 44,
+                                            px: 0,
+                                            gap: 1.5,
+                                            alignItems: 'center',
+                                            justifyContent: 'flex-start',
+                                            color: 'inherit',
+                                            fontSize: 'inherit',
+                                            fontWeight: 'inherit',
+                                            textTransform: 'none',
+                                        }}
+                                    >
+                                        <Box component="span">
+                                            {credit.toUpperCase()}
+                                        </Box>
+                                        <Box
+                                            component="span"
+                                            sx={{
+                                                color:
+                                                    inputs.prices[credit] ===
+                                                    null
+                                                        ? 'text.disabled'
+                                                        : 'text.secondary',
+                                                fontSize: 13,
+                                                fontWeight: 400,
+                                                fontVariantNumeric:
+                                                    'tabular-nums',
+                                                textDecoration: 'underline',
+                                                textUnderlineOffset: 3,
+                                            }}
+                                        >
+                                            {getRateLabel(credit)}
+                                        </Box>
+                                    </Button>
                                 </Typography>
                                 <Stack
                                     direction="row"
@@ -362,20 +433,32 @@ export default function CalculatorResults({
                                         )}
                                 </Stack>
                             </Box>
-                            <Typography sx={{ fontWeight: 650 }}>
+                            <Typography
+                                sx={{
+                                    fontSize: { xs: 22, sm: 24 },
+                                    fontWeight: 650,
+                                    fontVariantNumeric: 'tabular-nums',
+                                }}
+                            >
                                 {number(result.volumes[credit] / 1000)} t
                             </Typography>
                         </Stack>
                     ))}
-                    <Button
-                        onClick={onViewExtractionRates}
-                        startIcon={<InfoOutlinedIcon aria-hidden="true" />}
-                        sx={{ mt: 1, minHeight: 44, textTransform: 'none' }}
-                    >
-                        {inputs.language === 'id'
-                            ? 'Lihat rendemen'
-                            : 'View extraction rates'}
-                    </Button>
+                    {showRateSettings && (
+                        <Box sx={{ mt: 2 }}>
+                            <ExtractionRateSettings
+                                inputs={inputs}
+                                text={text}
+                                ratesValid={scenario.ratesValid}
+                                open={rateSettingsOpen}
+                                detailsRef={configDetails}
+                                onRateChange={(key, value) =>
+                                    scenario.update(key, value)
+                                }
+                                onOpenChange={onRateSettingsToggle}
+                            />
+                        </Box>
+                    )}
                 </Paper>
             )}
             {hasResults && (

@@ -173,24 +173,41 @@ it('keeps nonzero decimals in added revenue per kilogram', function (): void {
         ->assertNoJavaScriptErrors();
 });
 
+it('opens and focuses each matching extraction rate from product volumes', function (): void {
+    visit('/en')
+        ->fill('FFB volume', '1000')
+        ->fill('CSPO Price', '10')
+        ->assertScript('document.querySelector("#cspo-rate")?.closest("details")?.closest(".MuiPaper-root")?.querySelector("h2")?.textContent', 'Estimated product volumes')
+        ->assertDontSee('View extraction rates')
+        ->click('[aria-label="Edit CSPO rate: 20% of FFB"]')
+        ->assertScript('document.querySelector("#cspo-rate")?.closest("details")?.closest(".MuiPaper-root")?.querySelector("h2")?.textContent', 'Estimated product volumes')
+        ->assertScript('document.querySelector("details")?.open', true)
+        ->assertScript('document.activeElement?.id', 'cspo-rate')
+        ->click('[aria-label="Edit CSPKO rate: 2.25% of FFB"]')
+        ->assertScript('document.activeElement?.id', 'cspko-rate')
+        ->click('[aria-label="Edit CSPKE rate: 2.75% of FFB"]')
+        ->assertScript('document.activeElement?.id', 'cspke-rate')
+        ->assertNoJavaScriptErrors();
+});
+
 it('remembers a currency choice while preserving shared calculation rates', function (): void {
     Http::preventStrayRequests();
     CreditPriceSnapshot::factory()->create(['exchange_rates' => ['IDR' => ['rate' => 16000, 'date' => '2026-11-13'], 'SGD' => ['rate' => 1.35, 'date' => '2026-11-13']]]);
-    $page = visit('/en');
-    $page->click('[role="combobox"][aria-label="Result currency"]')
+    $page = visit('/en')->fill('FFB volume', '1000')->fill('CSPO Price', '10');
+    $page->click('[role="combobox"][aria-label="Currency"]')
         ->click('[role="option"][data-value="SGD"]')
-        ->click('Currency and Extraction Rate Settings')
-        ->assertValue('Rate per USD', '1.35')
+        ->assertScript('document.querySelector("input[name=exchange]")?.value', '1.35')
         ->assertScript('localStorage.getItem("rspocc:currency")', 'SGD');
 
     $page->script('history.replaceState(null, "", location.href);');
-    $page->refresh()->click('Currency and Extraction Rate Settings')
-        ->assertValue('Rate per USD', '1.35');
+    $page->refresh()
+        ->fill('FFB volume', '1000')->fill('CSPO Price', '10')
+        ->assertScript('document.querySelector("[role=combobox][aria-label=Currency]")?.textContent?.trim()', 'SGD')
+        ->assertScript('document.querySelector("input[name=exchange]")?.value', '1.35');
 
     $payload = 'N4Igbg9gNgrgtgUxALgIwAZMBoQwHYCWALiiCThAgE4oBM6OA1tXQHS0CsOAngQlABM2Adi4gADlQIBjBAGcUoaXPEQUAZlYA2YTmXjGa5AA5jrYaj0rmKdK1QBfHAgAe0gBYBDPAHMkaLUwGEGkYKioEPGluUgBJABEAJRAcKG8fGE8-UgIhByA';
     $page->navigate('/en?'.http_build_query(['payload' => $payload]))
-        ->click('Currency and Extraction Rate Settings')
-        ->assertValue('Rate per USD', '16,000')
+        ->assertScript('document.querySelector("input[name=exchange]")?.value', '16,000')
         ->assertScript('localStorage.getItem("rspocc:currency")', 'SGD')
         ->assertNoJavaScriptErrors();
 });
@@ -199,9 +216,9 @@ it('preserves the IDR fallback when no reference rates are stored', function ():
     Http::preventStrayRequests();
     $page = visit('/en');
     $page->script('localStorage.setItem("rspocc:currency", "IDR"); history.replaceState(null, "", location.href);');
-    $page->refresh()->click('Currency and Extraction Rate Settings')
-        ->assertValue('Rate per USD', '16,000')
+    $page->refresh()
         ->fill('FFB volume', '1000')->fill('CSPO Price', '10')
+        ->assertScript('document.querySelector("input[name=exchange]")?.value', '16,000')
         ->assertSee('Share the result')
         ->assertNoJavaScriptErrors();
     Http::assertNothingSent();
@@ -214,16 +231,15 @@ it('switches result currency and keeps settings synchronized', function (): void
     ]]);
     $page = visit('/en');
     $page->fill('FFB volume', '1000')->fill('CSPO Price', '10')
-        ->click('[role="combobox"][aria-label="Result currency"]')->click('[role="option"][data-value="SGD"]')
+        ->click('[role="combobox"][aria-label="Currency"]')->click('[role="option"][data-value="SGD"]')
         ->assertScript('localStorage.getItem("rspocc:currency")', 'SGD')
         ->assertScript('Array.from(document.querySelectorAll("p")).some(node => node.textContent.replace(/\s/g, "") === "SGD2,700")', true)
-        ->click('Currency and Extraction Rate Settings')
-        ->assertValue('Rate per USD', '1.35')
-        ->click('[role="combobox"][aria-label="Result currency"]')->click('[role="option"][data-value="EUR"]')
+        ->assertScript('document.querySelector("input[name=exchange]")?.value', '1.35')
+        ->click('[role="combobox"][aria-label="Currency"]')->click('[role="option"][data-value="EUR"]')
         ->assertSee('Estimated credit revenue')
         ->assertSee('Enter an exchange rate in Settings to see your estimate.')
         ->assertDontSee('Share the result')
-        ->click('[role="combobox"][aria-label="Result currency"]')->click('[role="option"][data-value="USD"]')
+        ->click('[role="combobox"][aria-label="Currency"]')->click('[role="option"][data-value="USD"]')
         ->assertSee('No exchange rate is needed for USD.')
         ->assertScript('document.querySelector(`input[aria-label="Rate per USD"]`) === null', true)
         ->assertNoJavaScriptErrors();
