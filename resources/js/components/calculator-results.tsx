@@ -3,14 +3,15 @@ import { Link } from '@inertiajs/react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import ShareIcon from '@mui/icons-material/Share';
 import type { CalculatorCopy } from '@/calculator-copy';
+import ExchangeRateField from '@/components/exchange-rate-field';
 import GlossaryText from '@/components/glossary-text';
 import { credits, useCalculator, type Inputs } from '@/hooks/use-calculator';
+import type { RateMode } from '@/hooks/use-calculator-scenario';
 import { localizedContent } from '@/routes';
 
 const creditColors = {
@@ -26,7 +27,11 @@ export default function CalculatorResults({
     valid,
     ready,
     shareUrl,
+    rateMode,
     onCurrencyChange,
+    onRateModeChange,
+    onExchangeRateChange,
+    onViewExtractionRates,
 }: {
     inputs: Inputs;
     text: CalculatorCopy;
@@ -34,7 +39,11 @@ export default function CalculatorResults({
     valid: boolean;
     ready: boolean;
     shareUrl: () => string;
+    rateMode: RateMode;
     onCurrencyChange: (currency: Inputs['currency']) => void;
+    onRateModeChange: (mode: RateMode) => void;
+    onExchangeRateChange: (rate: number) => void;
+    onViewExtractionRates: () => void;
 }) {
     const locale = inputs.language === 'id' ? 'id-ID' : 'en-US';
     const number = (value: number) =>
@@ -122,39 +131,27 @@ export default function CalculatorResults({
             .catch(() => setShareMessage(text.shareFailed));
     };
 
-    const currencySelector = (
-        <Select
-            value={inputs.currency}
-            onChange={(event) => onCurrencyChange(event.target.value)}
-            size="small"
-            inputProps={{
-                'aria-label':
-                    inputs.language === 'id'
-                        ? 'Mata uang hasil'
-                        : 'Result currency',
-            }}
-            sx={{
-                color: 'primary.dark',
-                minWidth: 96,
-                minHeight: 44,
-                '& .MuiSelect-icon': { color: 'inherit' },
-                '&.Mui-focused': {
-                    outline: '2px solid currentColor',
-                    outlineOffset: 2,
-                },
-                '& .MuiOutlinedInput-notchedOutline': {
-                    border: 0,
-                },
-            }}
+    const currencySettings = (
+        <Box
+            component="form"
+            aria-label={
+                inputs.language === 'id'
+                    ? 'Pengaturan mata uang'
+                    : 'Currency settings'
+            }
+            onSubmit={(event) => event.preventDefault()}
+            sx={{ mt: 1, mb: 2 }}
         >
-            {(['CNY', 'EUR', 'IDR', 'MYR', 'SGD', 'USD'] as const).map(
-                (currency) => (
-                    <MenuItem key={currency} value={currency}>
-                        {currency}
-                    </MenuItem>
-                ),
-            )}
-        </Select>
+            <ExchangeRateField
+                value={inputs.exchange}
+                currency={inputs.currency}
+                language={inputs.language}
+                mode={rateMode}
+                onModeChange={onRateModeChange}
+                onChange={onExchangeRateChange}
+                onCurrencyChange={onCurrencyChange}
+            />
+        </Box>
     );
 
     return (
@@ -168,35 +165,22 @@ export default function CalculatorResults({
                     p: { xs: 3, md: 4 },
                     bgcolor: 'primary.main',
                     color: 'primary.contrastText',
-                    '& .MuiTypography-root': { color: 'inherit' },
                 }}
             >
-                <Stack
-                    direction="row"
-                    sx={{
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: 2,
-                    }}
+                <Typography
+                    component="h2"
+                    color="inherit"
+                    sx={{ fontSize: 24, fontWeight: 600 }}
                 >
-                    <Typography
-                        component="h2"
-                        sx={{
-                            fontSize: 24,
-                            flex: 1,
-                            minWidth: 0,
-                            fontWeight: 600,
-                        }}
-                    >
-                        {text.total}
-                    </Typography>
-                    {currencySelector}
-                </Stack>
+                    {text.total}
+                </Typography>
+                {ready && currencySettings}
                 {hasResults ? (
                     <>
                         <Typography
                             variant="h2"
                             component="p"
+                            color="inherit"
                             sx={{
                                 mt: 2,
                                 fontSize: {
@@ -210,13 +194,16 @@ export default function CalculatorResults({
                             {money(result.converted, inputs.currency, '0.46em')}
                         </Typography>
                         {inputs.currency !== 'USD' && (
-                            <Typography color="text.secondary" sx={{ mt: 1 }}>
+                            <Typography
+                                color="inherit"
+                                sx={{ mt: 1, opacity: 0.8 }}
+                            >
                                 {money(result.usd, 'USD')}
                             </Typography>
                         )}
                     </>
                 ) : (
-                    <Typography sx={{ mt: 2, lineHeight: 1.6 }}>
+                    <Typography color="inherit" sx={{ mt: 2, lineHeight: 1.6 }}>
                         {!valid
                             ? inputs.exchange <= 0
                                 ? text.missingRate
@@ -235,20 +222,21 @@ export default function CalculatorResults({
                     >
                         <Typography
                             color="secondary.main"
-                            sx={{ fontWeight: 600 }}
+                            sx={{ color: 'inherit', fontWeight: 600 }}
                         >
                             {text.added}
                         </Typography>
                         <Typography
                             variant="h3"
                             component="p"
+                            color="inherit"
                             sx={{
                                 mt: 1,
                                 fontSize: { xs: '2rem', md: '2.5rem' },
                             }}
                         >
                             {money(result.added, inputs.currency, '0.55em')}{' '}
-                            <Typography component="span" color="text.secondary">
+                            <Typography component="span" color="inherit">
                                 / kg
                             </Typography>
                         </Typography>
@@ -387,6 +375,15 @@ export default function CalculatorResults({
                             </Typography>
                         </Stack>
                     ))}
+                    <Button
+                        onClick={onViewExtractionRates}
+                        startIcon={<InfoOutlinedIcon aria-hidden="true" />}
+                        sx={{ mt: 1, minHeight: 44, textTransform: 'none' }}
+                    >
+                        {inputs.language === 'id'
+                            ? 'Lihat rendemen'
+                            : 'View extraction rates'}
+                    </Button>
                 </Paper>
             )}
             {hasResults && (

@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { Head, router } from '@inertiajs/react';
 import ArrowForward from '@mui/icons-material/ArrowForward';
 import Alert from '@mui/material/Alert';
@@ -25,6 +26,18 @@ export default function Index({
     payload: string | null;
     lang: Inputs['language'];
 }) {
+    const configDetails = useRef<HTMLDetailsElement>(null);
+    const showExtractionRates = () => {
+        const details = configDetails.current;
+        if (!details) return;
+        details.open = true;
+        requestAnimationFrame(() => {
+            details
+                .querySelector<HTMLElement>('#calculator-rates-heading')
+                ?.focus({ preventScroll: true });
+            details.scrollIntoView({ block: 'nearest' });
+        });
+    };
     const scenario = useCalculatorScenario(payload, lang);
     const { inputs, update, invalid, valid } = scenario;
     const text = calculatorCopy[inputs.language];
@@ -110,7 +123,11 @@ export default function Index({
                                 },
                             }}
                         >
-                            <CalculatorInputs scenario={scenario} text={text} />
+                            <CalculatorInputs
+                                scenario={scenario}
+                                text={text}
+                                configDetails={configDetails}
+                            />
                             <CalculatorResults
                                 inputs={inputs}
                                 text={text}
@@ -118,7 +135,13 @@ export default function Index({
                                 valid={valid}
                                 ready={ready}
                                 shareUrl={shareUrl}
+                                rateMode={scenario.rateMode}
                                 onCurrencyChange={scenario.changeCurrency}
+                                onRateModeChange={scenario.setRateMode}
+                                onExchangeRateChange={(rate) =>
+                                    scenario.update('exchange', rate)
+                                }
+                                onViewExtractionRates={showExtractionRates}
                             />
                         </Box>
                     </Box>

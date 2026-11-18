@@ -1,5 +1,5 @@
 import { usePage } from '@inertiajs/react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, type RefObject } from 'react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -8,12 +8,9 @@ import MenuItem from '@mui/material/MenuItem';
 import Paper from '@mui/material/Paper';
 import Select from '@mui/material/Select';
 import Stack from '@mui/material/Stack';
-import Tab from '@mui/material/Tab';
-import Tabs from '@mui/material/Tabs';
 import Typography from '@mui/material/Typography';
 import type { PriceReference } from '@/calculator-assumptions';
 import type { CalculatorCopy } from '@/calculator-copy';
-import ExchangeRateField from '@/components/exchange-rate-field';
 import NumberField from '@/components/number-field';
 import { credits, type Inputs } from '@/hooks/use-calculator';
 import { useCalculatorScenario } from '@/hooks/use-calculator-scenario';
@@ -24,32 +21,20 @@ type Scenario = ReturnType<typeof useCalculatorScenario>;
 export default function CalculatorInputs({
     scenario,
     text,
+    configDetails,
 }: {
     scenario: Scenario;
     text: CalculatorCopy;
+    configDetails: RefObject<HTMLDetailsElement | null>;
 }) {
-    const {
-        inputs,
-        setInputs,
-        update,
-        rateMode,
-        setRateMode,
-        ratesValid,
-        changeCurrency,
-    } = scenario;
-    const configDetails = useRef<HTMLDetailsElement>(null);
-    const [activeConfig, setActiveConfig] = useState<'rates' | 'currency'>(
-        'currency',
-    );
-
+    const { inputs, setInputs, update, ratesValid } = scenario;
     useEffect(() => {
         if (!ratesValid) {
-            setActiveConfig('rates');
             if (configDetails.current) {
                 configDetails.current.open = true;
             }
         }
-    }, [ratesValid]);
+    }, [ratesValid, configDetails]);
 
     const rateLabels = {
         oer: 'CSPO',
@@ -456,10 +441,7 @@ export default function CalculatorInputs({
                         ref={configDetails}
                         sx={{
                             border: 1,
-                            borderColor:
-                                !ratesValid && activeConfig === 'rates'
-                                    ? 'error.main'
-                                    : 'divider',
+                            borderColor: !ratesValid ? 'error.main' : 'divider',
                             borderRadius: 1,
                             bgcolor: 'background.default',
                             '&[open] > summary': {
@@ -493,8 +475,8 @@ export default function CalculatorInputs({
                                 sx={{ fontWeight: 500 }}
                             >
                                 {inputs.language === 'id'
-                                    ? 'Pengaturan mata uang dan rendemen'
-                                    : 'Currency and Extraction Rate Settings'}
+                                    ? 'Pengaturan rendemen'
+                                    : 'Extraction Rate Settings'}
                             </Typography>
                             <ExpandMoreIcon
                                 className="settings-disclosure-icon"
@@ -506,126 +488,74 @@ export default function CalculatorInputs({
                                 }}
                             />
                         </Box>
-                        <Tabs
-                            value={activeConfig}
-                            onChange={(_, value: 'rates' | 'currency') =>
-                                setActiveConfig(value)
-                            }
-                            aria-label={
-                                inputs.language === 'id'
-                                    ? 'Pengaturan kalkulator'
-                                    : 'Calculator settings'
-                            }
-                            variant="fullWidth"
-                            sx={{ borderBottom: 1, borderColor: 'divider' }}
+                        <Stack
+                            role="group"
+                            id="calculator-rates-panel"
+                            aria-labelledby="calculator-rates-heading"
+                            sx={{ p: 2, gap: 2.5 }}
                         >
-                            <Tab
-                                value="currency"
-                                id="calculator-currency-tab"
-                                label={
-                                    inputs.language === 'id'
-                                        ? 'Kurs mata uang'
-                                        : 'Currency rate'
-                                }
-                            />
-                            <Tab
-                                value="rates"
-                                id="calculator-rates-tab"
-                                label={
-                                    inputs.language === 'id'
-                                        ? 'Rendemen'
-                                        : 'Extraction rates'
-                                }
-                            />
-                        </Tabs>
-                        {activeConfig === 'rates' ? (
-                            <Stack
-                                role="tabpanel"
-                                id="calculator-rates-panel"
-                                aria-labelledby="calculator-rates-tab"
-                                sx={{ p: 2, gap: 2.5 }}
+                            <Typography
+                                component="h3"
+                                id="calculator-rates-heading"
+                                tabIndex={-1}
+                                variant="body2"
+                                sx={{
+                                    fontSize: 16,
+                                    fontWeight: 600,
+                                    color: 'primary.main',
+                                }}
                             >
-                                <Typography
-                                    component="h3"
-                                    variant="body2"
-                                    sx={{
-                                        fontSize: 16,
-                                        fontWeight: 600,
-                                        color: 'primary.main',
-                                    }}
-                                >
-                                    {inputs.language === 'id'
-                                        ? 'Rendemen (% dari TBS)'
-                                        : 'Extraction rates (% of FFB)'}
-                                </Typography>
-                                <Box
-                                    sx={{
-                                        display: 'grid',
-                                        gridTemplateColumns:
-                                            'repeat(3, minmax(0, 1fr))',
-                                        gap: { xs: 1, sm: 2 },
-                                    }}
-                                >
-                                    {(['oer', 'ker', 'yield'] as const).map(
-                                        (key) => (
-                                            <Box key={key} sx={{ minWidth: 0 }}>
-                                                <NumberField
-                                                    fullWidth
-                                                    size="small"
-                                                    label={rateLabels[key]}
-                                                    language={inputs.language}
-                                                    value={inputs[key]}
-                                                    onValueChange={(value) =>
-                                                        update(key, value ?? 0)
-                                                    }
-                                                    slotProps={{
-                                                        input: {
-                                                            endAdornment: (
-                                                                <InputAdornment
-                                                                    position="end"
-                                                                    sx={{
-                                                                        ml: 0,
-                                                                    }}
-                                                                >
-                                                                    %
-                                                                </InputAdornment>
-                                                            ),
-                                                        },
-                                                        htmlInput: {
-                                                            'aria-label':
-                                                                text[key] +
-                                                                ' (%)',
-                                                            min: 0,
-                                                            max: 100,
-                                                            step: 0.01,
-                                                        },
-                                                    }}
-                                                />
-                                            </Box>
-                                        ),
-                                    )}
-                                </Box>
-                            </Stack>
-                        ) : (
+                                {inputs.language === 'id'
+                                    ? 'Rendemen (% dari TBS)'
+                                    : 'Extraction rates (% of FFB)'}
+                            </Typography>
                             <Box
-                                role="tabpanel"
-                                id="calculator-currency-panel"
-                                aria-labelledby="calculator-currency-tab"
-                                sx={{ p: 2 }}
+                                sx={{
+                                    display: 'grid',
+                                    gridTemplateColumns:
+                                        'repeat(3, minmax(0, 1fr))',
+                                    gap: { xs: 1, sm: 2 },
+                                }}
                             >
-                                <ExchangeRateField
-                                    value={inputs.exchange}
-                                    currency={inputs.currency}
-                                    language={inputs.language}
-                                    mode={rateMode}
-                                    onModeChange={setRateMode}
-                                    onChange={(value) =>
-                                        update('exchange', value)
-                                    }
-                                    onCurrencyChange={changeCurrency}
-                                />
+                                {(['oer', 'ker', 'yield'] as const).map(
+                                    (key) => (
+                                        <Box key={key} sx={{ minWidth: 0 }}>
+                                            <NumberField
+                                                fullWidth
+                                                size="small"
+                                                label={rateLabels[key]}
+                                                language={inputs.language}
+                                                value={inputs[key]}
+                                                onValueChange={(value) =>
+                                                    update(key, value ?? 0)
+                                                }
+                                                slotProps={{
+                                                    input: {
+                                                        endAdornment: (
+                                                            <InputAdornment
+                                                                position="end"
+                                                                sx={{
+                                                                    ml: 0,
+                                                                }}
+                                                            >
+                                                                %
+                                                            </InputAdornment>
+                                                        ),
+                                                    },
+                                                    htmlInput: {
+                                                        'aria-label':
+                                                            text[key] + ' (%)',
+                                                        min: 0,
+                                                        max: 100,
+                                                        step: 0.01,
+                                                    },
+                                                }}
+                                            />
+                                        </Box>
+                                    ),
+                                )}
                             </Box>
-                        )}
+                        </Stack>
                     </Box>
                 </Stack>
             </Stack>
