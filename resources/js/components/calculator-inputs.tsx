@@ -9,7 +9,10 @@ import Paper from '@mui/material/Paper';
 import Select from '@mui/material/Select';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import type { PriceReference } from '@/calculator-assumptions';
+import {
+    formatDisplayNumber,
+    type PriceReference,
+} from '@/calculator-assumptions';
 import type { CalculatorCopy } from '@/calculator-copy';
 import NumberField from '@/components/number-field';
 import { credits, type Inputs } from '@/hooks/use-calculator';
@@ -62,10 +65,7 @@ export default function CalculatorInputs({
           ] as const)
         : [];
     const formatPrice = (value: number) =>
-        new Intl.NumberFormat(inputs.language === 'id' ? 'id-ID' : 'en-US', {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: value > 999999 ? 0 : 2,
-        }).format(value);
+        formatDisplayNumber(value, inputs.language);
     const priceReferenceDate = new Intl.DateTimeFormat(
         inputs.language === 'id' ? 'id-ID' : 'en-US',
         { dateStyle: 'medium', timeZone: 'UTC' },

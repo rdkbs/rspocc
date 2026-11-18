@@ -13,7 +13,10 @@ import {
     encode,
     useCalculator,
 } from '../resources/js/hooks/use-calculator.ts';
-import { formatCurrency } from '../resources/js/calculator-assumptions.ts';
+import {
+    formatCurrency,
+    formatDisplayNumber,
+} from '../resources/js/calculator-assumptions.ts';
 import { pageScenario } from '../resources/js/hooks/use-calculator-scenario.ts';
 
 const defaults = {
@@ -214,6 +217,16 @@ describe('currency formatting', () => {
         }
         expect(formatCurrency(2700.25, 'USD', 'id')).toContain(',25');
         expect(formatCurrency(1.25, 'MYR', 'en')).toContain('.25');
+    });
+
+    test('preserves small nonzero amounts and marks values below display precision', () => {
+        expect(formatDisplayNumber(0.0042, 'en')).toBe('0.0042');
+        expect(formatDisplayNumber(0.0042, 'id')).toBe('0,0042');
+        expect(formatDisplayNumber(0.0001, 'en')).toBe('0.0001');
+        expect(formatDisplayNumber(0.00009, 'en')).toBe('<0.0001');
+        expect(formatDisplayNumber(0.00009, 'id')).toBe('<0,0001');
+        expect(formatCurrency(0.00009, 'USD', 'en')).toContain('<0.0001');
+        expect(formatCurrency(0.0042, 'USD', 'id')).toContain('0,0042');
     });
 });
 

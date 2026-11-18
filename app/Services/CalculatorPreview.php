@@ -77,7 +77,13 @@ final class CalculatorPreview
     public function formatNumber(float $value, string $language): string
     {
         $decimal = $language === 'id' ? ',' : '.';
-        $formatted = number_format($value, $value > 999999 ? 0 : 2, $decimal, $language === 'id' ? '.' : ',');
+        $belowDisplayPrecision = $value > 0 && $value < 0.0001;
+        $precision = $value > 999999 ? 0 : ($value > 0 && $value < 0.01 ? 4 : 2);
+        $formatted = number_format($belowDisplayPrecision ? 0.0001 : $value, $precision, $decimal, $language === 'id' ? '.' : ',');
+
+        if ($belowDisplayPrecision) {
+            return '<'.$formatted;
+        }
 
         return $value > 999999 ? $formatted : rtrim(rtrim($formatted, '0'), $decimal);
     }
