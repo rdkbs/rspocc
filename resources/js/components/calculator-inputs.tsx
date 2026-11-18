@@ -1,6 +1,5 @@
 import { usePage } from '@inertiajs/react';
-import { useEffect, type RefObject } from 'react';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import type { RefObject } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -14,6 +13,7 @@ import {
     type PriceReference,
 } from '@/calculator-assumptions';
 import type { CalculatorCopy } from '@/calculator-copy';
+import ExtractionRateSettings from '@/components/extraction-rate-settings';
 import NumberField from '@/components/number-field';
 import { credits, type Inputs } from '@/hooks/use-calculator';
 import { useCalculatorScenario } from '@/hooks/use-calculator-scenario';
@@ -25,25 +25,18 @@ export default function CalculatorInputs({
     scenario,
     text,
     configDetails,
+    showRateSettings,
+    rateSettingsOpen,
+    onRateSettingsToggle,
 }: {
     scenario: Scenario;
     text: CalculatorCopy;
     configDetails: RefObject<HTMLDetailsElement | null>;
+    showRateSettings: boolean;
+    rateSettingsOpen: boolean;
+    onRateSettingsToggle: (open: boolean) => void;
 }) {
-    const { inputs, setInputs, update, ratesValid } = scenario;
-    useEffect(() => {
-        if (!ratesValid) {
-            if (configDetails.current) {
-                configDetails.current.open = true;
-            }
-        }
-    }, [ratesValid, configDetails]);
-
-    const rateLabels = {
-        oer: 'CSPO',
-        ker: 'CSPKO',
-        yield: 'CSPKE',
-    } as const;
+    const { inputs, setInputs, update } = scenario;
     const { priceReference } = usePage<{
         priceReference: PriceReference | null;
     }>().props;
@@ -436,127 +429,17 @@ export default function CalculatorInputs({
                             </>
                         )}
                     </Box>
-                    <Box
-                        component="details"
-                        ref={configDetails}
-                        sx={{
-                            border: 1,
-                            borderColor: !ratesValid ? 'error.main' : 'divider',
-                            borderRadius: 1,
-                            bgcolor: 'background.default',
-                            '&[open] > summary': {
-                                borderBottom: 1,
-                                borderColor: 'divider',
-                            },
-                            '&[open] > summary .settings-disclosure-icon': {
-                                transform: 'rotate(180deg)',
-                            },
-                        }}
-                    >
-                        <Box
-                            component="summary"
-                            sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                px: 2,
-                                py: 1,
-                                minHeight: 48,
-                                cursor: 'pointer',
-                                listStyle: 'none',
-                                '&::-webkit-details-marker': {
-                                    display: 'none',
-                                },
-                            }}
-                        >
-                            <Typography
-                                component="span"
-                                variant="body2"
-                                color="text.secondary"
-                                sx={{ fontWeight: 500 }}
-                            >
-                                {inputs.language === 'id'
-                                    ? 'Pengaturan rendemen'
-                                    : 'Extraction Rate Settings'}
-                            </Typography>
-                            <ExpandMoreIcon
-                                className="settings-disclosure-icon"
-                                aria-hidden="true"
-                                sx={{
-                                    ml: 'auto',
-                                    color: 'text.secondary',
-                                    transition: 'transform 160ms ease',
-                                }}
-                            />
-                        </Box>
-                        <Stack
-                            role="group"
-                            id="calculator-rates-panel"
-                            aria-labelledby="calculator-rates-heading"
-                            sx={{ p: 2, gap: 2.5 }}
-                        >
-                            <Typography
-                                component="h3"
-                                id="calculator-rates-heading"
-                                tabIndex={-1}
-                                variant="body2"
-                                sx={{
-                                    fontSize: 16,
-                                    fontWeight: 600,
-                                    color: 'primary.main',
-                                }}
-                            >
-                                {inputs.language === 'id'
-                                    ? 'Rendemen (% dari TBS)'
-                                    : 'Extraction rates (% of FFB)'}
-                            </Typography>
-                            <Box
-                                sx={{
-                                    display: 'grid',
-                                    gridTemplateColumns:
-                                        'repeat(3, minmax(0, 1fr))',
-                                    gap: { xs: 1, sm: 2 },
-                                }}
-                            >
-                                {(['oer', 'ker', 'yield'] as const).map(
-                                    (key) => (
-                                        <Box key={key} sx={{ minWidth: 0 }}>
-                                            <NumberField
-                                                fullWidth
-                                                size="small"
-                                                label={rateLabels[key]}
-                                                language={inputs.language}
-                                                value={inputs[key]}
-                                                onValueChange={(value) =>
-                                                    update(key, value ?? 0)
-                                                }
-                                                slotProps={{
-                                                    input: {
-                                                        endAdornment: (
-                                                            <InputAdornment
-                                                                position="end"
-                                                                sx={{
-                                                                    ml: 0,
-                                                                }}
-                                                            >
-                                                                %
-                                                            </InputAdornment>
-                                                        ),
-                                                    },
-                                                    htmlInput: {
-                                                        'aria-label':
-                                                            text[key] + ' (%)',
-                                                        min: 0,
-                                                        max: 100,
-                                                        step: 0.01,
-                                                    },
-                                                }}
-                                            />
-                                        </Box>
-                                    ),
-                                )}
-                            </Box>
-                        </Stack>
-                    </Box>
+                    {showRateSettings && (
+                        <ExtractionRateSettings
+                            inputs={inputs}
+                            text={text}
+                            ratesValid={scenario.ratesValid}
+                            open={rateSettingsOpen}
+                            detailsRef={configDetails}
+                            onRateChange={(key, value) => update(key, value)}
+                            onOpenChange={onRateSettingsToggle}
+                        />
+                    )}
                 </Stack>
             </Stack>
         </Paper>

@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import ArrowForward from '@mui/icons-material/ArrowForward';
 import Alert from '@mui/material/Alert';
@@ -13,6 +13,7 @@ import {
     credits,
     encode,
     useCalculator,
+    type Credit,
     type Inputs,
 } from '@/hooks/use-calculator';
 import { useCalculatorScenario } from '@/hooks/use-calculator-scenario';
@@ -27,19 +28,38 @@ export default function Index({
     lang: Inputs['language'];
 }) {
     const configDetails = useRef<HTMLDetailsElement>(null);
-    const showExtractionRates = () => {
-        const details = configDetails.current;
-        if (!details) return;
-        details.open = true;
-        requestAnimationFrame(() => {
-            details
-                .querySelector<HTMLElement>('#calculator-rates-heading')
-                ?.focus({ preventScroll: true });
-            details.scrollIntoView({ block: 'nearest' });
-        });
-    };
     const scenario = useCalculatorScenario(payload, lang);
     const { inputs, update, invalid, valid } = scenario;
+    const hasResult = valid && inputs.volume !== null;
+    const [rateSettingsOpen, setRateSettingsOpen] = useState(false);
+    const [rateSettingsInInputs, setRateSettingsInInputs] =
+        useState(!hasResult);
+    const [focusCredit, setFocusCredit] = useState<Credit | null>(null);
+    useEffect(() => {
+        if (!hasResult) {
+            setRateSettingsInInputs(true);
+        } else if (!rateSettingsOpen) {
+            setRateSettingsInInputs(false);
+        }
+    }, [hasResult, rateSettingsOpen]);
+    useEffect(() => {
+        if (!focusCredit || !rateSettingsOpen) return;
+        const details = configDetails.current;
+        const target = details?.querySelector<HTMLInputElement>(
+            `#${focusCredit}-rate`,
+        );
+        if (!target) return;
+        target.focus({ preventScroll: true });
+        target.scrollIntoView({ block: 'nearest' });
+        setFocusCredit(null);
+    }, [focusCredit, rateSettingsInInputs, rateSettingsOpen]);
+    const editExtractionRate = (credit: Credit) => {
+        if (hasResult && !rateSettingsOpen) {
+            setRateSettingsInInputs(false);
+        }
+        setRateSettingsOpen(true);
+        setFocusCredit(credit);
+    };
     const text = calculatorCopy[inputs.language];
     const homeText = homePageCopy[inputs.language];
     const result = useCalculator(inputs);
@@ -127,9 +147,15 @@ export default function Index({
                                 scenario={scenario}
                                 text={text}
                                 configDetails={configDetails}
+                                showRateSettings={
+                                    !hasResult || rateSettingsInInputs
+                                }
+                                rateSettingsOpen={rateSettingsOpen}
+                                onRateSettingsToggle={setRateSettingsOpen}
                             />
                             <CalculatorResults
                                 inputs={inputs}
+                                scenario={scenario}
                                 text={text}
                                 result={result}
                                 valid={valid}
@@ -141,7 +167,13 @@ export default function Index({
                                 onExchangeRateChange={(rate) =>
                                     scenario.update('exchange', rate)
                                 }
-                                onViewExtractionRates={showExtractionRates}
+                                configDetails={configDetails}
+                                showRateSettings={
+                                    hasResult && !rateSettingsInInputs
+                                }
+                                rateSettingsOpen={rateSettingsOpen}
+                                onRateSettingsToggle={setRateSettingsOpen}
+                                onEditExtractionRate={editExtractionRate}
                             />
                         </Box>
                     </Box>
