@@ -190,6 +190,24 @@ it('opens and focuses each matching extraction rate from product volumes', funct
         ->assertNoJavaScriptErrors();
 });
 
+it('hides product results for invalid prices while keeping extraction rates available', function (): void {
+    $page = visit('/en')
+        ->fill('FFB volume', '1000')
+        ->fill('CSPO Price', '10');
+
+    $productRowIsVisible = '(() => { const rateButton = document.querySelector(`[aria-label="Edit CSPO rate: 20% of FFB"]`); return rateButton !== null && getComputedStyle(rateButton.closest(".MuiStack-root")).display !== "none"; })()';
+
+    $page->assertScript($productRowIsVisible, true)
+        ->fill('CSPO Price', '-10')
+        ->assertSee('Values must be zero or more.')
+        ->assertScript($productRowIsVisible, false)
+        ->click('Extraction Rate Settings')
+        ->assertScript('document.querySelector("#cspo-rate")?.closest("details")?.open', true)
+        ->fill('CSPO Price', '10')
+        ->assertScript($productRowIsVisible, true)
+        ->assertNoJavaScriptErrors();
+});
+
 it('remembers a currency choice while preserving shared calculation rates', function (): void {
     Http::preventStrayRequests();
     ExchangeRateSnapshot::factory()->create(['rates' => ['IDR' => ['rate' => 16000, 'date' => '2026-11-13'], 'SGD' => ['rate' => 1.35, 'date' => '2026-11-13']]]);

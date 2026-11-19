@@ -30,18 +30,8 @@ export default function Index({
     const configDetails = useRef<HTMLDetailsElement>(null);
     const scenario = useCalculatorScenario(payload, lang);
     const { inputs, update, invalid, valid } = scenario;
-    const hasResult = valid && inputs.volume !== null;
     const [rateSettingsOpen, setRateSettingsOpen] = useState(false);
-    const [rateSettingsInInputs, setRateSettingsInInputs] =
-        useState(!hasResult);
     const [focusCredit, setFocusCredit] = useState<Credit | null>(null);
-    useEffect(() => {
-        if (!hasResult) {
-            setRateSettingsInInputs(true);
-        } else if (!rateSettingsOpen) {
-            setRateSettingsInInputs(false);
-        }
-    }, [hasResult, rateSettingsOpen]);
     useEffect(() => {
         if (!focusCredit || !rateSettingsOpen) return;
         const details = configDetails.current;
@@ -52,11 +42,8 @@ export default function Index({
         target.focus({ preventScroll: true });
         target.scrollIntoView({ block: 'nearest' });
         setFocusCredit(null);
-    }, [focusCredit, rateSettingsInInputs, rateSettingsOpen]);
+    }, [focusCredit, rateSettingsOpen]);
     const editExtractionRate = (credit: Credit) => {
-        if (hasResult && !rateSettingsOpen) {
-            setRateSettingsInInputs(false);
-        }
         setRateSettingsOpen(true);
         setFocusCredit(credit);
     };
@@ -143,16 +130,7 @@ export default function Index({
                                 },
                             }}
                         >
-                            <CalculatorInputs
-                                scenario={scenario}
-                                text={text}
-                                configDetails={configDetails}
-                                showRateSettings={
-                                    !hasResult || rateSettingsInInputs
-                                }
-                                rateSettingsOpen={rateSettingsOpen}
-                                onRateSettingsToggle={setRateSettingsOpen}
-                            />
+                            <CalculatorInputs scenario={scenario} text={text} />
                             <CalculatorResults
                                 inputs={inputs}
                                 scenario={scenario}
@@ -168,9 +146,6 @@ export default function Index({
                                     scenario.update('exchange', rate)
                                 }
                                 configDetails={configDetails}
-                                showRateSettings={
-                                    hasResult && !rateSettingsInInputs
-                                }
                                 rateSettingsOpen={rateSettingsOpen}
                                 onRateSettingsToggle={setRateSettingsOpen}
                                 onEditExtractionRate={editExtractionRate}

@@ -45,7 +45,6 @@ export default function CalculatorResults({
     onRateModeChange,
     onExchangeRateChange,
     configDetails,
-    showRateSettings,
     rateSettingsOpen,
     onRateSettingsToggle,
     onEditExtractionRate,
@@ -62,7 +61,6 @@ export default function CalculatorResults({
     onRateModeChange: (mode: RateMode) => void;
     onExchangeRateChange: (rate: number) => void;
     configDetails: RefObject<HTMLDetailsElement | null>;
-    showRateSettings: boolean;
     rateSettingsOpen: boolean;
     onRateSettingsToggle: (open: boolean) => void;
     onEditExtractionRate: (credit: Credit) => void;
@@ -260,7 +258,7 @@ export default function CalculatorResults({
                     </Box>
                 )}
             </Paper>
-            {valid && inputs.volume !== null && (
+            {inputs.volume !== null && (
                 <Paper variant="outlined" sx={{ p: { xs: 3, md: 4 } }}>
                     <Typography
                         component="h2"
@@ -283,7 +281,7 @@ export default function CalculatorResults({
                         }
                         sx={{
                             m: 0,
-                            display: 'flex',
+                            display: valid ? 'flex' : 'none',
                             height: 8,
                             gap: 0.5,
                             mb: 2,
@@ -309,6 +307,7 @@ export default function CalculatorResults({
                             key={credit}
                             direction="row"
                             sx={{
+                                display: valid ? 'flex' : 'none',
                                 justifyContent: 'space-between',
                                 py: 1.5,
                                 borderBottom:
@@ -444,21 +443,19 @@ export default function CalculatorResults({
                             </Typography>
                         </Stack>
                     ))}
-                    {showRateSettings && (
-                        <Box sx={{ mt: 2 }}>
-                            <ExtractionRateSettings
-                                inputs={inputs}
-                                text={text}
-                                ratesValid={scenario.ratesValid}
-                                open={rateSettingsOpen}
-                                detailsRef={configDetails}
-                                onRateChange={(key, value) =>
-                                    scenario.update(key, value)
-                                }
-                                onOpenChange={onRateSettingsToggle}
-                            />
-                        </Box>
-                    )}
+                    <Box sx={{ mt: scenario.ratesValid ? 2 : 0 }}>
+                        <ExtractionRateSettings
+                            inputs={inputs}
+                            text={text}
+                            ratesValid={scenario.ratesValid}
+                            open={rateSettingsOpen}
+                            detailsRef={configDetails}
+                            onRateChange={(key, value) =>
+                                scenario.update(key, value)
+                            }
+                            onOpenChange={onRateSettingsToggle}
+                        />
+                    </Box>
                 </Paper>
             )}
             {hasResults && (

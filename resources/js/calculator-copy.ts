@@ -72,7 +72,7 @@ export const homePageCopy = {
             ],
             [
                 'Review the estimate',
-                'Review revenue and added value per kg. Change the exchange rate in the result card, or select a product’s percentage under Estimated product volumes to edit its extraction rate.',
+                'Review revenue and added value per kg. After entering FFB volume, select a product’s percentage under Estimated product volumes to edit its extraction rate. Change the exchange rate in the result card.',
             ],
         ],
         faqTitle: 'Common questions',
@@ -103,7 +103,7 @@ export const homePageCopy = {
             ],
             [
                 'Lihat hasil perhitungan',
-                'Periksa pendapatan dan nilai tambah per kg TBS. Ubah kurs pada kartu hasil. Untuk mengubah rendemen, pilih persentasenya di bagian Perkiraan volume produk.',
+                'Periksa pendapatan dan nilai tambah per kg TBS. Setelah memasukkan volume TBS, pilih persentase produk di bagian Perkiraan volume produk untuk mengubah rendemennya. Ubah kurs pada kartu hasil.',
             ],
         ],
         faqTitle: 'Pertanyaan umum',

@@ -8,7 +8,7 @@ RSPO Credit Calculator helps Indonesian cooperatives, farmers, and buyers estima
 
 - Energy: 1 (calm); rhythm: 2 (consistent with a few breaks); motion: 1 (subtle interaction feedback).
 - Use a compact hierarchy with generous spacing, readable sans-serif typography, and restrained decoration.
-- Keep the calculator focused on its four main inputs. Show currency and exchange-rate controls in the result card. Let users edit extraction rates from each product rate in the estimated volume list, with the matching setting opened in place.
+- Keep the calculator focused on its four main inputs. Show currency and exchange-rate controls in the result card. Show extraction-rate settings in Estimated product volumes after an FFB volume is entered; let users select a product rate to open its matching setting in place.
 - Keep layouts responsive: stack on narrow screens and place inputs beside results when there is room.
 - Keep English and Indonesian UI copy internally consistent with the selected language. The header brand follows the selected language; the footer always keeps the product name `RSPO Credit Calculator` in English.
 
