@@ -1,5 +1,4 @@
 import { usePage } from '@inertiajs/react';
-import type { RefObject } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -13,7 +12,6 @@ import {
     type PriceReference,
 } from '@/calculator-assumptions';
 import type { CalculatorCopy } from '@/calculator-copy';
-import ExtractionRateSettings from '@/components/extraction-rate-settings';
 import NumberField from '@/components/number-field';
 import { credits, type Inputs } from '@/hooks/use-calculator';
 import { useCalculatorScenario } from '@/hooks/use-calculator-scenario';
@@ -24,17 +22,9 @@ type Scenario = ReturnType<typeof useCalculatorScenario>;
 export default function CalculatorInputs({
     scenario,
     text,
-    configDetails,
-    showRateSettings,
-    rateSettingsOpen,
-    onRateSettingsToggle,
 }: {
     scenario: Scenario;
     text: CalculatorCopy;
-    configDetails: RefObject<HTMLDetailsElement | null>;
-    showRateSettings: boolean;
-    rateSettingsOpen: boolean;
-    onRateSettingsToggle: (open: boolean) => void;
 }) {
     const { inputs, setInputs, update } = scenario;
     const { priceReference } = usePage<{
@@ -429,17 +419,6 @@ export default function CalculatorInputs({
                             </>
                         )}
                     </Box>
-                    {showRateSettings && (
-                        <ExtractionRateSettings
-                            inputs={inputs}
-                            text={text}
-                            ratesValid={scenario.ratesValid}
-                            open={rateSettingsOpen}
-                            detailsRef={configDetails}
-                            onRateChange={(key, value) => update(key, value)}
-                            onOpenChange={onRateSettingsToggle}
-                        />
-                    )}
                 </Stack>
             </Stack>
         </Paper>
