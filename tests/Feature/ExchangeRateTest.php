@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\CreditPriceSnapshot;
+use App\Models\ExchangeRateSnapshot;
 use App\Services\FrankfurterExchangeRateProvider;
 use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -48,16 +49,15 @@ it('handles a reference provider network failure', function (): void {
 
 it('passes the latest available snapshot rates without requesting Frankfurter', function (): void {
     $rates = ['IDR' => ['rate' => 17000, 'date' => '2026-11-14'], 'SGD' => ['rate' => 1.35, 'date' => '2026-11-14']];
-    CreditPriceSnapshot::factory()->create(['period_end' => '2026-11-13', 'exchange_rates' => ['IDR' => ['rate' => 16000, 'date' => '2026-11-13']]]);
-    CreditPriceSnapshot::factory()->create(['period_end' => '2026-11-14', 'exchange_rates' => $rates]);
-    CreditPriceSnapshot::factory()->create(['period_end' => '2026-11-15', 'exchange_rates' => null]);
+    ExchangeRateSnapshot::factory()->create(['snapshot_date' => '2026-11-13', 'rates' => ['IDR' => ['rate' => 16000, 'date' => '2026-11-13']]]);
+    ExchangeRateSnapshot::factory()->create(['snapshot_date' => '2026-11-14', 'rates' => $rates]);
 
     $this->get('/en')->assertOk()->assertInertia(fn (Assert $page): Assert => $page->where('exchangeRates', $rates));
     Http::assertNothingSent();
 });
 
-it('returns no reference rates when snapshots have no rate data', function (): void {
-    CreditPriceSnapshot::factory()->create(['exchange_rates' => null]);
+it('returns no reference rates when no exchange rate snapshots exist', function (): void {
+    CreditPriceSnapshot::factory()->create();
     $this->get('/en')->assertOk()->assertInertia(fn (Assert $page): Assert => $page->where('exchangeRates', []));
     Http::assertNothingSent();
 });

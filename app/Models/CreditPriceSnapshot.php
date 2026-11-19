@@ -16,10 +16,9 @@ use Illuminate\Support\Carbon;
  * @property string $period_start
  * @property string $period_end
  * @property array<string, array<string, int|float>> $prices
- * @property array<string, array{rate: int|float, date: string}>|null $exchange_rates
  * @property Carbon $retrieved_at
  */
-#[Fillable(['period_start', 'period_end', 'prices', 'exchange_rates', 'retrieved_at'])]
+#[Fillable(['period_start', 'period_end', 'prices', 'retrieved_at'])]
 #[WithoutTimestamps]
 final class CreditPriceSnapshot extends Model
 {
@@ -41,7 +40,6 @@ final class CreditPriceSnapshot extends Model
     {
         return [
             'prices' => 'array',
-            'exchange_rates' => 'array',
             'retrieved_at' => 'datetime',
         ];
     }
