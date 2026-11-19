@@ -42,7 +42,7 @@ Keep explicit /id and /en URLs authoritative, and preserve shared or history-res
 
 ## Database-backed exchange rates in page props
 
-Pass the latest database snapshot containing exchange rates to the calculator through Inertia props. Refresh reference rates through the existing cron-scheduled command; do not fetch rates through a browser API, during page rendering, or from a file-cache fallback. Preserve shared/manual rates and the existing rate when detected currency is unchanged; when no reference rate is available, retain the existing IDR default and allow manual entry.
+Pass the latest database exchange-rate snapshot to the calculator through Inertia props. Store PRISMA prices and Frankfurter rates in separate snapshot tables and refresh them through separate scheduled commands; run the exchange-rate refresh after its source publishes. Do not fetch rates through a browser API, during page rendering, or from a file-cache fallback. Preserve shared/manual rates and the existing rate when detected currency is unchanged; when no reference rate is available, retain the existing IDR default and allow manual entry.
 
 ## Analytics and calculation privacy
 

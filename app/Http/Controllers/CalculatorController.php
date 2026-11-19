@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\CreditPriceSnapshot;
+use App\Models\ExchangeRateSnapshot;
 use App\Services\CalculatorPreview;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -35,8 +36,8 @@ final class CalculatorController extends Controller
             'prices' => $snapshot->prices,
         ];
 
-        $rateSnapshot = CreditPriceSnapshot::query()->whereNotNull('exchange_rates')->orderByDesc('period_end')->first();
-        $exchangeRates = $rateSnapshot->exchange_rates ?? [];
+        $rateSnapshot = ExchangeRateSnapshot::query()->latest('snapshot_date')->first();
+        $exchangeRates = $rateSnapshot === null ? [] : $rateSnapshot->rates;
 
         $sharePreview = $payload === null ? null : $preview->metadata($payload, app()->getLocale());
         if ($sharePreview !== null) {

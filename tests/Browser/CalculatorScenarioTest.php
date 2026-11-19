@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Models\CreditPriceSnapshot;
+use App\Models\ExchangeRateSnapshot;
 use Illuminate\Support\Facades\Http;
 
 it('keeps edits off the URL and preserves inputs when switching language', function (): void {
@@ -192,7 +192,7 @@ it('opens and focuses each matching extraction rate from product volumes', funct
 
 it('remembers a currency choice while preserving shared calculation rates', function (): void {
     Http::preventStrayRequests();
-    CreditPriceSnapshot::factory()->create(['exchange_rates' => ['IDR' => ['rate' => 16000, 'date' => '2026-11-13'], 'SGD' => ['rate' => 1.35, 'date' => '2026-11-13']]]);
+    ExchangeRateSnapshot::factory()->create(['rates' => ['IDR' => ['rate' => 16000, 'date' => '2026-11-13'], 'SGD' => ['rate' => 1.35, 'date' => '2026-11-13']]]);
     $page = visit('/en')->fill('FFB volume', '1000')->fill('CSPO Price', '10');
     $page->click('[role="combobox"][aria-label="Currency"]')
         ->click('[role="option"][data-value="SGD"]')
@@ -225,7 +225,7 @@ it('preserves the IDR fallback when no reference rates are stored', function ():
 });
 
 it('switches result currency and keeps settings synchronized', function (): void {
-    CreditPriceSnapshot::factory()->create(['exchange_rates' => [
+    ExchangeRateSnapshot::factory()->create(['rates' => [
         'IDR' => ['rate' => 16000, 'date' => '2026-11-13'],
         'SGD' => ['rate' => 1.35, 'date' => '2026-11-13'],
     ]]);

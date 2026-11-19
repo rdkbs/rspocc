@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Models\CreditPriceSnapshot;
-use App\Services\FrankfurterExchangeRateProvider;
 use Carbon\CarbonInterface;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
@@ -18,7 +17,7 @@ use UnexpectedValueException;
 #[Signature('credits:refresh-prices')]
 final class RefreshCreditPrices extends Command
 {
-    public function handle(FrankfurterExchangeRateProvider $exchangeRateProvider): int
+    public function handle(): int
     {
         $end = today('UTC');
         $start = $end->copy()->startOfYear();
@@ -30,7 +29,6 @@ final class RefreshCreditPrices extends Command
             [
                 'period_start' => $start->toDateString(),
                 'prices' => $prices,
-                'exchange_rates' => $exchangeRateProvider->fetchUsdRates() ?? $snapshot->exchange_rates,
                 'retrieved_at' => now('UTC'),
             ],
         )->save();
