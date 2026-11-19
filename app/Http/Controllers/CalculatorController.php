@@ -22,13 +22,7 @@ final class CalculatorController extends Controller
         abort_if($payload !== null && \strlen($payload) > 4096, 414);
 
         $snapshot = CreditPriceSnapshot::query()->orderByDesc('period_end')->first();
-        $priceReference = $snapshot === null ? [
-            'source' => 'PRISMA',
-            'checkedOn' => CreditPriceSnapshot::BASELINE_CHECKED_ON,
-            'periodStart' => '2026-01-01',
-            'periodEnd' => '2026-11-15',
-            'prices' => CreditPriceSnapshot::BASELINE_PRICES,
-        ] : [
+        $priceReference = $snapshot === null ? null : [
             'source' => 'PRISMA',
             'checkedOn' => $snapshot->retrieved_at->toISOString(),
             'periodStart' => $snapshot->period_start,

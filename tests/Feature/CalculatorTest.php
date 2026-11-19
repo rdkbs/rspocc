@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\CreditPriceSnapshot;
 use Inertia\Testing\AssertableInertia as Assert;
 
 it('redirects unprefixed content to Indonesian pages', function (string $slug): void {
@@ -10,8 +11,19 @@ it('redirects unprefixed content to Indonesian pages', function (string $slug): 
 })->with(['faq', 'terms', 'privacy', 'glossary']);
 
 it('passes calculator payloads without storing a scenario', function (): void {
+    CreditPriceSnapshot::factory()->create([
+        'prices' => [
+            'is' => ['cspo' => 3.67, 'cspko' => 88.71, 'cspke' => 0.1],
+            'standard' => ['cspo' => 0.12, 'cspko' => 18.05, 'cspke' => 0.25],
+        ],
+    ]);
+
     $this->get('/en?payload=scenario')->assertOk()->assertInertia(fn (Assert $page): Assert => $page->component('index')->where('payload', 'scenario'));
     $this->get('/id')->assertOk()->assertInertia(fn (Assert $page): Assert => $page->component('index')->where('payload', null)->where('priceReference.prices.is.cspo', 3.67));
+});
+
+it('does not provide price references when no credit price snapshot exists', function (): void {
+    $this->get('/en')->assertOk()->assertInertia(fn (Assert $page): Assert => $page->where('priceReference', null));
 });
 
 it('renders the selected language in Inertia props and the document', function (string $url, string $language): void {

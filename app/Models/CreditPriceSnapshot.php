@@ -22,14 +22,6 @@ use Illuminate\Support\Carbon;
 #[WithoutTimestamps]
 final class CreditPriceSnapshot extends Model
 {
-    /** @var array<string, array<string, float>> */
-    public const array BASELINE_PRICES = [
-        'is' => ['cspo' => 3.67, 'cspko' => 88.71, 'cspke' => 0.1],
-        'standard' => ['cspo' => 0.12, 'cspko' => 18.05, 'cspke' => 0.25],
-    ];
-
-    public const string BASELINE_CHECKED_ON = '2026-11-15T00:00:00.000000Z';
-
     /** @use HasFactory<CreditPriceSnapshotFactory> */
     use HasFactory;
 
