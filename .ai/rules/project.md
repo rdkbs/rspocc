@@ -44,6 +44,12 @@ Keep explicit /id and /en URLs authoritative, and preserve shared or history-res
 
 Pass the latest database exchange-rate snapshot to the calculator through Inertia props. Store PRISMA prices and Frankfurter rates in separate snapshot tables and refresh them through separate scheduled commands; run the exchange-rate refresh after its source publishes. Do not fetch rates through a browser API, during page rendering, or from a file-cache fallback. Preserve shared/manual rates and the existing rate when detected currency is unchanged; when no reference rate is available, retain the existing IDR default and allow manual entry.
 
+Store timestamps and analytics intervals in UTC. Format PRISMA retrieval timestamps in the viewer's browser timezone. Keep Frankfurter's source-provided date-only rate dates unchanged.
+
+## PRISMA credit analytics
+
+Keep historical PRISMA retrievals separate from calculator price snapshots. Follow `docs/adr/0001-separate-credit-price-analytics.md` for collection, interval splitting, reconciliation, queue retries, and audit provenance.
+
 ## Analytics and calculation privacy
 
 Load Google Tag Manager only in production and send manual page views with `payload` removed from page URLs and referrers. Keep `referrerpolicy="no-referrer"` on its script, disable automatic and history-based page views in the GTM configuration, and keep English and Indonesian privacy disclosures aligned with collected data. Cover URL sanitization with a Bun test.

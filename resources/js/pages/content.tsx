@@ -40,11 +40,11 @@ const englishPages: Record<ContentSlug, ContentPage> = {
             ],
             [
                 'Are the credit prices up to date?',
-                'We check PRISMA daily for the latest selling price of each credit type. The price stays the same until a newer sale is recorded. The date shown tells you when we checked the data, not when the sale took place.',
+                'We check PRISMA daily for the latest selling price of each credit type. The price stays the same until a newer sale is recorded. The date shown uses your local time. It tells you when we checked the data, not when the sale took place.',
             ],
             [
                 'Are the exchange rates up to date?',
-                'We check Frankfurter rates daily. To use the latest rate and see its update date, select the suggestion below the currency field. You can also enter your own rate. Shared calculations keep the rate used when they were created.',
+                'We check Frankfurter rates daily. The date shown is the date Frankfurter gives for the rate. To use the latest rate and see its date, select the suggestion below the currency field. You can also enter your own rate. Shared calculations keep the rate used when they were created.',
             ],
             [
                 'Why are RSPO’s CSPKO and CSPKE extraction rates different?',
@@ -136,11 +136,11 @@ const indonesianPages: Record<ContentSlug, ContentPage> = {
             ],
             [
                 'Apakah harga kreditnya terbaru?',
-                'Kami memeriksa PRISMA setiap hari untuk melihat harga jual terakhir setiap jenis kredit. Harga tetap sama sampai ada penjualan yang lebih baru. Tanggal yang tertera menunjukkan kapan kami memeriksa data, bukan kapan penjualan terjadi.',
+                'Kami memeriksa PRISMA setiap hari untuk melihat harga jual terakhir setiap jenis kredit. Harga tetap sama sampai ada penjualan yang lebih baru. Tanggal yang tertera mengikuti waktu di perangkat Anda. Tanggal itu menunjukkan kapan kami memeriksa data, bukan kapan penjualan terjadi.',
             ],
             [
                 'Apakah kursnya terbaru?',
-                'Kurs Frankfurter diperiksa setiap hari. Untuk memakai kurs terbaru dan melihat tanggal pembaruannya, pilih saran di bawah kolom mata uang. Anda juga bisa mengisi kurs sendiri. Tautan yang dibagikan tetap memakai kurs saat dibuat.',
+                'Kurs Frankfurter diperiksa setiap hari. Tanggal yang tertera mengikuti tanggal yang diberikan Frankfurter. Untuk memakai kurs terbaru dan melihat tanggalnya, pilih saran di bawah kolom mata uang. Anda juga bisa mengisi kurs sendiri. Tautan yang dibagikan tetap memakai kurs saat dibuat.',
             ],
             [
                 'Bagaimana rendemen CSPKO dan CSPKE dihitung?',
