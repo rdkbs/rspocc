@@ -4,11 +4,34 @@ declare(strict_types=1);
 
 use App\Models\CreditPriceSnapshot;
 use App\Models\ExchangeRateSnapshot;
+use App\Services\PrismaCreditPriceProvider;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Sleep;
 use Inertia\Testing\AssertableInertia;
+
+it('holds the shared PRISMA request lock while the request is sent', function (): void {
+    Http::preventStrayRequests();
+    Http::fake([
+        '*/credit-trading/price-data*' => function (Request $request) {
+            expect(Cache::lock('prisma:request-slot', 50)->get())->toBeFalse();
+
+            return Http::response(['quantity' => 0]);
+        },
+    ]);
+
+    $response = resolve(PrismaCreditPriceProvider::class)->fetchRange(
+        'CSPO',
+        CarbonImmutable::parse('2026-01-01 00:00:00', 'UTC'),
+        CarbonImmutable::parse('2026-01-01 23:59:59.999', 'UTC'),
+    );
+
+    expect($response->successful())->toBeTrue();
+    Http::assertSentCount(1);
+});
 
 it('stores a complete snapshot and supplies it to the calculator', function (): void {
     Sleep::fake();
@@ -26,8 +49,8 @@ it('stores a complete snapshot and supplies it to the calculator', function (): 
         }
         parse_str($queryString, $query);
 
-        return ($query['startDate'] ?? null) === '2026-01-01T00:00:00.000000Z'
-            && ($query['endDate'] ?? null) === '2026-11-18T23:59:59.999999Z';
+        return ($query['startDate'] ?? null) === '2026-01-01T00:00:00.000Z'
+            && ($query['endDate'] ?? null) === '2026-11-18T23:59:59.999Z';
     });
     Sleep::assertSequence(array_fill(0, 5, Sleep::for(3)->seconds()));
     expect(CreditPriceSnapshot::count())->toBe(1);
