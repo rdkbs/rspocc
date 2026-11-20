@@ -51,7 +51,7 @@ export default function CalculatorInputs({
         formatDisplayNumber(value, inputs.language);
     const priceReferenceDate = new Intl.DateTimeFormat(
         inputs.language === 'id' ? 'id-ID' : 'en-US',
-        { dateStyle: 'medium', timeZone: 'UTC' },
+        { dateStyle: 'medium' },
     ).format(new Date(priceReference?.checkedOn ?? 0));
     const brandedNumberFieldSx = {
         '& .MuiInputLabel-root': { color: 'primary.dark' },

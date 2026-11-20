@@ -15,6 +15,8 @@ Keep `credit_price_snapshots` and its refresh workflow dedicated to calculator p
 
 The analytics retrieval must preserve the requested credit type and exact UTC interval. Store the API’s `quantity` as `quantity_sold`: it means the amount of the selected credit sold in that interval. Keep the raw response and retrieval time with the normalized values so a later report can be traced back to what PRISMA returned.
 
+Store timestamps and analytics intervals in UTC. Display PRISMA check timestamps using the viewer's local time. Frankfurter's rate date is a date-only value from its source, so display it unchanged without timezone conversion.
+
 Laravel runs `credits:collect-analytics` daily at 00:15 UTC to create missing daily tasks for each credit type from January 1, 2026 through yesterday. Each run queues up to 96 unfinished days, newest first, with three minutes between their initial start times. Later runs pick up the remaining backlog.
 
 If the endpoint returns different minimum and maximum prices for a daily interval, split it into non-overlapping subintervals and resume those splits on later runs. Keep each parent response for traceability, but count only completed leaf intervals in analytics. Check that a parent's quantity equals the sum of its completed children. If prices still vary in the smallest one-millisecond interval, mark it unresolved rather than claiming an exact price breakdown.
