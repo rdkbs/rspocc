@@ -23,7 +23,7 @@ If the endpoint returns different minimum and maximum prices for a daily interva
 
 The database queue processes a bounded batch per job and releases unfinished work for another attempt after three minutes. The Laravel scheduler starts a short-lived worker for the analytics queue every minute, so shared hosting only needs the existing `schedule:run` cron entry. Record a successful no-trade response separately from a date that has not been retrieved.
 
-On an existing deployment, pause the scheduler for the rollout and run `php artisan migrate --force` after deploying the new code. The Envoy backend story does not apply migrations. Resume the scheduler once the migration succeeds.
+On an existing deployment, pause the scheduler for the rollout. The Envoy backend story runs `php artisan migrate --force` after installing dependencies and before optimizing the application. Resume the scheduler once the migration succeeds.
 
 ## Why this is separate
 

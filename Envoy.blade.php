@@ -29,6 +29,7 @@
 @story('deploy_be')
     pull_be
     install_be_deps
+    migrate_be
     optimize_be
     restart_queues
 @endstory
@@ -65,6 +66,12 @@
     echo "Installing composer dependencies..."
     cd {{ $projectPath }}
     composer install --optimize-autoloader --no-dev
+@endtask
+
+@task('migrate_be', ['on' => 'production'])
+    echo "Running database migrations..."
+    cd {{ $projectPath }}
+    php artisan migrate --force
 @endtask
 
 @task('clear_cache', ['on' => 'production'])
