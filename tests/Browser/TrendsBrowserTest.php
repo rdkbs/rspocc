@@ -45,6 +45,8 @@ it('compares credit types and switches metrics, language and theme', function ()
         'credit_type' => 'CSPKE',
         'period_start_at' => $firstDay,
         'period_end_at' => $firstDay->addDay()->subMillisecond(),
+        'quantity_sold' => '0.1',
+        'last_traded_price' => '0.2',
     ]);
 
     CreditPriceRetrieval::factory()->create([
@@ -63,6 +65,17 @@ it('compares credit types and switches metrics, language and theme', function ()
         ->click('#trends-period')
         ->click('Last 7 days')
         ->assertSee('Trading summary')
+        ->assertSee('Download daily data (CSV)')
+        ->assertScript('document.querySelector("a[download]").download', 'rspo-credit-trends-'.$firstDay->toDateString().'-'.$firstDay->addDays(6)->toDateString().'.csv')
+        ->assertScript('decodeURIComponent(document.querySelector("a[download]").href.split(",")[1]).trim().split("\r\n").length', 43)
+        ->assertScript('decodeURIComponent(document.querySelector("a[download]").href.split(",")[1]).trim().split("\r\n").filter(row => row.startsWith('.json_encode($firstDay->toDateString().',', JSON_THROW_ON_ERROR).'))', [
+            $firstDay->toDateString().',CSPO,0,,0,no_trades',
+            $firstDay->toDateString().',IS_CSPO,10,2,20,traded',
+            $firstDay->toDateString().',CSPKO,10,2,20,traded',
+            $firstDay->toDateString().',IS_CSPKO,10,2,20,traded',
+            $firstDay->toDateString().',CSPKE,0.1,0.2,0.02,traded',
+            $firstDay->toDateString().',IS_CSPKE,,,,in_progress',
+        ])
         ->assertSee('USD140')
         ->assertSee('In progress (1)')
         ->assertScript('document.querySelector("[role=status] details").open', false)

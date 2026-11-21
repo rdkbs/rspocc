@@ -6,8 +6,10 @@ namespace App\Http\Controllers;
 
 use App\Enums\CreditPriceRetrievalStatus;
 use App\Models\CreditPriceRetrieval;
+use Brick\Math\BigDecimal;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -58,30 +60,33 @@ final class TrendsController extends Controller
             ]);
         }
 
-        $traded = CreditPriceRetrieval::query()
-            ->from('credit_price_retrievals as traded')
-            ->whereColumn('traded.credit_type', 'credit_price_retrievals.credit_type')
-            ->whereColumn('traded.period_start_at', '>=', 'credit_price_retrievals.period_start_at')
-            ->whereColumn('traded.period_end_at', '<=', 'credit_price_retrievals.period_end_at')
-            ->where('traded.status', CreditPriceRetrievalStatus::RESOLVED->value);
-
         $days = CreditPriceRetrieval::query()
-            ->whereNull('parent_id')
-            ->where('period_start_at', '>=', $start->toDateTimeString())
-            ->where('period_start_at', '<', $end->addDay()->toDateTimeString())
-            ->select(['credit_type', 'period_start_at', 'quantity_sold', 'status', 'child_quantity_matches'])
-            ->latest('period_start_at')
-            ->orderBy('credit_type')
-            ->addSelect([
-                'closing_price' => (clone $traded)->select('traded.last_traded_price')
-                    ->latest('traded.period_start_at')->limit(1),
-                'trade_value' => $traded->selectRaw('SUM(traded.quantity_sold * traded.last_traded_price)'),
+            ->from('credit_price_retrievals as daily')
+            ->leftJoin('credit_price_retrievals as traded', function (JoinClause $join): void {
+                $join->on('traded.credit_type', '=', 'daily.credit_type')
+                    ->on('traded.period_start_at', '>=', 'daily.period_start_at')
+                    ->on('traded.period_end_at', '<=', 'daily.period_end_at')
+                    ->where('traded.status', CreditPriceRetrievalStatus::RESOLVED->value);
+            })
+            ->whereNull('daily.parent_id')
+            ->where('daily.period_start_at', '>=', $start->toDateTimeString())
+            ->where('daily.period_start_at', '<', $end->addDay()->toDateTimeString())
+            ->select([
+                'daily.id', 'daily.credit_type', 'daily.period_start_at', 'daily.quantity_sold',
+                'daily.status', 'daily.child_quantity_matches',
+                'traded.quantity_sold as traded_quantity', 'traded.last_traded_price',
             ])
-            ->get();
+            ->withCasts(['traded_quantity' => 'decimal:8'])
+            ->latest('daily.period_start_at')
+            ->orderBy('daily.credit_type')
+            ->latest('traded.period_start_at')
+            ->get()
+            ->groupBy('id');
 
         $excludedDates = ['inProgress' => [], 'couldNotVerify' => []];
         $trades = [];
-        foreach ($days as $day) {
+        foreach ($days as $intervals) {
+            $day = $intervals->firstOrFail();
             $date = $day->period_start_at->toDateString();
             $status = $day->status;
             if ($status !== CreditPriceRetrievalStatus::RESOLVED
@@ -99,13 +104,26 @@ final class TrendsController extends Controller
                 continue;
             }
 
-            $closingPrice = $day->getAttribute('closing_price');
-            $tradeValue = $day->getAttribute('trade_value');
+            $closingPrice = $day->last_traded_price;
+            $tradeValue = null;
+            foreach ($intervals as $interval) {
+                $quantity = $interval->getAttribute('traded_quantity');
+                if (is_string($quantity) && $interval->last_traded_price !== null) {
+                    $value = BigDecimal::of($quantity)->multipliedBy($interval->last_traded_price);
+                    $tradeValue = $tradeValue === null ? $value : $tradeValue->plus($value);
+                }
+            }
             $volume = $day->quantity_sold === null ? null : (float) $day->quantity_sold;
+            $tradeValue = $volume === 0.0 ? '0' : ($tradeValue === null ? null : (string) $tradeValue->strippedOfTrailingZeros());
             $trades[$day->credit_type][$date] = [
                 'price' => is_numeric($closingPrice) ? (float) $closingPrice : null,
                 'volume' => $volume,
-                'tradeValue' => $volume === 0.0 ? 0.0 : (is_numeric($tradeValue) ? (float) $tradeValue : null),
+                'tradeValue' => $tradeValue === null ? null : (float) $tradeValue,
+                'csvValues' => [
+                    $this->csvDecimal($day->quantity_sold),
+                    $this->csvDecimal($closingPrice),
+                    $tradeValue,
+                ],
             ];
         }
 
@@ -118,5 +136,10 @@ final class TrendsController extends Controller
             'excludedDates' => array_map(array_values(...), $excludedDates),
             'trades' => $trades,
         ]);
+    }
+
+    private function csvDecimal(?string $value): ?string
+    {
+        return $value === null ? null : (string) BigDecimal::of($value)->strippedOfTrailingZeros();
     }
 }
