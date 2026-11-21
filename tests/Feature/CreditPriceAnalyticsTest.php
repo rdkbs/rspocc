@@ -80,7 +80,7 @@ it('seeds missing historical tasks between existing days', function (): void {
 });
 
 it('queues unfinished days on the analytics queue with staggered delays', function (): void {
-    $this->travelTo('2026-01-03 00:00:00 UTC');
+    $this->travelTo('2025-01-03 00:00:00 UTC');
     Queue::fake([BackfillCreditPriceAnalytics::class]);
 
     expect(Artisan::call('credits:collect-analytics'))->toBe(0);
@@ -88,17 +88,17 @@ it('queues unfinished days on the analytics queue with staggered delays', functi
     Queue::assertPushed(BackfillCreditPriceAnalytics::class, 2);
     Queue::assertPushed(
         BackfillCreditPriceAnalytics::class,
-        static fn (BackfillCreditPriceAnalytics $job): bool => $job->day === '2026-01-02'
+        static fn (BackfillCreditPriceAnalytics $job): bool => $job->day === '2025-01-02'
             && $job->connection === 'database'
             && $job->queue === 'credit-analytics'
             && $job->delay instanceof DateTimeInterface
-            && $job->delay->getTimestamp() === CarbonImmutable::parse('2026-01-03 00:00:00', 'UTC')->getTimestamp(),
+            && $job->delay->getTimestamp() === CarbonImmutable::parse('2025-01-03 00:00:00', 'UTC')->getTimestamp(),
     );
     Queue::assertPushed(
         BackfillCreditPriceAnalytics::class,
-        static fn (BackfillCreditPriceAnalytics $job): bool => $job->day === '2026-01-01'
+        static fn (BackfillCreditPriceAnalytics $job): bool => $job->day === '2025-01-01'
             && $job->delay instanceof DateTimeInterface
-            && $job->delay->getTimestamp() === CarbonImmutable::parse('2026-01-03 00:03:00', 'UTC')->getTimestamp(),
+            && $job->delay->getTimestamp() === CarbonImmutable::parse('2025-01-03 00:03:00', 'UTC')->getTimestamp(),
     );
 });
 

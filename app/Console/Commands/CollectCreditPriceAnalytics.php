@@ -12,13 +12,13 @@ use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
 #[Signature('credits:collect-analytics')]
-#[Description('Queue unfinished PRISMA analytics days from January 1, 2026 through yesterday in UTC')]
+#[Description('Queue unfinished PRISMA analytics days from January 1, 2025 through yesterday in UTC')]
 final class CollectCreditPriceAnalytics extends Command
 {
     public function handle(PrismaCreditAnalyticsCollector $collector): int
     {
         $yesterday = CarbonImmutable::yesterday('UTC');
-        $firstDay = CarbonImmutable::parse('2026-01-01', 'UTC');
+        $firstDay = CarbonImmutable::parse('2025-01-01', 'UTC');
         $days = $collector->unfinishedDays($firstDay, $yesterday);
         $start = now();
 

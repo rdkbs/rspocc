@@ -1,0 +1,122 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Enums\CreditPriceRetrievalStatus;
+use App\Models\CreditPriceRetrieval;
+use Carbon\CarbonImmutable;
+use Inertia\Testing\AssertableInertia;
+
+it('shows complete trading days and distinguishes zero trades from missing data', function (): void {
+    $this->travelTo('2026-01-04 12:00:00 UTC');
+
+    foreach ([
+        [1, CreditPriceRetrievalStatus::NO_TRADES, null, 0, null],
+        [2, CreditPriceRetrievalStatus::MIXED, true, 500, 4],
+        [3, CreditPriceRetrievalStatus::MIXED, null, 200, 6],
+        [4, CreditPriceRetrievalStatus::RESOLVED, null, 150, 8],
+    ] as [$day, $status, $matches, $quantity, $price]) {
+        $start = CarbonImmutable::parse(sprintf('2026-01-%02d', $day), 'UTC');
+        $root = CreditPriceRetrieval::factory()->create([
+            'period_start_at' => $start,
+            'period_end_at' => $start->addDay()->subMillisecond(),
+            'status' => $status,
+            'child_quantity_matches' => $matches,
+            'quantity_sold' => $quantity,
+            'last_traded_price' => $price,
+        ]);
+
+        if ($matches === true) {
+            $midday = $start->addHours(12);
+            CreditPriceRetrieval::factory()->for($root, 'parent')->create([
+                'period_start_at' => $start,
+                'period_end_at' => $midday->subMillisecond(),
+                'quantity_sold' => 200,
+                'last_traded_price' => 3,
+            ]);
+            CreditPriceRetrieval::factory()->for($root, 'parent')->create([
+                'period_start_at' => $midday,
+                'period_end_at' => $root->period_end_at,
+                'quantity_sold' => 300,
+                'last_traded_price' => 5,
+            ]);
+        }
+    }
+
+    CreditPriceRetrieval::factory()->create([
+        'credit_type' => 'CSPO',
+        'period_start_at' => CarbonImmutable::parse('2026-01-02', 'UTC'),
+        'period_end_at' => CarbonImmutable::parse('2026-01-02 23:59:59.999', 'UTC'),
+        'status' => CreditPriceRetrievalStatus::UNRESOLVED,
+        'quantity_sold' => null,
+        'last_traded_price' => null,
+    ]);
+
+    $this->get('/trends')->assertRedirect('/id/trends');
+    $this->get('/en/trends?from=2026-01-01&to=2026-01-03')->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+        ->component('trends')
+        ->where('lang', 'en')
+        ->where('endDate', '2026-01-03')
+        ->where('excludedDates.inProgress', [[
+            'date' => '2026-01-03',
+            'creditTypes' => ['IS_CSPO'],
+        ]])
+        ->where('excludedDates.couldNotVerify', [[
+            'date' => '2026-01-02',
+            'creditTypes' => ['CSPO'],
+        ]])
+        ->has('trades.IS_CSPO', 2)
+        ->where('trades.IS_CSPO.2026-01-01.volume', 0)
+        ->where('trades.IS_CSPO.2026-01-01.price', null)
+        ->where('trades.IS_CSPO.2026-01-01.tradeValue', 0)
+        ->where('trades.IS_CSPO.2026-01-02.price', 5)
+        ->where('trades.IS_CSPO.2026-01-02.volume', 500)
+        ->where('trades.IS_CSPO.2026-01-02.tradeValue', 2100));
+
+    $this->get('/en/trends?from=2026-01-01&to=2026-01-01')
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->where('startDate', '2026-01-01')
+            ->where('endDate', '2026-01-01')
+            ->has('trades.IS_CSPO', 1));
+
+    $this->getJson('/en/trends?period=custom&from=&to=')
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['from', 'to']);
+
+    $this->getJson('/en/trends?from=2026-01-02&to=2026-01-01')
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('to');
+});
+
+it('uses UTC calendar boundaries for date presets', function (): void {
+    $this->travelTo('2026-02-11 00:15:00 UTC');
+
+    foreach ([
+        'week' => ['2026-02-02', '2026-02-08'],
+        'month' => ['2026-01-01', '2026-01-31'],
+        'three-months' => ['2025-11-11', '2026-02-10'],
+        '90-days' => ['2025-11-13', '2026-02-10'],
+        'six-months' => ['2025-08-11', '2026-02-10'],
+        '180-days' => ['2025-08-15', '2026-02-10'],
+        'year' => ['2025-01-01', '2025-12-31'],
+    ] as $period => [$start, $end]) {
+        $this->get('/en/trends?period='.$period)->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->where('period', $period)
+            ->where('startDate', $start)
+            ->where('endDate', $end));
+    }
+});
+
+it('includes the immediately preceding UTC periods at rollover', function (): void {
+    $this->travelTo('2029-01-01 00:15:00 UTC');
+
+    foreach ([
+        'week' => ['2028-12-25', '2028-12-31'],
+        'month' => ['2028-12-01', '2028-12-31'],
+        'year' => ['2028-01-01', '2028-12-31'],
+    ] as $period => [$start, $end]) {
+        $this->get('/en/trends?period='.$period)->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->where('startDate', $start)
+            ->where('endDate', $end));
+    }
+});

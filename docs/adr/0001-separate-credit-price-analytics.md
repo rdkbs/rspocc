@@ -17,7 +17,7 @@ The analytics retrieval must preserve the requested credit type and exact UTC in
 
 Store timestamps and analytics intervals in UTC. Display PRISMA check timestamps using the viewer's local time. Frankfurter's rate date is a date-only value from its source, so display it unchanged without timezone conversion.
 
-Laravel runs `credits:collect-analytics` daily at 00:15 UTC to create missing daily tasks for each credit type from January 1, 2026 through yesterday. Each run queues up to 96 unfinished days, newest first, with three minutes between their initial start times. Later runs pick up the remaining backlog.
+Laravel runs `credits:collect-analytics` daily at 00:15 UTC to create missing daily tasks for each credit type from January 1, 2025 through yesterday. Each run queues up to 96 unfinished days, newest first, with three minutes between their initial start times. Later runs pick up the remaining backlog.
 
 If the endpoint returns different minimum and maximum prices for a daily interval, split it into non-overlapping subintervals and resume those splits on later runs. Keep each parent response for traceability, but count only completed leaf intervals in analytics. Check that a parent's quantity equals the sum of its completed children. If prices still vary in the smallest one-millisecond interval, mark it unresolved rather than claiming an exact price breakdown.
 
@@ -63,7 +63,7 @@ Save the exact request range, credit type, retrieval time, HTTP outcome, and raw
 
 ### A normal daily retrieval
 
-After a UTC day is complete, retrieve that day for each credit type. For January 1, query `2026-01-01T00:00:00.000Z` through `2026-01-01T23:59:59.999Z`. If the query for `IS_CSPO` reports 12.5 credits sold and a single price of USD 3.80, record that interval, quantity, price summary, response, and retrieval time. If it reports zero trades, record the successful empty result so it is distinguishable from a missed query.
+After a UTC day is complete, retrieve that day for each credit type. For January 1, query `2025-01-01T00:00:00.000Z` through `2025-01-01T23:59:59.999Z`. If the query for `IS_CSPO` reports 12.5 credits sold and a single price of USD 3.80, record that interval, quantity, price summary, response, and retrieval time. If it reports zero trades, record the successful empty result so it is distinguishable from a missed query.
 
 ### A date missed by cron
 
