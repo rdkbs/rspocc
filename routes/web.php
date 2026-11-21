@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\CalculatorController;
 use App\Http\Controllers\CalculatorPreviewImageController;
+use App\Http\Controllers\TrendsController;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -17,6 +18,11 @@ Route::permanentRedirect('/terms', '/id/terms')->name('terms');
 Route::permanentRedirect('/privacy', '/id/privacy')->name('privacy');
 
 Route::permanentRedirect('/glossary', '/id/glossary')->name('glossary');
+Route::permanentRedirect('/trends', '/id/trends');
+
+Route::get('/{language}/trends', TrendsController::class)
+    ->whereIn('language', ['id', 'en'])
+    ->name('trends.index');
 
 Route::get('/{language}/share-preview.png', CalculatorPreviewImageController::class)
     ->whereIn('language', ['id', 'en'])

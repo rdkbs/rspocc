@@ -24,6 +24,7 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { localizedContent } from '@/routes';
 import { language as calculatorLanguage } from '@/routes/calculator';
+import { index as trendsIndex } from '@/routes/trends';
 
 export const NavigationLink = forwardRef<
     HTMLAnchorElement,
@@ -543,6 +544,18 @@ export default function Layout({
                                 }
                             >
                                 FAQ
+                            </Button>
+                            <Button
+                                component={NavigationLink}
+                                nativeButton={false}
+                                href={trendsIndex.url({ language })}
+                                aria-current={
+                                    path === trendsIndex.url({ language })
+                                        ? 'page'
+                                        : undefined
+                                }
+                            >
+                                {language === 'id' ? 'Tren' : 'Trends'}
                             </Button>
                         </Stack>
                         <TextField
