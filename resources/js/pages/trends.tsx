@@ -47,6 +47,7 @@ type Trade = {
     price: number | null;
     volume: number | null;
     tradeValue: number | null;
+    csvValues: [string | null, string | null, string | null];
 };
 type Trades = Record<string, Record<string, Trade>>;
 type ExcludedDate = { date: string; creditTypes: string[] };
@@ -54,6 +55,61 @@ type ExcludedDates = {
     inProgress: ExcludedDate[];
     couldNotVerify: ExcludedDate[];
 };
+
+function dailyCsv(
+    dates: string[],
+    trades: Trades,
+    excludedDates: ExcludedDates,
+) {
+    const excluded = new Map<string, string>();
+    for (const [status, entries] of [
+        ['in_progress', excludedDates.inProgress],
+        ['could_not_verify', excludedDates.couldNotVerify],
+    ] as const) {
+        for (const { date, creditTypes } of entries) {
+            for (const creditType of creditTypes) {
+                excluded.set(`${date}/${creditType}`, status);
+            }
+        }
+    }
+
+    const rows = [
+        'date_utc,credit_type,credits_sold,last_traded_price_usd,trade_value_usd,status',
+    ];
+    for (const date of dates) {
+        for (const product of products) {
+            for (const creditType of [product, `IS_${product}`]) {
+                const trade = trades[creditType]?.[date];
+                let status =
+                    excluded.get(`${date}/${creditType}`) ?? 'no_data_yet';
+                if (trade) {
+                    if (trade.volume === 0) {
+                        status = 'no_trades';
+                    } else {
+                        status =
+                            trade.volume === null ||
+                            trade.price === null ||
+                            trade.tradeValue === null
+                                ? 'incomplete_data'
+                                : 'traded';
+                    }
+                }
+
+                rows.push(
+                    [
+                        date,
+                        creditType,
+                        ...(trade?.csvValues ?? [null, null, null]),
+                        status,
+                    ].join(','),
+                );
+            }
+        }
+    }
+
+    return rows.join('\r\n') + '\r\n';
+}
+
 type Point = {
     date: string;
     values: (number | null)[];
@@ -1050,6 +1106,23 @@ export default function Trends({
                                     )}
                                 </Form>
                             )}
+                            <Button
+                                component="a"
+                                variant="outlined"
+                                href={`data:text/csv;charset=utf-8,${encodeURIComponent(dailyCsv(dates, trades, excludedDates))}`}
+                                download={`rspo-credit-trends-${startDate}-${endDate}.csv`}
+                                sx={{
+                                    alignSelf: {
+                                        xs: 'stretch',
+                                        sm: 'flex-start',
+                                    },
+                                    minHeight: 44,
+                                }}
+                            >
+                                {id
+                                    ? 'Unduh data harian (CSV)'
+                                    : 'Download daily data (CSV)'}
+                            </Button>
                         </Stack>
                     </Paper>
                     {(excludedDates.inProgress.length > 0 ||
