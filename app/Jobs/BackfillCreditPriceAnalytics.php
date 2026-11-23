@@ -35,7 +35,12 @@ final class BackfillCreditPriceAnalytics implements ShouldBeUnique, ShouldQueue
     /** @return list<WithoutOverlapping> */
     public function middleware(): array
     {
-        return [(new WithoutOverlapping('credit-analytics'))->releaseAfter(180)->expireAfter(90)];
+        return [self::overlapGuard()];
+    }
+
+    public static function overlapGuard(): WithoutOverlapping
+    {
+        return (new WithoutOverlapping('credit-analytics'))->releaseAfter(180)->expireAfter(90);
     }
 
     public function handle(PrismaCreditAnalyticsCollector $collector): void

@@ -17,9 +17,9 @@ The analytics retrieval must preserve the requested credit type and exact UTC in
 
 Store timestamps and analytics intervals in UTC. Display PRISMA check timestamps using the viewer's local time. Frankfurter's rate date is a date-only value from its source, so display it unchanged without timezone conversion.
 
-Laravel runs `credits:collect-analytics` daily at 00:15 UTC to create missing daily tasks for each credit type from January 1, 2025 through yesterday. Each run queues up to 96 unfinished days, newest first, with three minutes between their initial start times. Later runs pick up the remaining backlog.
+Laravel runs `credits:collect-analytics` daily at 00:15 UTC to create missing daily tasks for each credit type from January 1, 2025 through yesterday. Each run queues up to 96 unfinished days, newest first, with one minute between their initial start times. Later runs pick up the remaining backlog.
 
-If the endpoint returns different minimum and maximum prices for a daily interval, split it into non-overlapping subintervals and resume those splits on later runs. Keep each parent response for traceability, but count only completed leaf intervals in analytics. Check that a parent's quantity equals the sum of its completed children. If prices still vary in the smallest one-millisecond interval, mark it unresolved rather than claiming an exact price breakdown.
+If the endpoint returns different minimum and maximum prices for a daily interval, split it into subintervals that share the split timestamp and resume those splits on later runs. Keep each parent response for traceability, but count only completed leaf intervals in analytics. Check that a parent's quantity equals the sum of its completed children. If prices still vary in the smallest one-millisecond interval, mark it unresolved rather than claiming an exact price breakdown.
 
 The database queue processes a bounded batch per job and releases unfinished work for another attempt after three minutes. The Laravel scheduler starts a short-lived worker for the analytics queue every minute, so shared hosting only needs the existing `schedule:run` cron entry. Record a successful no-trade response separately from a date that has not been retrieved.
 
@@ -47,7 +47,9 @@ For example, if the full-day query reports 70 credits sold and prices vary, its 
 
 If the endpoint provides individual trades with stable trade IDs and timestamps, prefer storing one immutable row per trade instead of inferring trades from aggregates. If it only provides summaries, store the summaries as interval observations; do not describe them as individual trade records.
 
-Represent each UTC day at millisecond precision from `00:00:00.000` through `23:59:59.999`, matching the observed PRISMA request format. Split ranges into adjacent, non-overlapping millisecond intervals so no boundary is queried twice or omitted.
+Represent each UTC day at millisecond precision from `00:00:00.000` through `23:59:59.999`, matching the observed PRISMA request format. Send the same split timestamp as the left interval’s end and the right interval’s start. In the December 31, 2025 CSPO replay, introducing a one-millisecond gap omitted 1,000 credits. Verify each split against its parent quantity before publishing the result.
+
+Workers mark unfinished trees with legacy split gaps unresolved and retain their responses. Run `php artisan credits:collect-analytics --clear-unresolved` to restart all unresolved daily retrievals. The command deletes their old child intervals and clears the stored response on each reset daily record.
 
 ## Completeness checks
 
@@ -68,6 +70,12 @@ After a UTC day is complete, retrieve that day for each credit type. For January
 ### A date missed by cron
 
 The next daily run picks up missing days. Run `credits:collect-analytics` manually to queue them sooner. Existing queued jobs and completed results are reused.
+
+### Email a collection summary
+
+Run `php artisan credits:collect-analytics --email=ops@example.com` to receive counts by retrieval status after the jobs for that run's selected UTC dates finish, including their split jobs. Dates outside the run's 96-day batch are outside the summary. You can combine `--email` with `--clear-unresolved`.
+
+Set `MAIL_MAILER` to a mailer that can deliver email. Log and array transports are rejected, including when configured as fallbacks. The queue worker must also have the named mailer configured because it sends with the same mailer selected by the command.
 
 ### A quantity reconciliation
 

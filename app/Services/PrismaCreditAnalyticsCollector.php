@@ -34,6 +34,55 @@ final class PrismaCreditAnalyticsCollector
 
     public function __construct(private readonly PrismaCreditPriceProvider $priceProvider) {}
 
+    public function clearUnresolved(): int
+    {
+        $count = 0;
+
+        CreditPriceRetrieval::query()
+            ->whereNull('parent_id')
+            ->where('status', CreditPriceRetrievalStatus::UNRESOLVED->value)
+            ->eachById(function (CreditPriceRetrieval $root) use (&$count): void {
+                $this->resetTree($root);
+
+                $count++;
+            });
+
+        return $count;
+    }
+
+    private function resetTree(CreditPriceRetrieval $root): void
+    {
+        DB::transaction(function () use ($root): void {
+            $childIds = DB::table('credit_price_retrievals')
+                ->where('credit_type', $root->credit_type)
+                ->where('period_start_at', '>=', $root->period_start_at->format('Y-m-d H:i:s.v'))
+                ->where('period_end_at', '<=', $root->period_end_at->format('Y-m-d H:i:s.v'))
+                ->whereNotNull('parent_id')
+                ->orderByDesc('id')
+                ->pluck('id');
+
+            // Split children are inserted after their parents, so delete leaves first.
+            foreach ($childIds as $id) {
+                DB::table('credit_price_retrievals')->where('id', $id)->delete();
+            }
+
+            $root->update([
+                'status' => CreditPriceRetrievalStatus::PENDING,
+                'attempts' => 0,
+                'quantity_sold' => null,
+                'low_price' => null,
+                'high_price' => null,
+                'last_traded_price' => null,
+                'child_quantity_matches' => null,
+                'http_status' => null,
+                'response_body' => null,
+                'response_sha256' => null,
+                'error_message' => null,
+                'retrieved_at' => null,
+            ]);
+        });
+    }
+
     /** @return list<string> */
     public function unfinishedDays(CarbonImmutable $from, CarbonImmutable $to): array
     {
@@ -68,6 +117,43 @@ final class PrismaCreditAnalyticsCollector
 
     public function collect(CarbonImmutable $day, int $requestLimit, int $timeLimit, ?int $intervalId = null): bool
     {
+        $legacyRoots = CreditPriceRetrieval::query()
+            ->whereNull('parent_id')
+            ->where('status', CreditPriceRetrievalStatus::MIXED->value)
+            ->whereNull('child_quantity_matches')
+            ->where('period_start_at', $day->format('Y-m-d H:i:s.v'))
+            ->whereExists(function (QueryBuilder $query): void {
+                $query->from('credit_price_retrievals as left_child')
+                    ->join('credit_price_retrievals as right_child', 'left_child.parent_id', '=', 'right_child.parent_id')
+                    ->whereColumn('left_child.credit_type', 'credit_price_retrievals.credit_type')
+                    ->whereColumn('left_child.period_start_at', '>=', 'credit_price_retrievals.period_start_at')
+                    ->whereColumn('right_child.period_end_at', '<=', 'credit_price_retrievals.period_end_at')
+                    ->whereColumn('left_child.period_end_at', '<', 'right_child.period_start_at');
+            })
+            ->get();
+
+        foreach ($legacyRoots as $root) {
+            DB::transaction(function () use ($root): void {
+                CreditPriceRetrieval::query()
+                    ->whereNotNull('parent_id')
+                    ->where('credit_type', $root->credit_type)
+                    ->where('period_start_at', '>=', $root->period_start_at->format('Y-m-d H:i:s.v'))
+                    ->where('period_end_at', '<=', $root->period_end_at->format('Y-m-d H:i:s.v'))
+                    ->whereIn('status', [
+                        CreditPriceRetrievalStatus::PENDING->value,
+                        CreditPriceRetrievalStatus::FAILED->value,
+                        CreditPriceRetrievalStatus::MIXED->value,
+                    ])
+                    ->whereNull('child_quantity_matches')
+                    ->update(['status' => CreditPriceRetrievalStatus::UNRESOLVED->value]);
+
+                $root->update([
+                    'status' => CreditPriceRetrievalStatus::UNRESOLVED,
+                    'error_message' => 'This split uses legacy boundaries. Run credits:collect-analytics --clear-unresolved to rebuild it.',
+                ]);
+            });
+        }
+
         $deadline = microtime(true) + $timeLimit;
         $this->resetExhaustedRetries($day, $intervalId);
         $this->reconcileReadyParents($day, $day);
@@ -429,16 +515,15 @@ final class PrismaCreditAnalyticsCollector
     {
         $distance = (int) $start->diffInMilliseconds($end);
 
-        if ($distance < 1) {
+        if ($distance < 2) {
             return null;
         }
 
-        $leftEnd = $start->addMilliseconds(intdiv($distance, 2));
-        $rightStart = $leftEnd->addMilliseconds(1);
+        $midpoint = $start->addMilliseconds(intdiv($distance, 2));
 
         return [
-            [$start, $leftEnd],
-            [$rightStart, $end],
+            [$start, $midpoint],
+            [$midpoint, $end],
         ];
     }
 
