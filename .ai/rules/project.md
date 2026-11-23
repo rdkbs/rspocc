@@ -53,3 +53,7 @@ Keep historical PRISMA retrievals separate from calculator price snapshots. Foll
 ## Analytics and calculation privacy
 
 Load Google Tag Manager only in production and send manual page views with `payload` removed from page URLs and referrers. Keep `referrerpolicy="no-referrer"` on its script, disable automatic and history-based page views in the GTM configuration, and keep English and Indonesian privacy disclosures aligned with collected data. Cover URL sanitization with a Bun test.
+
+## Canonical URLs in the bilingual sitemap
+
+Keep `/sitemap.xml` in sync when public search pages or their localized routes change. Generate canonical URLs from `APP_URL` and named routes, and link both Indonesian and English variants with reciprocal `hreflang` entries. Exclude redirect URLs, shared calculation payloads, filtered URLs, and export endpoints.
