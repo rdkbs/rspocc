@@ -80,7 +80,16 @@ final class CollectCreditPriceAnalytics extends Command
                 ->delay($start->copy()->addMinutes(\count($days)));
         }
 
-        $this->info(\sprintf('Submitted %d unfinished UTC days for collection. Already queued days are reused.', \count($days)));
+        if ($days === []) {
+            $this->info('No unfinished UTC days to queue.');
+        } else {
+            $this->info(\sprintf(
+                'Submitted %d unfinished days from %s through %s (UTC). Already queued days are reused.',
+                \count($days),
+                min($days),
+                max($days),
+            ));
+        }
 
         return self::SUCCESS;
     }
