@@ -27,7 +27,7 @@ final class TrendsController extends Controller
             'from' => ['required_if:period,custom', 'required_with:to', 'date_format:Y-m-d', 'after_or_equal:'.$firstDate],
             'to' => ['required_if:period,custom', 'required_with:from', 'date_format:Y-m-d', 'after_or_equal:from', 'before_or_equal:'.$latest->toDateString()],
         ]);
-        $period = $request->filled('from') ? 'custom' : $request->string('period', 'month')->toString();
+        $period = $request->filled('from') ? 'custom' : $request->string('period', 'last-30-days')->toString();
         [$start, $end] = match ($period) {
             'custom' => [
                 CarbonImmutable::parse($request->string('from')->toString(), 'UTC'),
