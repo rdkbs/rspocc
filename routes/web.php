@@ -7,11 +7,16 @@ use App\Http\Controllers\CalculatorPreviewImageController;
 use App\Http\Controllers\TrendsController;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\AcceptHeader;
 use Symfony\Component\HttpFoundation\AcceptHeaderItem;
+
+Route::get('/sitemap.xml', fn (): HttpResponse => response()
+    ->view('sitemap', [], 200, ['Content-Type' => 'application/xml; charset=UTF-8']))
+    ->name('sitemap');
 
 Route::permanentRedirect('/faq', '/id/faq')->name('faq');
 Route::permanentRedirect('/terms', '/id/terms')->name('terms');
