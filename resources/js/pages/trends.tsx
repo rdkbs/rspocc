@@ -1,4 +1,5 @@
 import { Form, router } from '@inertiajs/react';
+import ArrowDropDown from '@mui/icons-material/ArrowDropDown';
 import ScheduleOutlined from '@mui/icons-material/ScheduleOutlined';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
@@ -6,12 +7,12 @@ import Button from '@mui/material/Button';
 import Checkbox from '@mui/material/Checkbox';
 import Container from '@mui/material/Container';
 import FormControlLabel from '@mui/material/FormControlLabel';
+import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
-import TextField from '@mui/material/TextField';
 import { alpha, useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import { BarChart } from '@mui/x-charts/BarChart';
@@ -134,6 +135,53 @@ function TradingSummary({
             maximumFractionDigits: 0,
         }).format(value);
 
+    const summaryRows = products.map((product) => {
+        const [standard, smallholder] = ['', 'IS_'].map((prefix) => {
+            let volume = 0;
+            let tradeValue = 0;
+            let daysWithVolume = 0;
+            let daysWithTradeValue = 0;
+            for (const date of dates) {
+                const trade = trades[prefix + product]?.[date];
+                if (trade?.volume != null) {
+                    volume += trade.volume;
+                    daysWithVolume += 1;
+                }
+                if (trade?.tradeValue != null) {
+                    tradeValue += trade.tradeValue;
+                    daysWithTradeValue += 1;
+                }
+            }
+            return {
+                prefix,
+                volume,
+                tradeValue,
+                hasVolume: daysWithVolume > 0,
+                completeVolume: daysWithVolume === dates.length,
+                hasTradeValue: daysWithTradeValue > 0,
+                completeTradeValue: daysWithTradeValue === dates.length,
+            };
+        });
+        const total = {
+            prefix: 'total',
+            volume: standard.volume + smallholder.volume,
+            tradeValue: standard.tradeValue + smallholder.tradeValue,
+            completeVolume:
+                standard.completeVolume && smallholder.completeVolume,
+            hasVolume: standard.hasVolume || smallholder.hasVolume,
+            completeTradeValue:
+                standard.completeTradeValue && smallholder.completeTradeValue,
+            hasTradeValue: standard.hasTradeValue || smallholder.hasTradeValue,
+        };
+
+        return { product, standard, smallholder, total };
+    });
+    const hasPartialTotals = summaryRows.some(
+        ({ total }) =>
+            (total.hasVolume && !total.completeVolume) ||
+            (total.hasTradeValue && !total.completeTradeValue),
+    );
+
     const shareChart = (standard: number, smallholder: number) => {
         const standardShare = standard / (standard + smallholder);
         const smallholderShare = smallholder / (standard + smallholder);
@@ -208,6 +256,9 @@ function TradingSummary({
             >
                 <Box
                     component="table"
+                    aria-describedby={
+                        hasPartialTotals ? 'partial-total-note' : undefined
+                    }
                     sx={(theme) => ({
                         width: '100%',
                         borderCollapse: 'separate',
@@ -259,248 +310,203 @@ function TradingSummary({
                         </tr>
                     </thead>
                     <tbody>
-                        {products.map((product) => {
-                            const [standard, smallholder] = ['', 'IS_'].map(
-                                (prefix) => {
-                                    let volume = 0;
-                                    let tradeValue = 0;
-                                    let daysWithVolume = 0;
-                                    let daysWithTradeValue = 0;
-                                    for (const date of dates) {
-                                        const trade =
-                                            trades[prefix + product]?.[date];
-                                        if (trade?.volume != null) {
-                                            volume += trade.volume;
-                                            daysWithVolume += 1;
-                                        }
-                                        if (trade?.tradeValue != null) {
-                                            tradeValue += trade.tradeValue;
-                                            daysWithTradeValue += 1;
-                                        }
-                                    }
-                                    return {
-                                        prefix,
-                                        volume,
-                                        tradeValue,
-                                        hasVolume: daysWithVolume > 0,
-                                        completeVolume:
-                                            daysWithVolume === dates.length,
-                                        hasTradeValue: daysWithTradeValue > 0,
-                                        completeTradeValue:
-                                            daysWithTradeValue === dates.length,
-                                    };
-                                },
-                            );
-                            const total = {
-                                prefix: 'total',
-                                volume: standard.volume + smallholder.volume,
-                                tradeValue:
-                                    standard.tradeValue +
-                                    smallholder.tradeValue,
-                                completeVolume:
-                                    standard.completeVolume &&
-                                    smallholder.completeVolume,
-                                hasVolume:
-                                    standard.hasVolume || smallholder.hasVolume,
-                                completeTradeValue:
-                                    standard.completeTradeValue &&
-                                    smallholder.completeTradeValue,
-                                hasTradeValue:
-                                    standard.hasTradeValue ||
-                                    smallholder.hasTradeValue,
-                            };
-
-                            return (
-                                <tr key={product}>
-                                    <th scope="row">{product}</th>
-                                    {[standard, smallholder, total].map(
-                                        ({
-                                            prefix,
-                                            volume,
-                                            tradeValue,
-                                            hasVolume,
-                                            hasTradeValue,
-                                            completeVolume,
-                                            completeTradeValue,
-                                        }) => {
-                                            return (
-                                                <td key={prefix}>
-                                                    <Typography
-                                                        component="p"
-                                                        variant="inherit"
-                                                        sx={{
-                                                            whiteSpace:
-                                                                hasVolume
-                                                                    ? 'nowrap'
-                                                                    : 'normal',
-                                                            fontSize:
-                                                                'clamp(1rem, 0.92rem + 0.35vw, 1.3rem)',
-                                                            fontWeight: 600,
-                                                            lineHeight: 1.3,
-                                                            fontVariantNumeric:
-                                                                'tabular-nums',
-                                                        }}
-                                                    >
-                                                        {hasVolume ? (
-                                                            <>
-                                                                <Box
-                                                                    component="span"
-                                                                    sx={{
-                                                                        fontWeight: 700,
-                                                                    }}
-                                                                >
-                                                                    {format(
-                                                                        volume,
-                                                                    )}
-                                                                </Box>{' '}
-                                                                <Box
-                                                                    component="span"
-                                                                    sx={{
-                                                                        color: 'text.secondary',
-                                                                        fontSize:
-                                                                            '0.8em',
-                                                                        fontWeight: 500,
-                                                                    }}
-                                                                >
-                                                                    {id
-                                                                        ? 'kredit terjual'
-                                                                        : 'credits sold'}
-                                                                </Box>
-                                                            </>
-                                                        ) : id ? (
-                                                            'Volume belum tersedia'
-                                                        ) : (
-                                                            'Volume unavailable'
-                                                        )}
-                                                    </Typography>
-                                                    {hasVolume &&
-                                                        !completeVolume && (
-                                                            <Typography
-                                                                component="p"
-                                                                variant="caption"
-                                                                color="text.secondary"
-                                                            >
-                                                                {id
-                                                                    ? 'Total sementara'
-                                                                    : 'Partial total'}
-                                                            </Typography>
-                                                        )}
-                                                    {prefix === total.prefix &&
-                                                        completeVolume &&
-                                                        total.volume > 0 &&
-                                                        shareChart(
-                                                            standard.volume,
-                                                            smallholder.volume,
-                                                        )}
-                                                    <Typography
-                                                        component="p"
-                                                        variant="inherit"
-                                                        sx={{
-                                                            mt: 0.5,
-                                                            mb: 0.5,
-                                                            fontSize:
-                                                                '0.875rem',
-                                                            fontWeight: 600,
-                                                            ...(hasTradeValue && {
+                        {summaryRows.map(
+                            ({ product, standard, smallholder, total }) => {
+                                return (
+                                    <tr key={product}>
+                                        <th scope="row">{product}</th>
+                                        {[standard, smallholder, total].map(
+                                            ({
+                                                prefix,
+                                                volume,
+                                                tradeValue,
+                                                hasVolume,
+                                                hasTradeValue,
+                                                completeVolume,
+                                                completeTradeValue,
+                                            }) => {
+                                                return (
+                                                    <td key={prefix}>
+                                                        <Typography
+                                                            component="p"
+                                                            variant="inherit"
+                                                            sx={{
+                                                                whiteSpace:
+                                                                    hasVolume
+                                                                        ? 'nowrap'
+                                                                        : 'normal',
                                                                 fontSize:
                                                                     'clamp(1rem, 0.92rem + 0.35vw, 1.3rem)',
-                                                                fontWeight: 700,
+                                                                fontWeight: 600,
+                                                                lineHeight: 1.3,
                                                                 fontVariantNumeric:
                                                                     'tabular-nums',
-                                                                lineHeight: 1.25,
-                                                            }),
-                                                        }}
-                                                    >
-                                                        {hasTradeValue
-                                                            ? formatCurrencyParts(
-                                                                  tradeValue,
-                                                                  'USD',
-                                                                  lang,
-                                                              ).map(
-                                                                  (
-                                                                      part,
-                                                                      index,
-                                                                      parts,
-                                                                  ) => {
-                                                                      if (
-                                                                          part.type ===
-                                                                          'currency'
-                                                                      ) {
-                                                                          return (
-                                                                              <Box
-                                                                                  key={
-                                                                                      index
-                                                                                  }
-                                                                                  component="span"
-                                                                                  sx={{
-                                                                                      fontSize:
-                                                                                          '0.78em',
-                                                                                      fontWeight: 500,
-                                                                                      letterSpacing:
-                                                                                          '0.01em',
-                                                                                      ...(index <
-                                                                                      parts.findIndex(
-                                                                                          ({
-                                                                                              type,
-                                                                                          }) =>
-                                                                                              type ===
-                                                                                              'integer',
-                                                                                      )
-                                                                                          ? {
-                                                                                                mr: '0.5em',
-                                                                                            }
-                                                                                          : {
-                                                                                                ml: '0.5em',
-                                                                                            }),
-                                                                                  }}
-                                                                              >
-                                                                                  {
-                                                                                      part.value
-                                                                                  }
-                                                                              </Box>
-                                                                          );
-                                                                      }
+                                                            }}
+                                                        >
+                                                            {hasVolume ? (
+                                                                <>
+                                                                    <Box
+                                                                        component="span"
+                                                                        sx={{
+                                                                            fontWeight: 700,
+                                                                        }}
+                                                                    >
+                                                                        {format(
+                                                                            volume,
+                                                                        )}
+                                                                    </Box>
+                                                                    {!completeVolume && (
+                                                                        <sup>
+                                                                            *
+                                                                        </sup>
+                                                                    )}{' '}
+                                                                    <Box
+                                                                        component="span"
+                                                                        sx={{
+                                                                            color: 'text.secondary',
+                                                                            fontSize:
+                                                                                '0.8em',
+                                                                            fontWeight: 500,
+                                                                        }}
+                                                                    >
+                                                                        {id
+                                                                            ? 'kredit terjual'
+                                                                            : 'credits sold'}
+                                                                    </Box>
+                                                                </>
+                                                            ) : id ? (
+                                                                'Volume belum tersedia'
+                                                            ) : (
+                                                                'Volume unavailable'
+                                                            )}
+                                                        </Typography>
+                                                        {prefix ===
+                                                            total.prefix &&
+                                                            standard.hasVolume &&
+                                                            smallholder.hasVolume &&
+                                                            total.volume > 0 &&
+                                                            shareChart(
+                                                                standard.volume,
+                                                                smallholder.volume,
+                                                            )}
+                                                        <Typography
+                                                            component="p"
+                                                            variant="inherit"
+                                                            sx={{
+                                                                mt: 0.5,
+                                                                mb: 0.5,
+                                                                fontSize:
+                                                                    '0.875rem',
+                                                                fontWeight: 600,
+                                                                ...(hasTradeValue && {
+                                                                    fontSize:
+                                                                        'clamp(1rem, 0.92rem + 0.35vw, 1.3rem)',
+                                                                    fontWeight: 700,
+                                                                    fontVariantNumeric:
+                                                                        'tabular-nums',
+                                                                    lineHeight: 1.25,
+                                                                }),
+                                                            }}
+                                                        >
+                                                            {hasTradeValue
+                                                                ? formatCurrencyParts(
+                                                                      tradeValue,
+                                                                      'USD',
+                                                                      lang,
+                                                                  ).map(
+                                                                      (
+                                                                          part,
+                                                                          index,
+                                                                          parts,
+                                                                      ) => {
+                                                                          if (
+                                                                              part.type ===
+                                                                              'currency'
+                                                                          ) {
+                                                                              return (
+                                                                                  <Box
+                                                                                      key={
+                                                                                          index
+                                                                                      }
+                                                                                      component="span"
+                                                                                      sx={{
+                                                                                          fontSize:
+                                                                                              '0.78em',
+                                                                                          fontWeight: 500,
+                                                                                          letterSpacing:
+                                                                                              '0.01em',
+                                                                                          ...(index <
+                                                                                          parts.findIndex(
+                                                                                              ({
+                                                                                                  type,
+                                                                                              }) =>
+                                                                                                  type ===
+                                                                                                  'integer',
+                                                                                          )
+                                                                                              ? {
+                                                                                                    mr: '0.5em',
+                                                                                                }
+                                                                                              : {
+                                                                                                    ml: '0.5em',
+                                                                                                }),
+                                                                                      }}
+                                                                                  >
+                                                                                      {
+                                                                                          part.value
+                                                                                      }
+                                                                                  </Box>
+                                                                              );
+                                                                          }
 
-                                                                      return part.type ===
-                                                                          'literal' &&
-                                                                          !part.value.trim()
-                                                                          ? null
-                                                                          : part.value;
-                                                                  },
-                                                              )
-                                                            : id
-                                                              ? 'Nilai belum tersedia'
-                                                              : 'Trade value unavailable'}
-                                                    </Typography>
-                                                    {hasTradeValue &&
-                                                        !completeTradeValue && (
-                                                            <Typography
-                                                                component="p"
-                                                                variant="caption"
-                                                                color="text.secondary"
-                                                            >
-                                                                {id
-                                                                    ? 'Total sementara'
-                                                                    : 'Partial total'}
-                                                            </Typography>
-                                                        )}
-                                                    {prefix === total.prefix &&
-                                                        completeTradeValue &&
-                                                        total.tradeValue > 0 &&
-                                                        shareChart(
-                                                            standard.tradeValue,
-                                                            smallholder.tradeValue,
-                                                        )}
-                                                </td>
-                                            );
-                                        },
-                                    )}
-                                </tr>
-                            );
-                        })}
+                                                                          return part.type ===
+                                                                              'literal' &&
+                                                                              !part.value.trim()
+                                                                              ? null
+                                                                              : part.value;
+                                                                      },
+                                                                  )
+                                                                : id
+                                                                  ? 'Nilai belum tersedia'
+                                                                  : 'Trade value unavailable'}
+                                                            {hasTradeValue &&
+                                                                !completeTradeValue && (
+                                                                    <sup>*</sup>
+                                                                )}
+                                                        </Typography>
+                                                        {prefix ===
+                                                            total.prefix &&
+                                                            standard.hasTradeValue &&
+                                                            smallholder.hasTradeValue &&
+                                                            total.tradeValue >
+                                                                0 &&
+                                                            shareChart(
+                                                                standard.tradeValue,
+                                                                smallholder.tradeValue,
+                                                            )}
+                                                    </td>
+                                                );
+                                            },
+                                        )}
+                                    </tr>
+                                );
+                            },
+                        )}
                     </tbody>
                 </Box>
             </Box>
+            {hasPartialTotals && (
+                <Typography
+                    id="partial-total-note"
+                    component="p"
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ mt: 1 }}
+                >
+                    {id
+                        ? '* Data belum lengkap. Total dan persentase dihitung dari data yang tersedia.'
+                        : '* Data is missing for some dates. Totals and shares use the available records.'}
+                </Typography>
+            )}
         </Paper>
     );
 }
@@ -918,6 +924,7 @@ export default function Trends({
 }) {
     const [tab, setTab] = useState<'summary' | Metric>('summary');
     const [editingCustomRange, setEditingCustomRange] = useState(false);
+    const [rangeAnchor, setRangeAnchor] = useState<HTMLElement | null>(null);
     const id = lang === 'id';
     const title = id ? 'Tren Kredit RSPO' : 'RSPO Credit Trends';
     const description = id
@@ -929,6 +936,44 @@ export default function Trends({
         (_, index) =>
             new Date(start + index * dayMs).toISOString().slice(0, 10),
     );
+    const rangeOptions = {
+        'last-7-days': id ? '7 hari terakhir' : 'Last 7 days',
+        'last-30-days': id ? '30 hari terakhir' : 'Last 30 days',
+        '90-days': id ? '90 hari terakhir' : 'Last 90 days',
+        '180-days': id ? '180 hari terakhir' : 'Last 180 days',
+        'last-365-days': id ? '365 hari terakhir' : 'Last 365 days',
+        week: id ? 'Minggu lalu' : 'Last week',
+        month: id ? 'Bulan lalu' : 'Last month',
+        'three-months': id ? '3 bulan terakhir' : 'Last 3 months',
+        'six-months': id ? '6 bulan terakhir' : 'Last 6 months',
+        year: id ? 'Tahun lalu' : 'Last year',
+        custom: id ? 'Rentang khusus' : 'Custom range',
+    } satisfies Record<Period, string>;
+    const excludedKeys = new Set(
+        [...excludedDates.inProgress, ...excludedDates.couldNotVerify].flatMap(
+            ({ date, creditTypes }) =>
+                creditTypes.map((creditType) => `${date}/${creditType}`),
+        ),
+    );
+    const creditTypes = products.flatMap((product) => [
+        product,
+        `IS_${product}`,
+    ]);
+    const missingDates = dates
+        .slice()
+        .reverse()
+        .flatMap((date) => {
+            const missingTypes = creditTypes.filter(
+                (creditType) =>
+                    !trades[creditType]?.[date] &&
+                    !excludedKeys.has(`${date}/${creditType}`),
+            );
+
+            return missingTypes.length
+                ? [{ date, creditTypes: missingTypes }]
+                : [];
+        });
+    const selectedRange = editingCustomRange ? 'custom' : period;
     const pendingDateFormat = new Intl.DateTimeFormat(id ? 'id-ID' : 'en-US', {
         day: 'numeric',
         month: 'short',
@@ -978,65 +1023,87 @@ export default function Trends({
                         sx={{ p: { xs: 1.5, sm: 2 }, bgcolor: 'action.hover' }}
                     >
                         <Stack spacing={2}>
-                            <TextField
+                            <Button
                                 id="trends-period"
-                                select
-                                label={id ? 'Rentang tanggal' : 'Date range'}
-                                value={editingCustomRange ? 'custom' : period}
-                                onChange={(event) => {
-                                    const value = event.target.value;
-                                    setEditingCustomRange(value === 'custom');
-                                    if (value !== 'custom') {
-                                        router.get(
-                                            trendsIndex.url({ language: lang }),
-                                            { period: value },
-                                            {
-                                                preserveState: true,
-                                                preserveScroll: true,
-                                            },
-                                        );
-                                    }
+                                variant="outlined"
+                                endIcon={<ArrowDropDown />}
+                                aria-haspopup="menu"
+                                aria-expanded={rangeAnchor !== null}
+                                aria-controls={
+                                    rangeAnchor
+                                        ? 'trends-period-menu'
+                                        : undefined
+                                }
+                                onClick={(event) =>
+                                    setRangeAnchor(event.currentTarget)
+                                }
+                                sx={{
+                                    width: { xs: '100%', sm: 240 },
+                                    minHeight: 44,
+                                    justifyContent: 'space-between',
                                 }}
-                                sx={{ width: { xs: '100%', sm: 240 } }}
                             >
-                                <MenuItem value="last-7-days">
-                                    {id ? '7 hari terakhir' : 'Last 7 days'}
-                                </MenuItem>
-                                <MenuItem value="last-30-days">
-                                    {id ? '30 hari terakhir' : 'Last 30 days'}
-                                </MenuItem>
-                                <MenuItem value="90-days">
-                                    {id ? '90 hari terakhir' : 'Last 90 days'}
-                                </MenuItem>
-                                <MenuItem value="180-days">
-                                    {id ? '180 hari terakhir' : 'Last 180 days'}
-                                </MenuItem>
-                                <MenuItem value="last-365-days">
-                                    {id ? '365 hari terakhir' : 'Last 365 days'}
-                                </MenuItem>
-                                <MenuItem value="week">
-                                    {id ? 'Minggu lalu' : 'Last week'}
-                                </MenuItem>
-                                <MenuItem value="month">
-                                    {id ? 'Bulan lalu' : 'Last month'}
-                                </MenuItem>
-
-                                <MenuItem value="three-months">
-                                    {id ? '3 bulan terakhir' : 'Last 3 months'}
-                                </MenuItem>
-
-                                <MenuItem value="six-months">
-                                    {id ? '6 bulan terakhir' : 'Last 6 months'}
-                                </MenuItem>
-
-                                <MenuItem value="year">
-                                    {id ? 'Tahun lalu' : 'Last year'}
-                                </MenuItem>
-
-                                <MenuItem value="custom">
-                                    {id ? 'Rentang khusus' : 'Custom range'}
-                                </MenuItem>
-                            </TextField>
+                                <Box
+                                    component="span"
+                                    sx={{ textAlign: 'left' }}
+                                >
+                                    <Typography
+                                        component="span"
+                                        variant="caption"
+                                        sx={{ display: 'block' }}
+                                    >
+                                        {id ? 'Rentang tanggal' : 'Date range'}
+                                    </Typography>
+                                    {rangeOptions[selectedRange]}
+                                </Box>
+                            </Button>
+                            <Menu
+                                anchorEl={rangeAnchor}
+                                open={rangeAnchor !== null}
+                                onClose={() => setRangeAnchor(null)}
+                                slotProps={{
+                                    list: {
+                                        id: 'trends-period-menu',
+                                        'aria-labelledby': 'trends-period',
+                                    },
+                                    paper: {
+                                        sx: {
+                                            maxHeight:
+                                                'min(20rem, calc(100dvh - 32px))',
+                                        },
+                                    },
+                                }}
+                            >
+                                {Object.entries(rangeOptions).map(
+                                    ([value, label]) => (
+                                        <MenuItem
+                                            key={value}
+                                            role="menuitemradio"
+                                            selected={value === selectedRange}
+                                            onClick={() => {
+                                                setRangeAnchor(null);
+                                                setEditingCustomRange(
+                                                    value === 'custom',
+                                                );
+                                                if (value !== 'custom') {
+                                                    router.get(
+                                                        trendsIndex.url({
+                                                            language: lang,
+                                                        }),
+                                                        { period: value },
+                                                        {
+                                                            preserveState: true,
+                                                            preserveScroll: true,
+                                                        },
+                                                    );
+                                                }
+                                            }}
+                                        >
+                                            {label}
+                                        </MenuItem>
+                                    ),
+                                )}
+                            </Menu>
                             {(editingCustomRange || period === 'custom') && (
                                 <Form
                                     key={`${lang}-${startDate}-${endDate}`}
@@ -1126,7 +1193,8 @@ export default function Trends({
                         </Stack>
                     </Paper>
                     {(excludedDates.inProgress.length > 0 ||
-                        excludedDates.couldNotVerify.length > 0) && (
+                        excludedDates.couldNotVerify.length > 0 ||
+                        missingDates.length > 0) && (
                         <Alert severity="info" role="status">
                             <Stack spacing={0.75}>
                                 <Typography variant="subtitle2">
@@ -1146,6 +1214,12 @@ export default function Trends({
                                             ? 'Belum dapat dipastikan'
                                             : 'Could not verify',
                                         dates: excludedDates.couldNotVerify,
+                                    },
+                                    {
+                                        label: id
+                                            ? 'Data belum tersedia'
+                                            : 'No data yet',
+                                        dates: missingDates,
                                     },
                                 ].map(({ label, dates: excluded }) =>
                                     excluded.length > 0 ? (
