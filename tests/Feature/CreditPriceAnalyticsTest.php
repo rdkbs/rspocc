@@ -4,15 +4,19 @@ declare(strict_types=1);
 
 use App\Enums\CreditPriceRetrievalStatus;
 use App\Jobs\BackfillCreditPriceAnalytics;
+use App\Jobs\SendCreditAnalyticsSummary;
 use App\Models\CreditPriceRetrieval;
 use App\Services\PrismaCreditAnalyticsCollector;
 use Carbon\CarbonImmutable;
 use DateTimeInterface;
 use Illuminate\Contracts\Cache\Lock;
 use Illuminate\Contracts\Cache\LockTimeoutException;
+use Illuminate\Contracts\Mail\Mailer;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Sleep;
 
@@ -98,7 +102,7 @@ it('queues unfinished days on the analytics queue with staggered delays', functi
         BackfillCreditPriceAnalytics::class,
         static fn (BackfillCreditPriceAnalytics $job): bool => $job->day === '2025-01-01'
             && $job->delay instanceof DateTimeInterface
-            && $job->delay->getTimestamp() === CarbonImmutable::parse('2025-01-03 00:03:00', 'UTC')->getTimestamp(),
+            && $job->delay->getTimestamp() === CarbonImmutable::parse('2025-01-03 00:01:00', 'UTC')->getTimestamp(),
     );
 });
 
@@ -108,7 +112,7 @@ it('queues the missing child of a saved split without duplicating the other chil
     $parent = CreditPriceRetrieval::factory()->create(['status' => CreditPriceRetrievalStatus::MIXED]);
     $left = CreditPriceRetrieval::factory()->create([
         'parent_id' => $parent->id,
-        'period_end_at' => $day->addHours(12)->subMillisecond(),
+        'period_end_at' => $day->addHours(12),
         'status' => CreditPriceRetrievalStatus::PENDING,
     ]);
     $right = CreditPriceRetrieval::factory()->create([
@@ -285,7 +289,7 @@ it('splits a mixed-price day into two adjacent intervals and queues both', funct
     $left = $children->firstOrFail();
     $right = $children->last();
     expect($left->period_start_at)->toEqual($day)
-        ->and($right?->period_start_at)->toEqual($left->period_end_at->addMillisecond())
+        ->and($right?->period_start_at)->toEqual($left->period_end_at)
         ->and($right?->period_end_at)->toEqual($parent->period_end_at);
 
     Queue::assertPushed(BackfillCreditPriceAnalytics::class, 2);
@@ -310,7 +314,7 @@ it('marks the day unresolved when a nested split has unequal quantities', functi
 
     $nested = CreditPriceRetrieval::factory()->for($root, 'parent')->create([
         'status' => $mixed,
-        'period_end_at' => $noon->subMillisecond(),
+        'period_end_at' => $noon,
         'quantity_sold' => '99999.00000000',
     ]);
     CreditPriceRetrieval::factory()->for($root, 'parent')->create([
@@ -318,13 +322,13 @@ it('marks the day unresolved when a nested split has unequal quantities', functi
         'quantity_sold' => '1.00000000',
     ]);
     CreditPriceRetrieval::factory()->for($nested, 'parent')->create([
-        'period_end_at' => $six->subMillisecond(),
+        'period_end_at' => $six,
         'quantity_sold' => '99998.99999995',
     ]);
     CreditPriceRetrieval::factory()->for($nested, 'parent')->create([
         'status' => CreditPriceRetrievalStatus::NO_TRADES,
         'period_start_at' => $six,
-        'period_end_at' => $noon->subMillisecond(),
+        'period_end_at' => $noon,
         'quantity_sold' => '0.00000000',
     ]);
 
@@ -335,5 +339,130 @@ it('marks the day unresolved when a nested split has unequal quantities', functi
         ->and($nested->status)->toBe(CreditPriceRetrievalStatus::UNRESOLVED)
         ->and($root->refresh()->status)->toBe(CreditPriceRetrievalStatus::UNRESOLVED)
         ->and($needsRetry)->toBeFalse();
+    Http::assertNothingSent();
+});
+
+it('resets unresolved trees before queuing their days', function (): void {
+    $this->travelTo('2025-01-02 00:00:00 UTC');
+    Queue::fake();
+    $root = CreditPriceRetrieval::factory()->create([
+        'period_start_at' => '2025-01-01 00:00:00.000',
+        'period_end_at' => '2025-01-01 23:59:59.999',
+        'status' => CreditPriceRetrievalStatus::UNRESOLVED,
+        'child_quantity_matches' => false,
+    ]);
+    $child = CreditPriceRetrieval::factory()->for($root, 'parent')->create([
+        'period_start_at' => '2025-01-01 00:00:00.000',
+        'period_end_at' => '2025-01-01 12:00:00.000',
+    ]);
+    $other = CreditPriceRetrieval::factory()->create([
+        'credit_type' => 'CSPO',
+        'period_start_at' => '2025-01-01 00:00:00.000',
+        'period_end_at' => '2025-01-01 23:59:59.999',
+    ]);
+
+    expect(Artisan::call('credits:collect-analytics --clear-unresolved --email'))->toBe(2)
+        ->and($root->refresh()->status)->toBe(CreditPriceRetrievalStatus::UNRESOLVED)
+        ->and($child->fresh())->not->toBeNull();
+    Queue::assertNothingPushed();
+
+    foreach ([
+        ['mail.default' => 'log'],
+        ['mail.default' => 'failover'],
+        ['mail.default' => 'smtp', 'mail.mailers.smtp.url' => 'array://localhost'],
+        ['mail.default' => 'smtp', 'mail.mailers.smtp.url' => 'smt://localhost'],
+    ] as $mailConfig) {
+        config($mailConfig);
+        expect(Artisan::call('credits:collect-analytics --clear-unresolved --email=ops@example.test'))->toBe(2)
+            ->and(Artisan::output())->toContain('MAIL_MAILER')
+            ->and($root->refresh()->status)->toBe(CreditPriceRetrievalStatus::UNRESOLVED)
+            ->and($child->fresh())->not->toBeNull();
+        Queue::assertNothingPushed();
+    }
+
+    expect(Artisan::call('credits:collect-analytics', ['--clear-unresolved' => true]))->toBe(0)
+        ->and($root->refresh()->status)->toBe(CreditPriceRetrievalStatus::PENDING)
+        ->and($root->response_body)->toBeNull()
+        ->and($root->child_quantity_matches)->toBeNull()
+        ->and($root->attempts)->toBe(0)
+        ->and($child->fresh())->toBeNull()
+        ->and($other->refresh()->status)->toBe(CreditPriceRetrievalStatus::RESOLVED);
+    Queue::assertPushed(BackfillCreditPriceAnalytics::class,
+        fn (BackfillCreditPriceAnalytics $job): bool => $job->day === '2025-01-01');
+});
+
+it('queues an optional summary and waits for delayed analytics jobs before sending it', function (): void {
+    $this->travelTo('2025-01-02 00:00:00 UTC');
+    Queue::fake();
+
+    config(['mail.default' => 'smtp']);
+    expect(Artisan::call('credits:collect-analytics', ['--email' => 'ops@example.test']))->toBe(0);
+    Queue::assertPushedOn('credit-analytics', SendCreditAnalyticsSummary::class,
+        static fn (SendCreditAnalyticsSummary $job): bool => $job->email === 'ops@example.test'
+            && $job->days === ['2025-01-01']
+            && $job->mailer === 'smtp');
+    Queue::assertPushed(BackfillCreditPriceAnalytics::class, 1);
+
+    $queueBackfill = static fn (BackfillCreditPriceAnalytics $job): int => DB::table('jobs')->insertGetId([
+        'queue' => 'credit-analytics',
+        'payload' => json_encode([
+            'displayName' => BackfillCreditPriceAnalytics::class,
+            'data' => ['command' => serialize($job)],
+        ], JSON_THROW_ON_ERROR),
+        'attempts' => 0,
+        'available_at' => now()->addMinutes(3)->timestamp,
+        'created_at' => now()->timestamp,
+    ]);
+
+    $queueBackfill(new BackfillCreditPriceAnalytics('2025-01-02'));
+    $queued = $queueBackfill(new BackfillCreditPriceAnalytics('2025-01-01', 123));
+    CreditPriceRetrieval::query()->where('credit_type', 'CSPO')->update([
+        'status' => CreditPriceRetrievalStatus::MIXED->value,
+        'child_quantity_matches' => true,
+    ]);
+    CreditPriceRetrieval::query()->where('credit_type', 'CSPKO')->update([
+        'status' => CreditPriceRetrievalStatus::MIXED->value,
+    ]);
+
+    config(['mail.default' => 'log']);
+    $mailer = Mockery::mock(Mailer::class);
+    Mail::shouldReceive('mailer')->once()->with('smtp')->andReturn($mailer);
+    $mailer->shouldReceive('raw')->once()->with("UTC dates selected: 1\npending: 4\nunfinished_split: 1\nverified_split: 1", Mockery::type(Closure::class));
+    $summary = new SendCreditAnalyticsSummary('ops@example.test', ['2025-01-01'], 'smtp');
+    $summary->withFakeQueueInteractions()->handle();
+    $summary->assertReleased(180);
+
+    DB::table('jobs')->where('id', $queued)->delete();
+    $summary->handle();
+
+    config(['mail.mailers.smtp.transport' => 'log']);
+    expect(fn () => $summary->handle())->toThrow(RuntimeException::class, 'The analytics summary mailer must deliver email');
+});
+
+it('preserves unfinished legacy split responses until an explicit reset', function (): void {
+    Queue::fake();
+    Http::preventStrayRequests();
+    $root = CreditPriceRetrieval::factory()->create(['status' => CreditPriceRetrievalStatus::MIXED]);
+    $day = $root->period_start_at;
+    $midpoint = $day->addHours(12);
+    $left = CreditPriceRetrieval::factory()->for($root, 'parent')->create([
+        'period_end_at' => $midpoint->subMillisecond(),
+    ]);
+    $right = CreditPriceRetrieval::factory()->for($root, 'parent')->create([
+        'period_start_at' => $midpoint,
+        'status' => CreditPriceRetrievalStatus::PENDING,
+    ]);
+
+    $needsRetry = resolve(PrismaCreditAnalyticsCollector::class)
+        ->collect($day, requestLimit: 6, timeLimit: 15, intervalId: $right->id);
+
+    expect($needsRetry)->toBeFalse()
+        ->and($root->refresh()->status)->toBe(CreditPriceRetrievalStatus::UNRESOLVED)
+        ->and($root->error_message)->toContain('--clear-unresolved')
+        ->and($root->response_body)->not->toBeNull()
+        ->and($left->refresh()->response_body)->not->toBeNull()
+        ->and($right->refresh()->status)->toBe(CreditPriceRetrievalStatus::UNRESOLVED)
+        ->and($right->response_body)->not->toBeNull();
+    Queue::assertNothingPushed();
     Http::assertNothingSent();
 });
