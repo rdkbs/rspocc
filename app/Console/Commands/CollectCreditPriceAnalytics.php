@@ -20,6 +20,8 @@ use Throwable;
 #[Description('Queue unfinished PRISMA analytics days from January 1, 2025 through yesterday in UTC')]
 final class CollectCreditPriceAnalytics extends Command
 {
+    public const string SCHEDULE_TIME_UTC = '00:15';
+
     public function handle(PrismaCreditAnalyticsCollector $collector): int
     {
         $email = $this->option('email');

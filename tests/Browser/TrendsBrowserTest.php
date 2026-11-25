@@ -7,6 +7,7 @@ use App\Models\CreditPriceRetrieval;
 use Carbon\CarbonImmutable;
 
 it('compares credit types and switches metrics, language and theme', function (): void {
+    $this->travelTo(CarbonImmutable::today('UTC')->addMinutes(10));
     $firstDay = CarbonImmutable::yesterday('UTC')->subDays(6);
 
     foreach (range(0, 6) as $offset) {
@@ -76,16 +77,30 @@ it('compares credit types and switches metrics, language and theme', function ()
             $firstDay->toDateString().',CSPKE,0.1,0.2,0.02,traded',
             $firstDay->toDateString().',IS_CSPKE,,,,in_progress',
         ])
-        ->assertSee('USD140')
-        ->assertPresent('#partial-total-note')
-        ->assertSee('In progress (1)')
-        ->assertSee('No data yet (6)')
-        ->assertScript('document.querySelector("[role=status] details").open', false)
-        ->click('[role=status] details summary:text-is("In progress (1)")')
+        ->assertSee('credits sold for USD 140')
+        ->assertScript('Array.from(document.querySelectorAll("#trends-summary-panel tfoot tr > *")).map(cell => cell.querySelector("p")?.textContent ?? cell.textContent)', ['Total traded', 'USD 40.02', 'USD 180', 'USD 220.02'])
+        ->assertSeeIn('#trends-summary-panel tfoot td:last-of-type', 'Standard 18%')
+        ->assertSeeIn('#trends-summary-panel tfoot td:last-of-type', 'IS 82%')
+        ->assertSeeIn('#trends-summary-panel tfoot', 'Based on verified trades')
+        ->assertPresent('#trends-summary-panel footer#partial-total-note')
+        ->assertSee('PRISMA check scheduled or in progress.')
+        ->assertSee('Some data is missing or could not be verified.')
+        ->assertScript('Array.from(document.querySelectorAll("#trends-summary-panel td sup")).every(marker => marker.closest("p") === marker.closest("td").querySelector("p"))', true)
+        ->assertMissing('[role=status] details')
+        ->assertScript('document.querySelector("#partial-total-note details").open', false)
+        ->click('#partial-total-note summary:has-text("PRISMA check scheduled or in progress")')
+        ->assertSee('PRISMA check pending or in progress (1)')
+        ->assertSee('Waiting for scheduled check (1)')
+        ->assertSee('Scheduled PRISMA check:')
+        ->assertScript('document.querySelector("#partial-total-note time").textContent.match(/[A-Z][a-z]{2} [0-9]{1,2}, [0-9]{4}/) !== null', true)
+        ->click('#partial-total-note summary:has-text("Some data is missing")')
+        ->assertSee('No data yet (5)')
+        ->assertPresent('#trends-summary-panel svg[role="img"] title:text-is("PRISMA check pending")')
+        ->assertScript('Array.from(document.querySelectorAll("#trends-summary-panel td:has(svg[role=img])")).every(cell => cell.querySelectorAll("svg[role=img]").length === 1 && getComputedStyle(cell.querySelector("svg[role=img]")).display === "block" && cell.querySelector("p").firstElementChild?.matches("svg[role=img]"))', true)
         ->assertSee($firstDay->format('M j, Y').' (IS CSPKE)')
         ->assertScript('Array.from(document.querySelectorAll("#trends-summary-panel tbody tr")).some(row => row.cells[0].textContent === "CSPKE" && row.textContent.includes("Volume unavailable") && !row.cells[3].textContent.includes("%"))', true)
         ->assertScript('Array.from(document.querySelectorAll("#trends-summary-panel tbody tr")).some(row => row.cells[0].textContent === "CSPO" && row.textContent.includes("Standard 0%"))', true)
-        ->assertScript('Array.from(document.querySelectorAll("#trends-summary-panel tbody tr")).some(row => row.cells[0].textContent === "CSPKO" && row.cells[3].textContent.includes("Standard 50%") && row.cells[3].textContent.includes("IS 50%") && row.cells[3].querySelectorAll("sup").length === 2)', true)
+        ->assertScript('Array.from(document.querySelectorAll("#trends-summary-panel tbody tr")).some(row => row.cells[0].textContent === "CSPKO" && row.cells[3].textContent.split("Standard 50%").length === 2 && row.cells[3].textContent.split("IS 50%").length === 2 && row.cells[3].querySelectorAll("sup").length === 1 && row.cells[3].querySelector("svg[role=img]") === null)', true)
         ->click('Volume')
         ->assertSee('Credits sold per UTC day')
         ->click('View data table')
@@ -105,7 +120,7 @@ it('compares credit types and switches metrics, language and theme', function ()
         ->click('Apply dates')
         ->assertScript('new URLSearchParams(location.search).has("from")', true)
         ->click('Summary')
-        ->assertSee('USD140')
+        ->assertSee('credits sold for USD 140')
         ->click('Dark mode')
         ->assertSee('Light mode')
         ->click('header [role=combobox]')
@@ -128,9 +143,11 @@ it('compares credit types and switches metrics, language and theme', function ()
 });
 
 it('keeps the trends page usable on mobile without trading data', function (): void {
+    $this->travelTo(CarbonImmutable::today('UTC')->addMinutes(16));
+
     visit('/id/trends')->resize(320, 360)
         ->assertSee('Tren Kredit RSPO')
-        ->assertScript('document.querySelector("#partial-total-note") === null && !document.querySelector("#trends-summary-panel table").hasAttribute("aria-describedby")', true)
+        ->assertScript('document.querySelector("#partial-total-note").textContent.includes("Belum ada catatan pengecekan") && !document.querySelector("#partial-total-note").textContent.includes("Menunggu jadwal pengecekan") && !document.querySelector("#partial-total-note").textContent.includes("*") && document.querySelector("#trends-summary-panel table").getAttribute("aria-describedby") === "partial-total-note"', true)
         ->click('#trends-period')
         ->assertVisible('#trends-period-menu')
         ->keys('#trends-period-menu [role=menuitemradio][aria-checked=true]', 'Escape')
@@ -143,3 +160,28 @@ it('keeps the trends page usable on mobile without trading data', function (): v
         ->assertScript('document.documentElement.scrollWidth === window.innerWidth', true)
         ->assertNoJavaScriptErrors();
 });
+
+it('rounds displayed trade shares to one hundred percent', function (int|string $standard, int|string $is, string $standardShare, string $isShare): void {
+    $day = CarbonImmutable::yesterday('UTC');
+
+    foreach (['CSPO' => $standard, 'IS_CSPO' => $is] as $creditType => $quantity) {
+        CreditPriceRetrieval::factory()->create([
+            'credit_type' => $creditType,
+            'period_start_at' => $day,
+            'period_end_at' => $day->endOfDay(),
+            'quantity_sold' => $quantity,
+            'last_traded_price' => 1,
+        ]);
+    }
+
+    visit('/en/trends')
+        ->assertSeeIn('#trends-summary-panel tbody tr:first-of-type td:last-of-type', 'Standard '.$standardShare)
+        ->assertSeeIn('#trends-summary-panel tbody tr:first-of-type td:last-of-type', 'IS '.$isShare)
+        ->assertSeeIn('#trends-summary-panel tfoot td:last-of-type', 'Standard '.$standardShare)
+        ->assertSeeIn('#trends-summary-panel tfoot td:last-of-type', 'IS '.$isShare)
+        ->assertNoJavaScriptErrors();
+})->with([
+    '12.5 percent' => [1, 7, '13%', '87%'],
+    '14.5 percent' => [29, 171, '15%', '85%'],
+    '14.5 percent with decimal amounts' => ['0.29', '1.71', '15%', '85%'],
+]);

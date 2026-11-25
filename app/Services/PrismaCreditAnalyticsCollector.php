@@ -396,7 +396,7 @@ final class PrismaCreditAnalyticsCollector
                 CreditPriceRetrievalStatus::UNRESOLVED,
                 $response,
                 $values,
-                'Prices still vary within the smallest one-millisecond interval.',
+                CreditPriceRetrieval::MIXED_MILLISECOND_MESSAGE,
             );
 
             return;
