@@ -7,7 +7,7 @@ use App\Models\CreditPriceRetrieval;
 use Carbon\CarbonImmutable;
 use Inertia\Testing\AssertableInertia;
 
-it('keeps verified spending and reports shared mixed-price credits once', function (): void {
+it('counts a matching shared-boundary quantity once while keeping verified sales', function (): void {
     $day = CarbonImmutable::parse('2026-10-27', 'UTC');
     $this->travelTo($day->addDay());
 
@@ -17,6 +17,8 @@ it('keeps verified spending and reports shared mixed-price credits once', functi
         'period_end_at' => $day->addDay()->subMillisecond(),
         'status' => CreditPriceRetrievalStatus::UNRESOLVED,
         'quantity_sold' => 572,
+        'low_price' => 100,
+        'high_price' => 130,
         'last_traded_price' => 130,
     ]);
 
@@ -60,6 +62,12 @@ it('keeps verified spending and reports shared mixed-price credits once', functi
                 'high' => 130,
                 'creditType' => 'IS_CSPKO',
             ]])
+            ->has('tradeIntervals.IS_CSPKO.2026-10-27', 3)
+            ->where('tradeIntervals.IS_CSPKO.2026-10-27.0.start', '2026-10-27 17:00:00.000')
+            ->where('tradeIntervals.IS_CSPKO.2026-10-27.0.end', '2026-10-27 17:00:00.000')
+            ->where('tradeIntervals.IS_CSPKO.2026-10-27.0.quantity', 562)
+            ->where('tradeIntervals.IS_CSPKO.2026-10-27.0.low', 100)
+            ->where('tradeIntervals.IS_CSPKO.2026-10-27.0.high', 130)
             ->where('trades.IS_CSPKO.2026-10-27.volume', 572)
             ->where('trades.IS_CSPKO.2026-10-27.pricedVolume', 10)
             ->where('trades.IS_CSPKO.2026-10-27.price', 130)
@@ -72,6 +80,13 @@ it('keeps verified spending and reports shared mixed-price credits once', functi
         ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
             ->has('excludedDates.couldNotVerify', 1)
             ->has('partialSpending', 0)
+            ->where('tradeIntervals.IS_CSPKO.2026-10-27', [[
+                'start' => '2026-10-27 00:00:00.000',
+                'end' => '2026-10-27 23:59:59.999',
+                'quantity' => 573,
+                'low' => 100,
+                'high' => 130,
+            ]])
             ->has('trades', 0));
 });
 

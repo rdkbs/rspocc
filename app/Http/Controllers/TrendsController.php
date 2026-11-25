@@ -81,7 +81,8 @@ final class TrendsController extends Controller
             ->where('daily.period_start_at', '<', $end->addDay()->toDateTimeString())
             ->select([
                 'daily.id', 'daily.credit_type', 'daily.period_start_at', 'daily.quantity_sold',
-                'daily.status', 'daily.child_quantity_matches',
+                'daily.status', 'daily.child_quantity_matches', 'daily.period_end_at',
+                'daily.low_price', 'daily.high_price',
                 'daily.last_traded_price', 'traded.quantity_sold as traded_quantity',
                 'traded.last_traded_price as traded_price', 'traded.id as interval_id',
                 'traded.parent_id as interval_parent_id', 'traded.status as interval_status',
@@ -98,6 +99,7 @@ final class TrendsController extends Controller
 
         $excludedDates = ['inProgress' => [], 'couldNotVerify' => []];
         $partialSpending = [];
+        $tradeIntervals = [];
         $trades = [];
         foreach ($days as $intervals) {
             $day = $intervals->firstOrFail();
@@ -113,13 +115,15 @@ final class TrendsController extends Controller
                         $partialTradeValue = true;
                         foreach ($unresolved as $interval) {
                             $excludedQuantity = $excludedQuantity->plus($interval['quantity']);
-                            $partialSpending[] = [
+                            $observation = [
                                 ...$interval,
                                 'creditType' => $day->credit_type,
                                 'quantity' => (float) $interval['quantity'],
                                 'low' => (float) $interval['low'],
                                 'high' => (float) $interval['high'],
                             ];
+                            $partialSpending[] = $observation;
+                            $tradeIntervals[$day->credit_type][$date][] = $observation;
                         }
                     }
                 }
@@ -138,6 +142,18 @@ final class TrendsController extends Controller
                 $excludedDates[$group][$date] ??= ['date' => $date, 'creditTypes' => []];
                 $excludedDates[$group][$date]['creditTypes'][] = $day->credit_type;
 
+                // Report the source's daily observation when its split cannot be reconciled.
+                if ($group === 'couldNotVerify' && $day->quantity_sold !== null
+                    && $day->low_price !== null && $day->high_price !== null) {
+                    $tradeIntervals[$day->credit_type][$date][] = [
+                        'start' => $day->period_start_at->format('Y-m-d H:i:s.v'),
+                        'end' => $day->period_end_at->format('Y-m-d H:i:s.v'),
+                        'quantity' => (float) $day->quantity_sold,
+                        'low' => (float) $day->low_price,
+                        'high' => (float) $day->high_price,
+                    ];
+                }
+
                 continue;
             }
 
@@ -150,6 +166,13 @@ final class TrendsController extends Controller
                     && is_string($quantity) && is_string($price)) {
                     $value = BigDecimal::of($quantity)->multipliedBy($price);
                     $tradeValue = $tradeValue === null ? $value : $tradeValue->plus($value);
+                    $tradeIntervals[$day->credit_type][$date][] = [
+                        'start' => $interval->getAttribute('interval_start'),
+                        'end' => $interval->getAttribute('interval_end'),
+                        'quantity' => (float) $quantity,
+                        'low' => (float) $price,
+                        'high' => (float) $price,
+                    ];
                 }
             }
             $volume = $day->quantity_sold === null ? null : (float) $day->quantity_sold;
@@ -182,6 +205,7 @@ final class TrendsController extends Controller
             'scheduledCheckPending' => $now->lessThan($scheduledCheck),
             'excludedDates' => array_map(array_values(...), $excludedDates),
             'partialSpending' => $partialSpending,
+            'tradeIntervals' => $tradeIntervals,
             'trades' => $trades,
         ]);
     }

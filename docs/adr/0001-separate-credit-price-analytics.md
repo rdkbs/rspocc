@@ -19,7 +19,7 @@ Store timestamps and analytics intervals in UTC. Display PRISMA check timestamps
 
 Laravel runs `credits:collect-analytics` daily at 00:15 UTC to create missing daily tasks for each credit type from January 1, 2025 through yesterday. Each run queues up to 96 unfinished days, newest first, with one minute between their initial start times. Later runs pick up the remaining backlog.
 
-If the endpoint returns different minimum and maximum prices for a daily interval, split it into subintervals that share the split timestamp and resume those splits on later runs. Keep each parent response for traceability, but count only completed leaf intervals in analytics. Check that a parent's quantity equals the sum of its completed children. If prices still vary in the smallest one-millisecond interval, mark it unresolved rather than claiming an exact price breakdown.
+If the endpoint returns different minimum and maximum prices for an interval, split it into subintervals that share the split timestamp and resume those splits on later runs. Keep every parent response for traceability. A mixed-price interval that cannot be split below one millisecond has a known quantity but no verified single price. Keep that quantity in volume, show its price range, and exclude its spending from totals. When both adjacent branches return the same quantity and price range for the same mixed-price interval at their shared timestamp, Trends counts that interval once. This matching-boundary adjustment preserves quantity but does not resolve price. If the child responses do not match this pattern, keep the interval breakdown unresolved and use the daily source total rather than inferring an adjustment.
 
 The database queue processes a bounded batch per job and releases unfinished work for another attempt after three minutes. The Laravel scheduler starts a short-lived worker for the analytics queue every minute, so shared hosting only needs the existing `schedule:run` cron entry. Record a successful no-trade response separately from a date that has not been retrieved.
 
@@ -47,13 +47,15 @@ For example, if the full-day query reports 70 credits sold and prices vary, its 
 
 If the endpoint provides individual trades with stable trade IDs and timestamps, prefer storing one immutable row per trade instead of inferring trades from aggregates. If it only provides summaries, store the summaries as interval observations; do not describe them as individual trade records.
 
-Represent each UTC day at millisecond precision from `00:00:00.000` through `23:59:59.999`, matching the observed PRISMA request format. Send the same split timestamp as the left interval’s end and the right interval’s start. In the December 31, 2025 CSPO replay, introducing a one-millisecond gap omitted 1,000 credits. Verify each split against its parent quantity before publishing the result.
+Represent each UTC day at millisecond precision from `00:00:00.000` through `23:59:59.999`, matching the observed PRISMA request format. Send the same split timestamp as the left interval's end and the right interval's start. In the December 31, 2025 CSPO replay, introducing a one-millisecond gap omitted 1,000 credits. Verify each split against its parent quantity before publishing the result.
 
 Workers mark unfinished trees with legacy split gaps unresolved and retain their responses. Run `php artisan credits:collect-analytics --clear-unresolved` to restart all unresolved daily retrievals. The command deletes their old child intervals and clears the stored response on each reset daily record.
 
 ## Completeness checks
 
-For each credit type, the quantities of a day's completed leaf intervals must equal the quantity from its daily task. For a separate completeness audit, daily quantities across a fully covered UTC year can be compared with PRISMA's quantity for the same yearly interval. Compare like-for-like ranges and flag mismatches for investigation; boundary semantics, missing intervals, overlapping intervals, or source corrections can cause differences.
+An unresolved price does not by itself mean that quantity is missing or mismatched. For example, if a parent reports 562 credits and both child queries report the same 562-credit mixed-price interval at their shared timestamp, the raw child sum is 1,124. Trends counts the matching interval once, preserving the parent's 562-credit volume; it keeps the minimum and maximum prices but does not calculate spending without the quantity at each price. When child responses do not match exactly at the shared boundary, do not subtract a guessed duplicate. Keep the interval breakdown unresolved and report the daily source total.
+
+For a separate completeness audit, daily quantities across a fully covered UTC year can be compared with PRISMA's quantity for the same yearly interval. Compare like-for-like ranges and flag mismatches for investigation; boundary semantics, missing intervals, overlapping intervals, or source corrections can cause differences.
 
 For example, if daily records sum to 1,240 credits while PRISMA reports 1,250 for the same yearly range, do not silently accept the dataset as complete. Check the missing or overlapping date ranges and repeat the comparison after resolving the difference.
 
