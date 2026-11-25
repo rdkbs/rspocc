@@ -100,7 +100,7 @@ it('compares credit types and switches metrics, language and theme', function ()
         ->assertSee($firstDay->format('M j, Y').' (IS CSPKE)')
         ->assertScript('Array.from(document.querySelectorAll("#trends-summary-panel tbody tr")).some(row => row.cells[0].textContent === "CSPKE" && row.textContent.includes("Volume unavailable") && !row.cells[3].textContent.includes("%"))', true)
         ->assertScript('Array.from(document.querySelectorAll("#trends-summary-panel tbody tr")).some(row => row.cells[0].textContent === "CSPO" && row.textContent.includes("Non-IS RSPO Credits 0%"))', true)
-        ->assertScript('Array.from(document.querySelectorAll("#trends-summary-panel tbody tr")).some(row => row.cells[0].textContent === "CSPKO" && row.cells[3].textContent.split("Non-IS RSPO Credits 50%").length === 2 && row.cells[3].textContent.split("IS RSPO Credits 50%").length === 2 && row.cells[3].querySelectorAll("sup").length === 1 && row.cells[3].querySelector("svg[role=img]") === null)', true)
+        ->assertScript('Array.from(document.querySelectorAll("#trends-summary-panel tbody tr")).some(row => row.cells[0].textContent === "CSPKO" && row.cells[3].textContent.includes("Non-IS RSPO Credits") && row.cells[3].textContent.includes("IS RSPO Credits") && (row.cells[3].textContent.match(/50%/g) ?? []).length === 2 && row.cells[3].querySelectorAll("sup").length === 1 && row.cells[3].querySelector("svg[role=img]") === null)', true)
         ->click('Volume')
         ->assertSee('Credits sold per UTC day')
         ->click('View data table')
@@ -111,6 +111,10 @@ it('compares credit types and switches metrics, language and theme', function ()
         ->assertScript('Array.from(document.querySelectorAll("main details[open] tbody tr")).every(row => row.cells[2].textContent === "10")', true)
         ->click('Price')
         ->assertSee('Last traded price by UTC day')
+        ->assertScript('(() => { const card = Array.from(document.querySelectorAll("#trends-price-panel section")).find((section) => section.querySelector("h2")?.textContent === "CSPO"); return card ? Array.from(card.querySelectorAll("dd")).map((value) => value.textContent.trim()) : null; })()', [
+            'No trades',
+            'USD 2',
+        ])
         ->assertScript('Array.from(document.querySelectorAll("#trends-price-panel section")).some(section => section.querySelector("h2")?.textContent === "CSPKO" && Array.from(section.querySelectorAll(".MuiChartsAxis-directionX .MuiChartsAxis-tickLabel")).some(label => label.textContent === '.json_encode($firstDay->addDay()->format('M j'), JSON_THROW_ON_ERROR).'))', true)
         ->hover('section:has(h2:text-is("CSPKO")) g[data-series] circle >> nth=-1')
         ->assertSee($firstDay->addDays(2)->format('M j').' · 2 USD (Non-IS RSPO Credits + IS RSPO Credits)')
@@ -188,3 +192,36 @@ it('rounds displayed trade shares to one hundred percent', function (int|string 
     '14.5 percent' => [29, 171, '15%', '85%'],
     '14.5 percent with decimal amounts' => ['0.29', '1.71', '15%', '85%'],
 ]);
+
+it('shows the observed price range for each credit category', function (): void {
+    $this->travelTo(CarbonImmutable::today('UTC')->addMinutes(10));
+    $firstDay = CarbonImmutable::yesterday('UTC')->subDays(2);
+
+    foreach ([
+        ['CSPO', [2, 5]],
+        ['IS_CSPO', [3, 3]],
+    ] as [$creditType, $prices]) {
+        foreach ($prices as $offset => $price) {
+            $day = $firstDay->addDays($offset);
+            CreditPriceRetrieval::factory()->create([
+                'credit_type' => $creditType,
+                'period_start_at' => $day,
+                'period_end_at' => $day->addDay()->subMillisecond(),
+                'quantity_sold' => 10,
+                'last_traded_price' => $price,
+                'low_price' => $price,
+                'high_price' => $price,
+            ]);
+        }
+    }
+
+    visit('/en/trends?period=last-7-days')
+        ->click('Price')
+        ->assertScript('(() => { const card = Array.from(document.querySelectorAll("#trends-price-panel section")).find((section) => section.querySelector("h2")?.textContent === "CSPO"); return card ? Array.from(card.querySelectorAll("dd")).map((value) => value.textContent.trim()) : null; })()', [
+            'USD 2–5',
+            'USD 3',
+        ])
+        ->assertSee('Observed price in selected date range · USD / credit')
+        ->assertSee('No verified prices')
+        ->assertNoJavaScriptErrors();
+});

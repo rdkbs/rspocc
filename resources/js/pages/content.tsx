@@ -52,7 +52,7 @@ const englishPages: Record<ContentSlug, ContentPage> = {
             ],
             [
                 'Why does Trends list some credits separately?',
-                'Sometimes PRISMA reports several prices at the same time but gives only the combined quantity. The volume chart counts those credits once, and the price chart shows the lowest and highest prices reported for that time. The Trading Summary leaves them out because we cannot tell how many sold at each price, so their sales value cannot be calculated.',
+                'The figures below each price chart title show the lowest and highest prices reported for each credit type during the selected dates. Sometimes PRISMA reports several prices at the same time but gives only the combined quantity. The chart counts those credits once and shows that timestamp’s price range. The Trading Summary leaves them out because we cannot tell how many sold at each price, so their sales value cannot be calculated.',
             ],
             [
                 'Why are RSPO’s CSPKO and CSPKE extraction rates different?',
@@ -156,7 +156,7 @@ const indonesianPages: Record<ContentSlug, ContentPage> = {
             ],
             [
                 'Mengapa sebagian kredit ditampilkan terpisah di halaman Tren?',
-                'Kadang PRISMA melaporkan beberapa harga pada waktu yang sama, tetapi hanya memberikan jumlah seluruh kredit yang terjual. Grafik volume menghitung kredit tersebut satu kali, sedangkan grafik harga menampilkan harga terendah dan tertinggi pada waktu itu. Ringkasan Perdagangan tidak memasukkannya karena jumlah kredit pada tiap harga tidak diketahui, sehingga nilai transaksinya tidak dapat dihitung.',
+                'Angka di bawah judul grafik harga menunjukkan harga terendah dan tertinggi yang dilaporkan untuk setiap jenis kredit selama rentang tanggal yang dipilih. Kadang PRISMA melaporkan beberapa harga pada waktu yang sama, tetapi hanya memberikan jumlah seluruh kredit yang terjual. Grafik menghitung kredit tersebut satu kali dan menampilkan rentang harga pada waktu itu. Ringkasan Perdagangan tidak memasukkan nilai transaksinya karena jumlah kredit yang terjual pada tiap harga tidak diketahui.',
             ],
             [
                 'Bagaimana rendemen CSPKO dan CSPKE dihitung?',

@@ -990,6 +990,51 @@ function ProductChart({
     const labels = id
         ? ['Kredit RSPO non-IS', 'Kredit RSPO petani swadaya (IS)']
         : ['Non-IS RSPO Credits', 'IS RSPO Credits'];
+    const observedPriceRanges = [0, 1].map((index) => {
+        let low: number | null = null;
+        let high: number | null = null;
+
+        for (const point of points) {
+            const prices = point.intervals[index].flatMap(({ low, high }) => [
+                low,
+                high,
+            ]);
+            const closingPrice = point.values[index];
+            if (closingPrice !== null) {
+                prices.push(closingPrice);
+            }
+
+            for (const price of prices) {
+                low = low === null ? price : Math.min(low, price);
+                high = high === null ? price : Math.max(high, price);
+            }
+        }
+
+        return low === null || high === null ? null : { low, high };
+    });
+    const noTradesByType = [0, 1].map(
+        (index) =>
+            points.length > 0 && points.every((point) => point.noTrades[index]),
+    );
+    const formatObservedPriceRange = (
+        range: (typeof observedPriceRanges)[number],
+        index: number,
+    ) => {
+        if (range === null) {
+            return noTradesByType[index]
+                ? id
+                    ? 'Tidak ada transaksi'
+                    : 'No trades'
+                : id
+                  ? 'Belum ada harga terverifikasi'
+                  : 'No verified prices';
+        }
+
+        const low = formatDisplayNumber(range.low, lang);
+        const high = formatDisplayNumber(range.high, lang);
+
+        return `USD ${low}${low === high ? '' : `–${high}`}`;
+    };
     const series = labels.map((label, index) => ({
         label,
         color: index === 0 ? palette.primary.dark : palette.secondary.main,
@@ -1009,9 +1054,80 @@ function ProductChart({
             <Typography component="h2" variant="h5" sx={{ fontWeight: 700 }}>
                 {product}
             </Typography>
-            <Typography color="text.secondary">
-                {volume || !id ? unit : 'USD / kredit'}
-            </Typography>
+            {volume ? (
+                <Typography color="text.secondary">{unit}</Typography>
+            ) : (
+                <>
+                    <Typography color="text.secondary" variant="caption">
+                        {id
+                            ? 'Harga terpantau pada rentang tanggal yang dipilih · USD / kredit'
+                            : 'Observed price in selected date range · USD / credit'}
+                    </Typography>
+                    <Box
+                        component="dl"
+                        sx={{
+                            display: 'grid',
+                            gap: 0.5,
+                            m: 0,
+                            mt: 0.5,
+                            mb: 1,
+                        }}
+                    >
+                        {labels.map((label, index) => (
+                            <Box
+                                component="div"
+                                key={label}
+                                sx={{
+                                    display: 'grid',
+                                    gridTemplateColumns: 'minmax(0, 1fr) auto',
+                                    alignItems: 'start',
+                                    columnGap: 1,
+                                }}
+                            >
+                                <Typography
+                                    component="dt"
+                                    variant="body2"
+                                    color="text.secondary"
+                                    sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 1,
+                                        minWidth: 0,
+                                    }}
+                                >
+                                    <Box
+                                        component="span"
+                                        aria-hidden="true"
+                                        sx={{
+                                            bgcolor: series[index].color,
+                                            borderRadius: '50%',
+                                            flex: '0 0 auto',
+                                            width: 8,
+                                            height: 8,
+                                        }}
+                                    />
+                                    {label}
+                                </Typography>
+                                <Typography
+                                    component="dd"
+                                    variant="subtitle2"
+                                    sx={{
+                                        m: 0,
+                                        textAlign: 'right',
+                                        fontVariantNumeric: 'tabular-nums',
+                                        whiteSpace: 'nowrap',
+                                    }}
+                                >
+                                    {formatObservedPriceRange(
+                                        observedPriceRanges[index],
+                                        index,
+                                    )}
+                                </Typography>
+                            </Box>
+                        ))}
+                    </Box>
+                </>
+            )}
             {visiblePoints.length === 0 ? (
                 <Typography sx={{ mt: 2 }}>
                     {id
