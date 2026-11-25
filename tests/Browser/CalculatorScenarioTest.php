@@ -87,12 +87,14 @@ it('keeps canonical URLs language-specific and explains the tool in the FAQ', fu
     }
 
     $page->assertSee('What is the RSPO Credit Calculator?')
+        ->assertSee('What do Non-IS and IS RSPO Credits mean?')
         ->assertScript('document.querySelector("link[rel=canonical]").href', $origin.'/en/faq')
         ->assertScript('document.querySelector(`meta[property="og:url"]`).content', $origin.'/en/faq')
         ->assertScript('JSON.parse(document.querySelector(`script[type="application/ld+json"]`).textContent).url', $origin.'/en/faq');
 
     $page->navigate('/id/faq')
         ->assertSee('Apa itu Kalkulator Kredit RSPO?')
+        ->assertSee('Apa arti Kredit RSPO non-IS dan IS?')
         ->assertScript('document.querySelector("link[rel=canonical]").href', $origin.'/id/faq')
         ->assertScript('JSON.parse(document.querySelector(`script[type="application/ld+json"]`).textContent).url', $origin.'/id/faq');
 

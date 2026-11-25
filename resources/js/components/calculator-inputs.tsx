@@ -36,13 +36,16 @@ export default function CalculatorInputs({
                   key: 'is',
                   label:
                       inputs.language === 'id'
-                          ? 'Petani swadaya (IS)'
-                          : 'Independent Smallholder (IS)',
+                          ? 'Kredit RSPO petani swadaya (IS)'
+                          : 'IS RSPO Credits',
                   prices: priceReference.prices.is,
               },
               {
                   key: 'standard',
-                  label: inputs.language === 'id' ? 'Standar' : 'Standard',
+                  label:
+                      inputs.language === 'id'
+                          ? 'Kredit RSPO non-IS'
+                          : 'Non-IS RSPO Credits',
                   prices: priceReference.prices.standard,
               },
           ] as const)

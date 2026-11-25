@@ -39,6 +39,10 @@ const englishPages: Record<ContentSlug, ContentPage> = {
                 'We want to help farmers, cooperatives, buyers, and Internal Control System (ICS) teams understand the potential additional revenue from RSPO credits. ICS teams can compare this estimate with certification costs to assess whether the benefits are worth the expense.',
             ],
             [
+                'What do Non-IS and IS RSPO Credits mean?',
+                'Both are RSPO credits. This calculator uses Non-IS RSPO Credits for CSPO, CSPKO, and CSPKE credits outside the Independent Smallholder category. IS RSPO Credits come from certified independent smallholders.',
+            ],
+            [
                 'Are the credit prices up to date?',
                 'We check PRISMA daily for the latest selling price of each credit type. The price stays the same until a newer sale is recorded. The date shown uses your local time. It tells you when we checked the data, not when the sale took place.',
             ],
@@ -137,6 +141,10 @@ const indonesianPages: Record<ContentSlug, ContentPage> = {
             [
                 'Mengapa alat ini dibuat?',
                 'Kami ingin membantu petani, koperasi, pembeli, dan tim ICS memahami potensi tambahan pendapatan dari kredit RSPO. Tim ICS dapat membandingkan perkiraan ini dengan biaya sertifikasi untuk menilai apakah manfaatnya sepadan dengan biaya yang dikeluarkan.',
+            ],
+            [
+                'Apa arti Kredit RSPO non-IS dan IS?',
+                'Keduanya merupakan kredit RSPO. Kalkulator ini menggunakan sebutan Kredit RSPO non-IS untuk kredit CSPO, CSPKO, dan CSPKE di luar kategori petani swadaya (IS). Kredit RSPO petani swadaya (IS) berasal dari petani swadaya bersertifikat RSPO.',
             ],
             [
                 'Apakah harga kreditnya terbaru?',

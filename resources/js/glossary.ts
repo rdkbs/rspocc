@@ -53,8 +53,8 @@ export const glossaryEntries: GlossaryEntry[] = [
         term: 'IS credits',
         termId: 'Kredit IS',
         matches: ['IS-CSPO', 'IS-CSPKO', 'IS-CSPKE', 'kredit IS'],
-        en: 'Independent Smallholder credits come from certified independent smallholders. Their market prices differ from standard credits. This calculator uses IS prices by default.',
-        id: 'Kredit Independent Smallholder (IS) berasal dari petani swadaya bersertifikat. Harganya berbeda dari kredit biasa. Kalkulator menyediakan referensi harga untuk kredit IS.',
+        en: 'RSPO credits from certified independent smallholders. This calculator calls them IS RSPO Credits and separates them from Non-IS RSPO Credits when comparing prices.',
+        id: 'Kredit RSPO dari petani swadaya bersertifikat. Kalkulator menyebutnya Kredit RSPO petani swadaya (IS) dan membedakannya dari kredit RSPO non-IS saat membandingkan harga.',
     },
     {
         term: 'CSPO',

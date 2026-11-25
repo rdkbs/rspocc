@@ -403,11 +403,14 @@ function TradingSummary({
                     }}
                 >
                     <span>
-                        {id ? 'Standar' : 'Standard'}{' '}
+                        {id ? 'Kredit RSPO non-IS' : 'Non-IS RSPO Credits'}{' '}
                         {formatPercent(standardPercent / 100)}
                     </span>
                     <span>
-                        IS {formatPercent((100 - standardPercent) / 100)}
+                        {id
+                            ? 'Kredit RSPO petani swadaya (IS)'
+                            : 'IS RSPO Credits'}{' '}
+                        {formatPercent((100 - standardPercent) / 100)}
                     </span>
                 </Box>
             </Box>
@@ -429,8 +432,8 @@ function TradingSummary({
                 sx={{ mt: 1, mb: 2 }}
             >
                 {id
-                    ? 'Ringkasan hanya menghitung kredit dengan harga jual yang dapat dipastikan. Total menggabungkan penjualan Standar dan IS untuk tiap jenis kredit.'
-                    : 'This summary counts only credits sold at verified prices. Each product total combines Standard and IS sales.'}
+                    ? 'Ringkasan hanya menghitung kredit dengan harga jual yang dapat dipastikan. Total menggabungkan penjualan kredit RSPO non-IS dan IS untuk tiap jenis kredit.'
+                    : 'This summary counts only credits sold at verified prices. Each product total combines Non-IS RSPO Credits and IS RSPO Credits.'}
             </Typography>
             <Box
                 role="region"
@@ -488,11 +491,15 @@ function TradingSummary({
                     <thead>
                         <tr>
                             <th scope="col">{id ? 'Kredit' : 'Credits'}</th>
-                            <th scope="col">{id ? 'Standar' : 'Standard'}</th>
                             <th scope="col">
                                 {id
-                                    ? 'Petani swadaya (IS)'
-                                    : 'Independent Smallholder (IS)'}
+                                    ? 'Kredit RSPO non-IS'
+                                    : 'Non-IS RSPO Credits'}
+                            </th>
+                            <th scope="col">
+                                {id
+                                    ? 'Kredit RSPO petani swadaya (IS)'
+                                    : 'IS RSPO Credits'}
                             </th>
                             <th scope="col">Total</th>
                         </tr>
@@ -981,8 +988,8 @@ function ProductChart({
         ),
     );
     const labels = id
-        ? ['Standar', 'Petani swadaya (IS)']
-        : ['Standard', 'Independent Smallholder (IS)'];
+        ? ['Kredit RSPO non-IS', 'Kredit RSPO petani swadaya (IS)']
+        : ['Non-IS RSPO Credits', 'IS RSPO Credits'];
     const series = labels.map((label, index) => ({
         label,
         color: index === 0 ? palette.primary.dark : palette.secondary.main,
@@ -1414,8 +1421,8 @@ export default function Trends({
     const id = lang === 'id';
     const title = id ? 'Tren Kredit RSPO' : 'RSPO Credit Trends';
     const description = id
-        ? 'Bandingkan harga dan volume perdagangan kredit standar dan petani swadaya di PRISMA.'
-        : 'Compare PRISMA prices and trading volumes for Standard and Independent Smallholder credits.';
+        ? 'Bandingkan harga dan volume perdagangan kredit RSPO non-IS dan kredit RSPO petani swadaya di PRISMA.'
+        : 'Compare PRISMA prices and trading volumes for Non-IS RSPO Credits and IS RSPO Credits.';
     const start = Date.parse(startDate);
     const dates = Array.from(
         { length: (Date.parse(endDate) - start) / dayMs + 1 },
@@ -1771,8 +1778,8 @@ export default function Trends({
                                                             : '■'}{' '}
                                                     </Box>
                                                     {id
-                                                        ? 'Standar'
-                                                        : 'Standard'}
+                                                        ? 'Kredit RSPO non-IS'
+                                                        : 'Non-IS RSPO Credits'}
                                                     {' · '}
                                                     <Box
                                                         component="span"
@@ -1786,8 +1793,8 @@ export default function Trends({
                                                             : '■'}{' '}
                                                     </Box>
                                                     {id
-                                                        ? 'Petani swadaya (IS)'
-                                                        : 'Independent Smallholder (IS)'}
+                                                        ? 'Kredit RSPO petani swadaya (IS)'
+                                                        : 'IS RSPO Credits'}
                                                 </Typography>
                                                 <Typography
                                                     color="text.secondary"
