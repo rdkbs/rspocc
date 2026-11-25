@@ -1,7 +1,6 @@
 import { Form, router } from '@inertiajs/react';
 import ArrowDropDown from '@mui/icons-material/ArrowDropDown';
 import ScheduleOutlined from '@mui/icons-material/ScheduleOutlined';
-import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Checkbox from '@mui/material/Checkbox';
@@ -17,11 +16,8 @@ import { alpha, useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { ScatterChart } from '@mui/x-charts/ScatterChart';
-import { useState } from 'react';
-import {
-    formatCurrencyParts,
-    formatDisplayNumber,
-} from '@/calculator-assumptions';
+import { useEffect, useState } from 'react';
+import { formatDisplayNumber } from '@/calculator-assumptions';
 import Layout from '@/components/layout';
 import DateRangeFields from '@/components/date-range-fields';
 import { index as trendsIndex } from '@/routes/trends';
@@ -47,23 +43,43 @@ type Period =
 type Trade = {
     price: number | null;
     volume: number | null;
+    pricedVolume: number | null;
     tradeValue: number | null;
+    partialTradeValue: boolean;
     csvValues: [string | null, string | null, string | null];
 };
 type Trades = Record<string, Record<string, Trade>>;
-type ExcludedDate = { date: string; creditTypes: string[] };
+type ExcludedDate = {
+    date: string;
+    creditTypes: string[];
+};
+type PartialSpending = {
+    start: string;
+    end: string;
+    creditType: string;
+    quantity: number;
+    low: number;
+    high: number;
+};
 type ExcludedDates = {
     inProgress: ExcludedDate[];
     couldNotVerify: ExcludedDate[];
 };
 
+type CollectionDates = ExcludedDates & {
+    awaiting: ExcludedDate[];
+    notChecked: ExcludedDate[];
+};
+
 function dailyCsv(
     dates: string[],
     trades: Trades,
-    excludedDates: ExcludedDates,
+    excludedDates: CollectionDates,
 ) {
     const excluded = new Map<string, string>();
     for (const [status, entries] of [
+        ['awaiting_collection', excludedDates.awaiting],
+        ['no_check_recorded', excludedDates.notChecked],
         ['in_progress', excludedDates.inProgress],
         ['could_not_verify', excludedDates.couldNotVerify],
     ] as const) {
@@ -86,6 +102,8 @@ function dailyCsv(
                 if (trade) {
                     if (trade.volume === 0) {
                         status = 'no_trades';
+                    } else if (trade.partialTradeValue) {
+                        status = 'partial_trade_value';
                     } else {
                         status =
                             trade.volume === null ||
@@ -118,12 +136,74 @@ type Point = {
     noTrades: boolean[];
 };
 
+function SpendingExclusions({
+    rows,
+    lang,
+}: {
+    rows: PartialSpending[];
+    lang: Language;
+}) {
+    const id = lang === 'id';
+    const format = (value: number) => formatDisplayNumber(value, lang);
+    const dateFormat = new Intl.DateTimeFormat(id ? 'id-ID' : 'en-US', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'UTC',
+    });
+    const quantity = format(rows.reduce((sum, row) => sum + row.quantity, 0));
+
+    return (
+        <Box
+            component="details"
+            sx={{
+                mt: 'auto',
+                pt: 0.5,
+                fontSize: '0.875rem',
+                color: 'text.secondary',
+            }}
+        >
+            <Box component="summary" sx={{ cursor: 'pointer' }}>
+                {id
+                    ? `${quantity} kredit lainnya terjual, tetapi total nilai transaksinya belum dapat dipastikan.`
+                    : `${quantity} more credits sold, with no verified total value.`}
+            </Box>
+            <Typography variant="body2" sx={{ mt: 0.5 }}>
+                {id
+                    ? 'PRISMA mencatat beberapa harga dalam satu milidetik tanpa merinci jumlah kredit pada tiap harga.'
+                    : 'PRISMA reported multiple prices within one millisecond without a quantity for each price.'}
+            </Typography>
+            <Stack component="ul" spacing={0.75} sx={{ pl: 2, mb: 1 }}>
+                {rows.map(({ start, end, quantity: excluded, low, high }) => (
+                    <li key={`${start}/${end}`}>
+                        <Box component="span" sx={{ display: 'block' }}>
+                            {dateFormat.format(new Date(start.slice(0, 10)))}{' '}
+                            {start.slice(11)}
+                            {end !== start && `–${end.slice(11)}`} UTC
+                        </Box>
+                        {format(excluded)} {id ? 'kredit' : 'credits'} · USD{' '}
+                        {format(low)}–{format(high)}
+                    </li>
+                ))}
+            </Stack>
+        </Box>
+    );
+}
+
 function TradingSummary({
     dates,
+    partialSpending,
+    collectionDates,
+    historicalGaps,
+    scheduledCheckAt,
     trades,
     lang,
 }: {
     dates: string[];
+    partialSpending: PartialSpending[];
+    collectionDates: CollectionDates;
+    historicalGaps: ExcludedDate[];
+    scheduledCheckAt: string;
     trades: Trades;
     lang: Language;
 }) {
@@ -135,56 +215,155 @@ function TradingSummary({
             maximumFractionDigits: 0,
         }).format(value);
 
+    const { awaiting, inProgress, couldNotVerify, notChecked } =
+        collectionDates;
+    const collectingDates = [...awaiting, ...inProgress];
+    const [browserTimeZone, setBrowserTimeZone] = useState<string>();
+    useEffect(() => {
+        setBrowserTimeZone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+    }, []);
+    const scheduledCollection = new Date(scheduledCheckAt);
+    const scheduledTime = new Intl.DateTimeFormat(id ? 'id-ID' : 'en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        timeZone: browserTimeZone ?? 'UTC',
+        timeZoneName: 'short',
+    }).format(scheduledCollection);
+    const pendingDateFormat = new Intl.DateTimeFormat(id ? 'id-ID' : 'en-US', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'UTC',
+    });
+
+    const dateGroup = (label: string, entries: ExcludedDate[]) =>
+        entries.length > 0 && (
+            <Box sx={{ mt: 0.5 }}>
+                <Typography
+                    component="p"
+                    variant="body2"
+                    sx={{ fontWeight: 600 }}
+                >
+                    {label} ({entries.length})
+                </Typography>
+                <Typography component="p" variant="body2">
+                    {entries
+                        .map(
+                            ({ date, creditTypes }) =>
+                                `${pendingDateFormat.format(new Date(date))} (${creditTypes.join(', ').replaceAll('_', ' ')})`,
+                        )
+                        .join(' · ')}
+                </Typography>
+            </Box>
+        );
+
+    const collectionClock = (
+        <ScheduleOutlined
+            titleAccess={
+                id ? 'Pengecekan PRISMA belum selesai' : 'PRISMA check pending'
+            }
+            sx={{
+                color: 'text.disabled',
+                fontSize: '0.9em',
+                display: 'block',
+                mb: 0.25,
+            }}
+        />
+    );
     const summaryRows = products.map((product) => {
         const [standard, smallholder] = ['', 'IS_'].map((prefix) => {
             let volume = 0;
-            let tradeValue = 0;
+            let tradeValue = 0n;
             let daysWithVolume = 0;
             let daysWithTradeValue = 0;
+            let hasPartialTrade = false;
             for (const date of dates) {
                 const trade = trades[prefix + product]?.[date];
-                if (trade?.volume != null) {
-                    volume += trade.volume;
+                if (trade?.pricedVolume != null) {
+                    volume += trade.pricedVolume;
                     daysWithVolume += 1;
                 }
-                if (trade?.tradeValue != null) {
-                    tradeValue += trade.tradeValue;
+                hasPartialTrade ||= trade?.partialTradeValue === true;
+                const exactTradeValue = trade?.csvValues[2];
+                if (exactTradeValue != null) {
+                    // Each value is calculated from quantities and prices with up to eight decimal places each.
+                    const [whole, fraction = ''] = exactTradeValue.split('.');
+                    tradeValue += BigInt(whole + fraction.padEnd(16, '0'));
                     daysWithTradeValue += 1;
                 }
             }
+            const waitingDays = collectingDates.filter(({ creditTypes }) =>
+                creditTypes.includes(prefix + product),
+            ).length;
             return {
                 prefix,
+                collecting: waitingDays > 0,
+                volumeGap: daysWithVolume + waitingDays < dates.length,
+                exclusions: partialSpending.filter(
+                    ({ creditType }) => creditType === prefix + product,
+                ),
                 volume,
                 tradeValue,
                 hasVolume: daysWithVolume > 0,
-                completeVolume: daysWithVolume === dates.length,
                 hasTradeValue: daysWithTradeValue > 0,
-                completeTradeValue: daysWithTradeValue === dates.length,
+                completeTradeValue:
+                    !hasPartialTrade && daysWithTradeValue === dates.length,
             };
         });
         const total = {
             prefix: 'total',
+            collecting: false,
+            volumeGap: standard.volumeGap || smallholder.volumeGap,
+            exclusions: [],
             volume: standard.volume + smallholder.volume,
             tradeValue: standard.tradeValue + smallholder.tradeValue,
-            completeVolume:
-                standard.completeVolume && smallholder.completeVolume,
             hasVolume: standard.hasVolume || smallholder.hasVolume,
-            completeTradeValue:
-                standard.completeTradeValue && smallholder.completeTradeValue,
             hasTradeValue: standard.hasTradeValue || smallholder.hasTradeValue,
         };
 
         return { product, standard, smallholder, total };
     });
-    const hasPartialTotals = summaryRows.some(
-        ({ total }) =>
-            (total.hasVolume && !total.completeVolume) ||
-            (total.hasTradeValue && !total.completeTradeValue),
+    const tradedTotals = (['standard', 'smallholder'] as const).map((key) =>
+        summaryRows.reduce(
+            (total, row) => ({
+                value: total.value + row[key].tradeValue,
+                hasValue: total.hasValue || row[key].hasTradeValue,
+                complete: total.complete && row[key].completeTradeValue,
+            }),
+            { value: 0n, hasValue: false, complete: true },
+        ),
+    );
+    const [standardTraded, smallholderTraded] = tradedTotals;
+    const combinedTraded = {
+        value: standardTraded.value + smallholderTraded.value,
+        hasValue: standardTraded.hasValue || smallholderTraded.hasValue,
+        complete: standardTraded.complete && smallholderTraded.complete,
+    };
+    const creditCells = summaryRows.flatMap(
+        ({ standard, smallholder, total }) => [standard, smallholder, total],
+    );
+    const hasClockNote = creditCells.some(({ collecting }) => collecting);
+    const hasAsteriskNote = creditCells.some(
+        ({ hasVolume, volumeGap }) => hasVolume && volumeGap,
     );
 
-    const shareChart = (standard: number, smallholder: number) => {
-        const standardShare = standard / (standard + smallholder);
-        const smallholderShare = smallholder / (standard + smallholder);
+    const hasDateGaps =
+        historicalGaps.length > 0 ||
+        couldNotVerify.length > 0 ||
+        notChecked.length > 0;
+
+    const formatTradeValue = (value: bigint) =>
+        formatDisplayNumber(`${value}e-16` as `${number}`, lang);
+    const shareChart = (standard: bigint, smallholder: bigint) => {
+        const total = standard + smallholder;
+        const standardShare = Number(standard) / Number(total);
+        const smallholderShare = Number(smallholder) / Number(total);
+        const standardPercent = Number(
+            (standard * 200n + total) / (2n * total),
+        );
 
         return (
             <Box sx={{ mt: 0.5, mb: 1 }}>
@@ -222,9 +401,11 @@ function TradingSummary({
                 >
                     <span>
                         {id ? 'Standar' : 'Standard'}{' '}
-                        {formatPercent(standardShare)}
+                        {formatPercent(standardPercent / 100)}
                     </span>
-                    <span>IS {formatPercent(smallholderShare)}</span>
+                    <span>
+                        IS {formatPercent((100 - standardPercent) / 100)}
+                    </span>
                 </Box>
             </Box>
         );
@@ -245,8 +426,8 @@ function TradingSummary({
                 sx={{ mt: 1, mb: 2 }}
             >
                 {id
-                    ? 'Total menjumlahkan penjualan Standar dan IS yang tercatat untuk tiap jenis kredit. Persentase menunjukkan bagiannya dari jumlah kredit terjual dan nilai transaksi.'
-                    : 'Totals combine recorded Standard and IS sales for each credit type. Percentages show shares of credits sold and buyer spending.'}
+                    ? 'Ringkasan hanya menghitung kredit dengan harga jual yang dapat dipastikan. Total menggabungkan penjualan Standar dan IS untuk tiap jenis kredit.'
+                    : 'This summary counts only credits sold at verified prices. Each product total combines Standard and IS sales.'}
             </Typography>
             <Box
                 role="region"
@@ -257,7 +438,9 @@ function TradingSummary({
                 <Box
                     component="table"
                     aria-describedby={
-                        hasPartialTotals ? 'partial-total-note' : undefined
+                        hasClockNote || hasAsteriskNote || hasDateGaps
+                            ? 'partial-total-note'
+                            : undefined
                     }
                     sx={(theme) => ({
                         width: '100%',
@@ -274,8 +457,10 @@ function TradingSummary({
                             overflowWrap: 'anywhere',
                         },
                         '& tr > th:first-of-type': {
-                            width: { xs: '22%', sm: '25%' },
+                            width: '15%',
                         },
+                        '& tbody td:has(details)': { height: '1px' },
+                        '& sup': { color: 'text.disabled' },
                         '& thead th': {
                             fontSize: { xs: '0.875rem', sm: '1rem' },
                         },
@@ -322,167 +507,142 @@ function TradingSummary({
                                                 tradeValue,
                                                 hasVolume,
                                                 hasTradeValue,
-                                                completeVolume,
-                                                completeTradeValue,
+                                                exclusions,
+                                                collecting,
+                                                volumeGap,
                                             }) => {
                                                 return (
                                                     <td key={prefix}>
-                                                        <Typography
-                                                            component="p"
-                                                            variant="inherit"
-                                                            sx={{
-                                                                whiteSpace:
-                                                                    hasVolume
-                                                                        ? 'nowrap'
-                                                                        : 'normal',
-                                                                fontSize:
-                                                                    'clamp(1rem, 0.92rem + 0.35vw, 1.3rem)',
-                                                                fontWeight: 600,
-                                                                lineHeight: 1.3,
-                                                                fontVariantNumeric:
-                                                                    'tabular-nums',
-                                                            }}
+                                                        <Box
+                                                            sx={
+                                                                exclusions.length
+                                                                    ? {
+                                                                          display:
+                                                                              'flex',
+                                                                          flexDirection:
+                                                                              'column',
+                                                                          height: '100%',
+                                                                      }
+                                                                    : undefined
+                                                            }
                                                         >
-                                                            {hasVolume ? (
-                                                                <>
-                                                                    <Box
-                                                                        component="span"
-                                                                        sx={{
-                                                                            fontWeight: 700,
-                                                                        }}
-                                                                    >
-                                                                        {format(
-                                                                            volume,
-                                                                        )}
-                                                                    </Box>
-                                                                    {!completeVolume && (
-                                                                        <sup>
-                                                                            *
-                                                                        </sup>
-                                                                    )}{' '}
-                                                                    <Box
-                                                                        component="span"
-                                                                        sx={{
-                                                                            color: 'text.secondary',
-                                                                            fontSize:
-                                                                                '0.8em',
-                                                                            fontWeight: 500,
-                                                                        }}
-                                                                    >
-                                                                        {id
-                                                                            ? 'kredit terjual'
-                                                                            : 'credits sold'}
-                                                                    </Box>
-                                                                </>
-                                                            ) : id ? (
-                                                                'Volume belum tersedia'
-                                                            ) : (
-                                                                'Volume unavailable'
-                                                            )}
-                                                        </Typography>
-                                                        {prefix ===
-                                                            total.prefix &&
-                                                            standard.hasVolume &&
-                                                            smallholder.hasVolume &&
-                                                            total.volume > 0 &&
-                                                            shareChart(
-                                                                standard.volume,
-                                                                smallholder.volume,
-                                                            )}
-                                                        <Typography
-                                                            component="p"
-                                                            variant="inherit"
-                                                            sx={{
-                                                                mt: 0.5,
-                                                                mb: 0.5,
-                                                                fontSize:
-                                                                    '0.875rem',
-                                                                fontWeight: 600,
-                                                                ...(hasTradeValue && {
+                                                            <Typography
+                                                                component="p"
+                                                                variant="inherit"
+                                                                sx={{
                                                                     fontSize:
                                                                         'clamp(1rem, 0.92rem + 0.35vw, 1.3rem)',
-                                                                    fontWeight: 700,
+                                                                    fontWeight: 600,
+                                                                    lineHeight: 1.3,
                                                                     fontVariantNumeric:
                                                                         'tabular-nums',
-                                                                    lineHeight: 1.25,
-                                                                }),
-                                                            }}
-                                                        >
-                                                            {hasTradeValue
-                                                                ? formatCurrencyParts(
-                                                                      tradeValue,
-                                                                      'USD',
-                                                                      lang,
-                                                                  ).map(
-                                                                      (
-                                                                          part,
-                                                                          index,
-                                                                          parts,
-                                                                      ) => {
-                                                                          if (
-                                                                              part.type ===
-                                                                              'currency'
-                                                                          ) {
-                                                                              return (
-                                                                                  <Box
-                                                                                      key={
-                                                                                          index
-                                                                                      }
-                                                                                      component="span"
-                                                                                      sx={{
-                                                                                          fontSize:
-                                                                                              '0.78em',
-                                                                                          fontWeight: 500,
-                                                                                          letterSpacing:
-                                                                                              '0.01em',
-                                                                                          ...(index <
-                                                                                          parts.findIndex(
-                                                                                              ({
-                                                                                                  type,
-                                                                                              }) =>
-                                                                                                  type ===
-                                                                                                  'integer',
-                                                                                          )
-                                                                                              ? {
-                                                                                                    mr: '0.5em',
-                                                                                                }
-                                                                                              : {
-                                                                                                    ml: '0.5em',
-                                                                                                }),
-                                                                                      }}
-                                                                                  >
-                                                                                      {
-                                                                                          part.value
-                                                                                      }
-                                                                                  </Box>
-                                                                              );
-                                                                          }
-
-                                                                          return part.type ===
-                                                                              'literal' &&
-                                                                              !part.value.trim()
-                                                                              ? null
-                                                                              : part.value;
-                                                                      },
-                                                                  )
-                                                                : id
-                                                                  ? 'Nilai belum tersedia'
-                                                                  : 'Trade value unavailable'}
-                                                            {hasTradeValue &&
-                                                                !completeTradeValue && (
-                                                                    <sup>*</sup>
+                                                                }}
+                                                            >
+                                                                {collecting &&
+                                                                    collectionClock}
+                                                                {hasVolume ? (
+                                                                    <>
+                                                                        <Box
+                                                                            component="span"
+                                                                            sx={{
+                                                                                fontWeight: 700,
+                                                                            }}
+                                                                        >
+                                                                            {format(
+                                                                                volume,
+                                                                            )}
+                                                                        </Box>
+                                                                        {volumeGap && (
+                                                                            <sup>
+                                                                                *
+                                                                            </sup>
+                                                                        )}{' '}
+                                                                        <Box
+                                                                            component="span"
+                                                                            sx={{
+                                                                                color: 'text.secondary',
+                                                                                fontSize:
+                                                                                    '0.8em',
+                                                                                fontWeight: 500,
+                                                                            }}
+                                                                        >
+                                                                            {hasTradeValue
+                                                                                ? id
+                                                                                    ? 'kredit terjual senilai'
+                                                                                    : 'credits sold for'
+                                                                                : id
+                                                                                  ? 'kredit dihitung'
+                                                                                  : 'credits counted'}
+                                                                        </Box>
+                                                                    </>
+                                                                ) : id ? (
+                                                                    'Volume belum tersedia'
+                                                                ) : (
+                                                                    'Volume unavailable'
                                                                 )}
-                                                        </Typography>
-                                                        {prefix ===
-                                                            total.prefix &&
-                                                            standard.hasTradeValue &&
-                                                            smallholder.hasTradeValue &&
-                                                            total.tradeValue >
-                                                                0 &&
-                                                            shareChart(
-                                                                standard.tradeValue,
-                                                                smallholder.tradeValue,
+                                                                {hasVolume &&
+                                                                    hasTradeValue && (
+                                                                        <>
+                                                                            {' '}
+                                                                            <Box
+                                                                                component="span"
+                                                                                sx={{
+                                                                                    whiteSpace:
+                                                                                        'nowrap',
+                                                                                    fontWeight: 700,
+                                                                                }}
+                                                                            >
+                                                                                <Box
+                                                                                    component="span"
+                                                                                    sx={{
+                                                                                        fontSize:
+                                                                                            '0.78em',
+                                                                                        fontWeight: 500,
+                                                                                    }}
+                                                                                >
+                                                                                    USD
+                                                                                </Box>{' '}
+                                                                                {formatTradeValue(
+                                                                                    tradeValue,
+                                                                                )}
+                                                                            </Box>
+                                                                        </>
+                                                                    )}
+                                                            </Typography>
+                                                            {!hasTradeValue && (
+                                                                <Typography
+                                                                    component="p"
+                                                                    variant="body2"
+                                                                    sx={{
+                                                                        my: 0.5,
+                                                                        fontWeight: 600,
+                                                                    }}
+                                                                >
+                                                                    {id
+                                                                        ? 'Nilai transaksi belum tersedia'
+                                                                        : 'Trade value unavailable'}
+                                                                </Typography>
                                                             )}
+                                                            {exclusions.length >
+                                                                0 && (
+                                                                <SpendingExclusions
+                                                                    rows={
+                                                                        exclusions
+                                                                    }
+                                                                    lang={lang}
+                                                                />
+                                                            )}
+                                                            {prefix ===
+                                                                total.prefix &&
+                                                                standard.hasTradeValue &&
+                                                                smallholder.hasTradeValue &&
+                                                                total.tradeValue >
+                                                                    0n &&
+                                                                shareChart(
+                                                                    standard.tradeValue,
+                                                                    smallholder.tradeValue,
+                                                                )}
+                                                        </Box>
                                                     </td>
                                                 );
                                             },
@@ -492,20 +652,178 @@ function TradingSummary({
                             },
                         )}
                     </tbody>
+                    <Box
+                        component="tfoot"
+                        sx={{
+                            bgcolor: 'action.hover',
+                            '& th, & td': {
+                                borderTop: 1,
+                                borderBottom: 0,
+                                borderColor: 'divider',
+                            },
+                        }}
+                    >
+                        <tr>
+                            <th scope="row">
+                                {id ? 'Total nilai transaksi' : 'Total traded'}
+                            </th>
+                            {[...tradedTotals, combinedTraded].map(
+                                ({ value, hasValue, complete }, index) => (
+                                    <td key={index}>
+                                        {hasValue ? (
+                                            <>
+                                                <Typography
+                                                    component="p"
+                                                    variant="inherit"
+                                                    sx={{
+                                                        fontSize:
+                                                            'clamp(1rem, 0.92rem + 0.35vw, 1.3rem)',
+                                                        fontWeight: 700,
+                                                        fontVariantNumeric:
+                                                            'tabular-nums',
+                                                    }}
+                                                >
+                                                    <Box
+                                                        component="span"
+                                                        sx={{
+                                                            fontSize: '0.78em',
+                                                            fontWeight: 500,
+                                                        }}
+                                                    >
+                                                        USD
+                                                    </Box>{' '}
+                                                    {formatTradeValue(value)}
+                                                </Typography>
+                                                {index === 2 && !complete && (
+                                                    <Typography
+                                                        component="p"
+                                                        variant="caption"
+                                                        color="text.secondary"
+                                                    >
+                                                        {id
+                                                            ? 'Berdasarkan transaksi terverifikasi'
+                                                            : 'Based on verified trades'}
+                                                    </Typography>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <Typography
+                                                component="p"
+                                                variant="body2"
+                                                color="text.secondary"
+                                            >
+                                                {id
+                                                    ? 'Nilai transaksi belum tersedia'
+                                                    : 'Trade value unavailable'}
+                                            </Typography>
+                                        )}
+                                        {index === 2 &&
+                                            standardTraded.hasValue &&
+                                            smallholderTraded.hasValue &&
+                                            combinedTraded.value > 0n &&
+                                            shareChart(
+                                                standardTraded.value,
+                                                smallholderTraded.value,
+                                            )}
+                                    </td>
+                                ),
+                            )}
+                        </tr>
+                    </Box>
                 </Box>
             </Box>
-            {hasPartialTotals && (
-                <Typography
+            {(hasClockNote || hasAsteriskNote || hasDateGaps) && (
+                <Stack
                     id="partial-total-note"
-                    component="p"
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ mt: 1 }}
+                    component="footer"
+                    spacing={0.25}
+                    sx={{ pt: 0.5 }}
                 >
-                    {id
-                        ? '* Data belum lengkap. Total dan persentase dihitung dari data yang tersedia.'
-                        : '* Data is missing for some dates. Totals and shares use the available records.'}
-                </Typography>
+                    {hasClockNote && (
+                        <Box component="details">
+                            <Typography
+                                variant="caption"
+                                component="summary"
+                                sx={{ cursor: 'pointer' }}
+                            >
+                                <ScheduleOutlined
+                                    aria-hidden="true"
+                                    sx={{
+                                        fontSize: '1em',
+                                        verticalAlign: 'middle',
+                                        mr: 0.5,
+                                        color: 'text.disabled',
+                                    }}
+                                />
+                                {id
+                                    ? 'Pengecekan PRISMA terjadwal atau sedang berlangsung.'
+                                    : 'PRISMA check scheduled or in progress.'}
+                            </Typography>
+                            {dateGroup(
+                                id
+                                    ? 'Menunggu jadwal pengecekan'
+                                    : 'Waiting for scheduled check',
+                                awaiting,
+                            )}
+                            {awaiting.length > 0 && (
+                                <Typography variant="body2">
+                                    {id
+                                        ? 'Jadwal pengecekan PRISMA:'
+                                        : 'Scheduled PRISMA check:'}{' '}
+                                    <time
+                                        dateTime={scheduledCollection.toISOString()}
+                                    >
+                                        {scheduledTime}
+                                    </time>
+                                    .
+                                </Typography>
+                            )}
+                            {dateGroup(
+                                id
+                                    ? 'Pengecekan PRISMA tertunda atau sedang berlangsung'
+                                    : 'PRISMA check pending or in progress',
+                                inProgress,
+                            )}
+                        </Box>
+                    )}
+                    {(hasAsteriskNote || hasDateGaps) && (
+                        <Box component="details">
+                            <Typography
+                                variant="caption"
+                                component="summary"
+                                sx={{ cursor: 'pointer' }}
+                            >
+                                {hasAsteriskNote && (
+                                    <Box
+                                        component="span"
+                                        sx={{ mr: 0.5, color: 'text.disabled' }}
+                                    >
+                                        *
+                                    </Box>
+                                )}
+                                {id
+                                    ? 'Sebagian data belum tersedia atau belum dapat dipastikan.'
+                                    : 'Some data is missing or could not be verified.'}
+                            </Typography>
+                            {dateGroup(
+                                id
+                                    ? 'Belum ada catatan pengecekan'
+                                    : 'No check recorded yet',
+                                notChecked,
+                            )}
+                            {dateGroup(
+                                id ? 'Data belum tersedia' : 'No data yet',
+                                historicalGaps,
+                            )}
+                            {dateGroup(
+                                id
+                                    ? 'Belum dapat dipastikan'
+                                    : 'Could not verify',
+                                couldNotVerify,
+                            )}
+                        </Box>
+                    )}
+                </Stack>
             )}
         </Paper>
     );
@@ -537,7 +855,7 @@ function ProductChart({
     points: Point[];
     metric: Metric;
     lang: Language;
-    excludedDates: ExcludedDates;
+    excludedDates: CollectionDates;
 }) {
     const [includeNoTradeDates, setIncludeNoTradeDates] = useState(false);
     const id = lang === 'id';
@@ -560,13 +878,17 @@ function ProductChart({
     const showEmptyPriceTimeline = !volume && noTrades;
     const hasStatusCells = visiblePoints.some(({ date }) =>
         [product, `IS_${product}`].some((creditType) =>
-            [excludedDates.inProgress, excludedDates.couldNotVerify].some(
-                (statusDates) =>
-                    statusDates.some(
-                        (entry) =>
-                            entry.date === date &&
-                            entry.creditTypes.includes(creditType),
-                    ),
+            [
+                excludedDates.awaiting,
+                excludedDates.notChecked,
+                excludedDates.inProgress,
+                excludedDates.couldNotVerify,
+            ].some((statusDates) =>
+                statusDates.some(
+                    (entry) =>
+                        entry.date === date &&
+                        entry.creditTypes.includes(creditType),
+                ),
             ),
         ),
     );
@@ -801,6 +1123,24 @@ function ProductChart({
                                                                     creditType,
                                                                 ),
                                                         );
+                                                    const isAwaiting =
+                                                        excludedDates.awaiting.some(
+                                                            (entry) =>
+                                                                entry.date ===
+                                                                    date &&
+                                                                entry.creditTypes.includes(
+                                                                    creditType,
+                                                                ),
+                                                        );
+                                                    const notChecked =
+                                                        excludedDates.notChecked.some(
+                                                            (entry) =>
+                                                                entry.date ===
+                                                                    date &&
+                                                                entry.creditTypes.includes(
+                                                                    creditType,
+                                                                ),
+                                                        );
                                                     const couldNotVerify =
                                                         excludedDates.couldNotVerify.some(
                                                             ({
@@ -820,21 +1160,29 @@ function ProductChart({
                                                                 : 'No trades'
                                                             : isInProgress
                                                               ? id
-                                                                  ? 'Sedang diproses'
-                                                                  : 'In progress'
-                                                              : couldNotVerify
+                                                                  ? 'Pengecekan PRISMA tertunda atau sedang berlangsung'
+                                                                  : 'PRISMA check pending or in progress'
+                                                              : isAwaiting
                                                                 ? id
-                                                                    ? 'Belum dapat dipastikan'
-                                                                    : 'Could not verify'
-                                                                : observed[
-                                                                        index
-                                                                    ]
+                                                                    ? 'Menunggu jadwal pengecekan'
+                                                                    : 'Waiting for scheduled check'
+                                                                : notChecked
                                                                   ? id
-                                                                      ? 'Data belum lengkap'
-                                                                      : 'Incomplete data'
-                                                                  : id
-                                                                    ? 'Data belum tersedia'
-                                                                    : 'No data yet';
+                                                                      ? 'Belum ada catatan pengecekan'
+                                                                      : 'No check recorded yet'
+                                                                  : couldNotVerify
+                                                                    ? id
+                                                                        ? 'Belum dapat dipastikan'
+                                                                        : 'Could not verify'
+                                                                    : observed[
+                                                                            index
+                                                                        ]
+                                                                      ? id
+                                                                          ? 'Data belum lengkap'
+                                                                          : 'Incomplete data'
+                                                                      : id
+                                                                        ? 'Data belum tersedia'
+                                                                        : 'No data yet';
 
                                                     return (
                                                         <Box
@@ -846,6 +1194,8 @@ function ProductChart({
                                                                         index
                                                                     ] ||
                                                                     isInProgress ||
+                                                                    isAwaiting ||
+                                                                    notChecked ||
                                                                     couldNotVerify ||
                                                                     (volume &&
                                                                         value ===
@@ -859,7 +1209,8 @@ function ProductChart({
                                                                     value,
                                                                     lang,
                                                                 )
-                                                            ) : isInProgress ? (
+                                                            ) : isInProgress ||
+                                                              isAwaiting ? (
                                                                 <Box
                                                                     component="span"
                                                                     sx={{
@@ -910,7 +1261,10 @@ export default function Trends({
     endDate,
     firstDate,
     latestDate,
+    scheduledCheckAt,
+    scheduledCheckPending,
     excludedDates,
+    partialSpending,
     trades,
 }: {
     lang: Language;
@@ -919,7 +1273,10 @@ export default function Trends({
     endDate: string;
     firstDate: string;
     latestDate: string;
+    scheduledCheckAt: string;
+    scheduledCheckPending: boolean;
     excludedDates: ExcludedDates;
+    partialSpending: PartialSpending[];
     trades: Trades;
 }) {
     const [tab, setTab] = useState<'summary' | Metric>('summary');
@@ -959,7 +1316,7 @@ export default function Trends({
         product,
         `IS_${product}`,
     ]);
-    const missingDates = dates
+    const missingDates: ExcludedDate[] = dates
         .slice()
         .reverse()
         .flatMap((date) => {
@@ -973,13 +1330,18 @@ export default function Trends({
                 ? [{ date, creditTypes: missingTypes }]
                 : [];
         });
+    const latestMissing = missingDates.filter(
+        ({ date }) => date === latestDate,
+    );
+    const historicalGaps = missingDates.filter(
+        ({ date }) => date !== latestDate,
+    );
+    const collectionDates = {
+        ...excludedDates,
+        awaiting: scheduledCheckPending ? latestMissing : [],
+        notChecked: scheduledCheckPending ? [] : latestMissing,
+    };
     const selectedRange = editingCustomRange ? 'custom' : period;
-    const pendingDateFormat = new Intl.DateTimeFormat(id ? 'id-ID' : 'en-US', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-        timeZone: 'UTC',
-    });
 
     return (
         <Layout
@@ -1176,7 +1538,7 @@ export default function Trends({
                             <Button
                                 component="a"
                                 variant="outlined"
-                                href={`data:text/csv;charset=utf-8,${encodeURIComponent(dailyCsv(dates, trades, excludedDates))}`}
+                                href={`data:text/csv;charset=utf-8,${encodeURIComponent(dailyCsv(dates, trades, collectionDates))}`}
                                 download={`rspo-credit-trends-${startDate}-${endDate}.csv`}
                                 sx={{
                                     alignSelf: {
@@ -1192,64 +1554,6 @@ export default function Trends({
                             </Button>
                         </Stack>
                     </Paper>
-                    {(excludedDates.inProgress.length > 0 ||
-                        excludedDates.couldNotVerify.length > 0 ||
-                        missingDates.length > 0) && (
-                        <Alert severity="info" role="status">
-                            <Stack spacing={0.75}>
-                                <Typography variant="subtitle2">
-                                    {id
-                                        ? 'Beberapa tanggal tidak masuk dalam hasil.'
-                                        : 'Some dates are excluded from these results.'}
-                                </Typography>
-                                {[
-                                    {
-                                        label: id
-                                            ? 'Sedang diproses'
-                                            : 'In progress',
-                                        dates: excludedDates.inProgress,
-                                    },
-                                    {
-                                        label: id
-                                            ? 'Belum dapat dipastikan'
-                                            : 'Could not verify',
-                                        dates: excludedDates.couldNotVerify,
-                                    },
-                                    {
-                                        label: id
-                                            ? 'Data belum tersedia'
-                                            : 'No data yet',
-                                        dates: missingDates,
-                                    },
-                                ].map(({ label, dates: excluded }) =>
-                                    excluded.length > 0 ? (
-                                        <Box component="details" key={label}>
-                                            <Box
-                                                component="summary"
-                                                sx={{ cursor: 'pointer' }}
-                                            >
-                                                {label} ({excluded.length})
-                                            </Box>
-                                            <Typography
-                                                variant="body2"
-                                                sx={{ mt: 0.5 }}
-                                            >
-                                                {excluded
-                                                    .map(
-                                                        ({
-                                                            date,
-                                                            creditTypes,
-                                                        }) =>
-                                                            `${pendingDateFormat.format(new Date(date))} (${creditTypes.join(', ').replaceAll('_', ' ')})`,
-                                                    )
-                                                    .join(' · ')}
-                                            </Typography>
-                                        </Box>
-                                    ) : null,
-                                )}
-                            </Stack>
-                        </Alert>
-                    )}
                     <Tabs
                         value={tab}
                         onChange={(_, value: 'summary' | Metric) =>
@@ -1287,6 +1591,10 @@ export default function Trends({
                         {tab === 'summary' && (
                             <TradingSummary
                                 dates={dates}
+                                partialSpending={partialSpending}
+                                collectionDates={collectionDates}
+                                historicalGaps={historicalGaps}
+                                scheduledCheckAt={scheduledCheckAt}
                                 trades={trades}
                                 lang={lang}
                             />
@@ -1379,7 +1687,7 @@ export default function Trends({
                                             )}
                                             metric={metric}
                                             lang={lang}
-                                            excludedDates={excludedDates}
+                                            excludedDates={collectionDates}
                                         />
                                     ))}
                                 </Stack>

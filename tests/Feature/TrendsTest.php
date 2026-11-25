@@ -7,6 +7,74 @@ use App\Models\CreditPriceRetrieval;
 use Carbon\CarbonImmutable;
 use Inertia\Testing\AssertableInertia;
 
+it('keeps verified spending and reports shared mixed-price credits once', function (): void {
+    $day = CarbonImmutable::parse('2026-10-27', 'UTC');
+    $this->travelTo($day->addDay());
+
+    $root = CreditPriceRetrieval::factory()->create([
+        'credit_type' => 'IS_CSPKO',
+        'period_start_at' => $day,
+        'period_end_at' => $day->addDay()->subMillisecond(),
+        'status' => CreditPriceRetrievalStatus::UNRESOLVED,
+        'quantity_sold' => 572,
+        'last_traded_price' => 130,
+    ]);
+
+    $boundary = $day->addHours(17);
+    $factory = CreditPriceRetrieval::factory()->state(['credit_type' => $root->credit_type]);
+    foreach ([
+        [$day, $boundary, $boundary->subMillisecond(), $boundary, $day, $boundary->subMillisecond(), 4],
+        [$boundary, $root->period_end_at, $boundary, $boundary->addMillisecond(), $boundary->addMillisecond(), $root->period_end_at, 6],
+    ] as [$start, $end, $mixedStart, $mixedEnd, $verifiedStart, $verifiedEnd, $verifiedQuantity]) {
+        $branch = $factory->for($root, 'parent')->create([
+            'period_start_at' => $start,
+            'period_end_at' => $end,
+            'status' => CreditPriceRetrievalStatus::UNRESOLVED,
+            'quantity_sold' => 562 + $verifiedQuantity,
+        ]);
+        $factory->for($branch, 'parent')->create([
+            'period_start_at' => $mixedStart,
+            'period_end_at' => $mixedEnd,
+            'status' => CreditPriceRetrievalStatus::UNRESOLVED,
+            'quantity_sold' => 562,
+            'low_price' => 100,
+            'high_price' => 130,
+            'error_message' => CreditPriceRetrieval::MIXED_MILLISECOND_MESSAGE,
+        ]);
+        $factory->for($branch, 'parent')->create([
+            'period_start_at' => $verifiedStart,
+            'period_end_at' => $verifiedEnd,
+            'quantity_sold' => $verifiedQuantity,
+            'last_traded_price' => 100,
+        ]);
+    }
+
+    $this->get('/en/trends?from=2026-10-27&to=2026-10-27')
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->has('excludedDates.couldNotVerify', 0)
+            ->where('partialSpending', [[
+                'start' => '2026-10-27 17:00:00.000',
+                'end' => '2026-10-27 17:00:00.000',
+                'quantity' => 562,
+                'low' => 100,
+                'high' => 130,
+                'creditType' => 'IS_CSPKO',
+            ]])
+            ->where('trades.IS_CSPKO.2026-10-27.volume', 572)
+            ->where('trades.IS_CSPKO.2026-10-27.pricedVolume', 10)
+            ->where('trades.IS_CSPKO.2026-10-27.price', 130)
+            ->where('trades.IS_CSPKO.2026-10-27.tradeValue', 1000)
+            ->where('trades.IS_CSPKO.2026-10-27.partialTradeValue', true));
+
+    $root->update(['quantity_sold' => 573]);
+
+    $this->get('/en/trends?from=2026-10-27&to=2026-10-27')
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->has('excludedDates.couldNotVerify', 1)
+            ->has('partialSpending', 0)
+            ->has('trades', 0));
+});
+
 it('shows complete trading days and distinguishes zero trades from missing data', function (): void {
     $this->travelTo('2026-01-04 12:00:00 UTC');
 

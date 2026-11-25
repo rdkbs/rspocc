@@ -45,15 +45,19 @@ function maximumFractionDigits(value: number): number {
     return value > 999999 ? 0 : value > 0 && value < 0.01 ? 4 : 2;
 }
 
-export function formatDisplayNumber(value: number, language: Language): string {
+export function formatDisplayNumber(
+    value: number | `${number}`,
+    language: Language,
+): string {
     const locale = language === 'id' ? 'id-ID' : 'en-US';
+    const numericValue = Number(value);
 
-    if (belowDisplayPrecision(value)) {
+    if (belowDisplayPrecision(numericValue)) {
         return `<${new Intl.NumberFormat(locale, { maximumFractionDigits: 4 }).format(0.0001)}`;
     }
 
     return new Intl.NumberFormat(locale, {
-        maximumFractionDigits: maximumFractionDigits(value),
+        maximumFractionDigits: maximumFractionDigits(numericValue),
     }).format(value);
 }
 

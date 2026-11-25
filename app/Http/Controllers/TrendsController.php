@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Console\Commands\CollectCreditPriceAnalytics;
 use App\Enums\CreditPriceRetrievalStatus;
 use App\Models\CreditPriceRetrieval;
 use Brick\Math\BigDecimal;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -19,7 +22,9 @@ final class TrendsController extends Controller
 {
     public function __invoke(Request $request): Response
     {
-        $today = CarbonImmutable::today('UTC');
+        $now = CarbonImmutable::now('UTC');
+        $today = $now->startOfDay();
+        $scheduledCheck = $today->setTimeFromTimeString(CollectCreditPriceAnalytics::SCHEDULE_TIME_UTC);
         $latest = $today->subDay();
         $firstDate = '2025-01-01';
         $request->validate([
@@ -66,7 +71,10 @@ final class TrendsController extends Controller
                 $join->on('traded.credit_type', '=', 'daily.credit_type')
                     ->on('traded.period_start_at', '>=', 'daily.period_start_at')
                     ->on('traded.period_end_at', '<=', 'daily.period_end_at')
-                    ->where('traded.status', CreditPriceRetrievalStatus::RESOLVED->value);
+                    ->where(function (JoinClause $join): void {
+                        $join->where('traded.status', CreditPriceRetrievalStatus::RESOLVED->value)
+                            ->orWhere('daily.status', CreditPriceRetrievalStatus::UNRESOLVED->value);
+                    });
             })
             ->whereNull('daily.parent_id')
             ->where('daily.period_start_at', '>=', $start->toDateTimeString())
@@ -74,9 +82,14 @@ final class TrendsController extends Controller
             ->select([
                 'daily.id', 'daily.credit_type', 'daily.period_start_at', 'daily.quantity_sold',
                 'daily.status', 'daily.child_quantity_matches',
-                'traded.quantity_sold as traded_quantity', 'traded.last_traded_price',
+                'daily.last_traded_price', 'traded.quantity_sold as traded_quantity',
+                'traded.last_traded_price as traded_price', 'traded.id as interval_id',
+                'traded.parent_id as interval_parent_id', 'traded.status as interval_status',
+                'traded.period_start_at as interval_start', 'traded.period_end_at as interval_end',
+                'traded.error_message as interval_error',
+                'traded.low_price as interval_low', 'traded.high_price as interval_high',
             ])
-            ->withCasts(['traded_quantity' => 'decimal:8'])
+            ->withCasts(['traded_quantity' => 'decimal:8', 'traded_price' => 'decimal:8', 'interval_id' => 'integer'])
             ->latest('daily.period_start_at')
             ->orderBy('daily.credit_type')
             ->latest('traded.period_start_at')
@@ -84,12 +97,36 @@ final class TrendsController extends Controller
             ->groupBy('id');
 
         $excludedDates = ['inProgress' => [], 'couldNotVerify' => []];
+        $partialSpending = [];
         $trades = [];
         foreach ($days as $intervals) {
             $day = $intervals->firstOrFail();
             $date = $day->period_start_at->toDateString();
             $status = $day->status;
-            if ($status !== CreditPriceRetrievalStatus::RESOLVED
+            $excludedQuantity = BigDecimal::zero();
+            $partialTradeValue = false;
+            if ($status === CreditPriceRetrievalStatus::UNRESOLVED) {
+                $root = $intervals->firstWhere('interval_id', $day->id);
+                if ($root !== null) {
+                    $unresolved = $this->mixedPriceIntervals($root, $intervals->groupBy('interval_parent_id'));
+                    if ($unresolved !== null && $unresolved !== []) {
+                        $partialTradeValue = true;
+                        foreach ($unresolved as $interval) {
+                            $excludedQuantity = $excludedQuantity->plus($interval['quantity']);
+                            $partialSpending[] = [
+                                ...$interval,
+                                'creditType' => $day->credit_type,
+                                'quantity' => (float) $interval['quantity'],
+                                'low' => (float) $interval['low'],
+                                'high' => (float) $interval['high'],
+                            ];
+                        }
+                    }
+                }
+            }
+
+            if (! $partialTradeValue
+                && $status !== CreditPriceRetrievalStatus::RESOLVED
                 && $status !== CreditPriceRetrievalStatus::NO_TRADES
                 && ! ($status === CreditPriceRetrievalStatus::MIXED && $day->child_quantity_matches === true)) {
                 $group = match ($status) {
@@ -104,12 +141,14 @@ final class TrendsController extends Controller
                 continue;
             }
 
-            $closingPrice = $day->last_traded_price;
+            $closingPrice = $partialTradeValue ? $day->last_traded_price : $day->getAttribute('traded_price');
             $tradeValue = null;
             foreach ($intervals as $interval) {
                 $quantity = $interval->getAttribute('traded_quantity');
-                if (is_string($quantity) && $interval->last_traded_price !== null) {
-                    $value = BigDecimal::of($quantity)->multipliedBy($interval->last_traded_price);
+                $price = $interval->getAttribute('traded_price');
+                if ($interval->getAttribute('interval_status') === CreditPriceRetrievalStatus::RESOLVED->value
+                    && is_string($quantity) && is_string($price)) {
+                    $value = BigDecimal::of($quantity)->multipliedBy($price);
                     $tradeValue = $tradeValue === null ? $value : $tradeValue->plus($value);
                 }
             }
@@ -118,14 +157,20 @@ final class TrendsController extends Controller
             $trades[$day->credit_type][$date] = [
                 'price' => is_numeric($closingPrice) ? (float) $closingPrice : null,
                 'volume' => $volume,
+                'pricedVolume' => $day->quantity_sold === null
+                    ? null
+                    : BigDecimal::of($day->quantity_sold)->minus($excludedQuantity)->toFloat(),
                 'tradeValue' => $tradeValue === null ? null : (float) $tradeValue,
+                'partialTradeValue' => $partialTradeValue,
                 'csvValues' => [
                     $this->csvDecimal($day->quantity_sold),
-                    $this->csvDecimal($closingPrice),
+                    $this->csvDecimal(is_string($closingPrice) ? $closingPrice : null),
                     $tradeValue,
                 ],
             ];
         }
+
+        usort($partialSpending, static fn (array $a, array $b): int => [$b['start'], $a['creditType']] <=> [$a['start'], $b['creditType']]);
 
         return Inertia::render('trends', [
             'startDate' => $start->toDateString(),
@@ -133,9 +178,90 @@ final class TrendsController extends Controller
             'endDate' => $end->toDateString(),
             'firstDate' => $firstDate,
             'latestDate' => $latest->toDateString(),
+            'scheduledCheckAt' => $scheduledCheck->toIso8601String(),
+            'scheduledCheckPending' => $now->lessThan($scheduledCheck),
             'excludedDates' => array_map(array_values(...), $excludedDates),
+            'partialSpending' => $partialSpending,
             'trades' => $trades,
         ]);
+    }
+
+    /**
+     * @param  Collection<array-key, EloquentCollection<int, CreditPriceRetrieval>>  $childrenByParent
+     * @return list<array{start: string, end: string, quantity: string, low: string, high: string}>|null
+     */
+    private function mixedPriceIntervals(CreditPriceRetrieval $interval, Collection $childrenByParent): ?array
+    {
+        $intervalId = $interval->getAttribute('interval_id');
+        $quantity = $interval->getAttribute('traded_quantity');
+        $start = $interval->getAttribute('interval_start');
+        $end = $interval->getAttribute('interval_end');
+        if (! is_int($intervalId) || ! is_string($quantity) || ! is_string($start) || ! is_string($end)) {
+            return null;
+        }
+
+        $children = $childrenByParent->get($intervalId);
+        if ($children === null) {
+            if ($interval->getAttribute('interval_status') === CreditPriceRetrievalStatus::UNRESOLVED->value
+                && $interval->getAttribute('interval_error') === CreditPriceRetrieval::MIXED_MILLISECOND_MESSAGE) {
+                $low = $interval->getAttribute('interval_low');
+                $high = $interval->getAttribute('interval_high');
+
+                return is_numeric($low) && is_numeric($high)
+                    ? [['start' => $start, 'end' => $end, 'quantity' => $quantity, 'low' => (string) $low, 'high' => (string) $high]]
+                    : null;
+            }
+
+            return match ($interval->getAttribute('interval_status')) {
+                CreditPriceRetrievalStatus::NO_TRADES->value => [],
+                CreditPriceRetrievalStatus::RESOLVED->value => is_string($interval->getAttribute('traded_price')) ? [] : null,
+                default => null,
+            };
+        }
+
+        $left = $children->last();
+        $right = $children->first();
+        if ($children->count() !== 2 || $left === null || $right === null
+            || $left->getAttribute('interval_start') !== $interval->getAttribute('interval_start')
+            || $right->getAttribute('interval_end') !== $interval->getAttribute('interval_end')
+            || $left->getAttribute('interval_end') !== $right->getAttribute('interval_start')) {
+            return null;
+        }
+
+        $leftMixed = $this->mixedPriceIntervals($left, $childrenByParent);
+        $rightMixed = $this->mixedPriceIntervals($right, $childrenByParent);
+        $leftQuantity = $left->getAttribute('traded_quantity');
+        $rightQuantity = $right->getAttribute('traded_quantity');
+        if ($leftMixed === null || $rightMixed === null || ! is_string($leftQuantity) || ! is_string($rightQuantity)) {
+            return null;
+        }
+
+        $combinedQuantity = BigDecimal::sum($leftQuantity, $rightQuantity);
+        if ($combinedQuantity->isEqualTo($quantity)) {
+            return [...$leftMixed, ...$rightMixed];
+        }
+
+        $boundary = $left->getAttribute('interval_end');
+        $leftBoundary = array_pop($leftMixed);
+        $rightBoundary = $rightMixed[0] ?? null;
+
+        // A matching mixed-price interval at the shared boundary contributes once.
+        if (is_string($boundary)
+            && $leftBoundary !== null && $rightBoundary !== null
+            && $leftBoundary['end'] === $boundary && $rightBoundary['start'] === $boundary
+            && BigDecimal::of($leftBoundary['low'])->isEqualTo($rightBoundary['low'])
+            && BigDecimal::of($leftBoundary['high'])->isEqualTo($rightBoundary['high'])
+            && BigDecimal::of($leftBoundary['quantity'])->isEqualTo($rightBoundary['quantity'])
+            && $combinedQuantity->minus($leftBoundary['quantity'])->isEqualTo($quantity)) {
+
+            return [
+                ...$leftMixed,
+                [...$leftBoundary, 'start' => $boundary, 'end' => $boundary],
+                ...array_slice($rightMixed, 1),
+            ];
+        }
+
+        return null;
     }
 
     private function csvDecimal(?string $value): ?string

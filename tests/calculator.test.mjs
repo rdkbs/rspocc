@@ -228,6 +228,19 @@ describe('currency formatting', () => {
         expect(formatCurrency(0.00009, 'USD', 'en')).toContain('<0.0001');
         expect(formatCurrency(0.0042, 'USD', 'id')).toContain('0,0042');
     });
+
+    test('formats exact decimal trade values with result-card precision', () => {
+        expect(formatDisplayNumber('73787050000000000000e-16', 'en')).toBe(
+            '7,378.71',
+        );
+        expect(formatDisplayNumber('73787050000000000000e-16', 'id')).toBe(
+            '7.378,71',
+        );
+        expect(formatDisplayNumber('4.2e-3', 'en')).toBe('0.0042');
+        expect(formatDisplayNumber('9e-5', 'en')).toBe('<0.0001');
+        expect(formatDisplayNumber('1000000.5', 'en')).toBe('1,000,001');
+        expect(formatDisplayNumber('1000.00', 'en')).toBe('1,000');
+    });
 });
 
 describe('glossary term matching', () => {

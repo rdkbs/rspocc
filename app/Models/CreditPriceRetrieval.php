@@ -41,6 +41,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[DateFormat('Y-m-d H:i:s.v')]
 class CreditPriceRetrieval extends Model
 {
+    public const string MIXED_MILLISECOND_MESSAGE = 'Prices still vary within the smallest one-millisecond interval.';
+
     /** @use HasFactory<CreditPriceRetrievalFactory> */
     use HasFactory;
 

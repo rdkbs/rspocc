@@ -47,6 +47,10 @@ const englishPages: Record<ContentSlug, ContentPage> = {
                 'We check Frankfurter rates daily. The date shown is the date Frankfurter gives for the rate. To use the latest rate and see its date, select the suggestion below the currency field. You can also enter your own rate. Shared calculations keep the rate used when they were created.',
             ],
             [
+                'Why does Trends list some credits separately?',
+                'The Trading Summary counts only credits whose sale value we can verify. Sometimes PRISMA reports several prices at the same time and gives only the combined quantity. We can see how many credits sold, but we can’t tell how many sold at each price. Those credits are listed separately and left out of both the summary credit count and the USD total.',
+            ],
+            [
                 'Why are RSPO’s CSPKO and CSPKE extraction rates different?',
                 conversionExplanation('en'),
                 true,
@@ -141,6 +145,10 @@ const indonesianPages: Record<ContentSlug, ContentPage> = {
             [
                 'Apakah kursnya terbaru?',
                 'Kurs Frankfurter diperiksa setiap hari. Tanggal yang tertera mengikuti tanggal yang diberikan Frankfurter. Untuk memakai kurs terbaru dan melihat tanggalnya, pilih saran di bawah kolom mata uang. Anda juga bisa mengisi kurs sendiri. Tautan yang dibagikan tetap memakai kurs saat dibuat.',
+            ],
+            [
+                'Mengapa sebagian kredit ditampilkan terpisah di halaman Tren?',
+                'Ringkasan Perdagangan hanya menghitung kredit yang nilai jualnya bisa dipastikan. Kadang PRISMA mencatat beberapa harga pada waktu yang sama dan hanya menampilkan jumlah seluruh kredit yang terjual. Karena jumlah kredit pada tiap harga tidak diketahui, kredit tersebut ditampilkan terpisah. Kredit itu tidak masuk dalam jumlah kredit maupun total nilai transaksi di ringkasan.',
             ],
             [
                 'Bagaimana rendemen CSPKO dan CSPKE dihitung?',
