@@ -53,14 +53,16 @@ type ExcludedDate = {
     date: string;
     creditTypes: string[];
 };
-type PartialSpending = {
+type TradeInterval = {
     start: string;
     end: string;
-    creditType: string;
     quantity: number;
     low: number;
     high: number;
 };
+type PartialSpending = TradeInterval & { creditType: string };
+type TradeIntervals = Record<string, Record<string, TradeInterval[]>>;
+
 type ExcludedDates = {
     inProgress: ExcludedDate[];
     couldNotVerify: ExcludedDate[];
@@ -134,6 +136,7 @@ type Point = {
     values: (number | null)[];
     observed: boolean[];
     noTrades: boolean[];
+    intervals: TradeInterval[][];
 };
 
 function SpendingExclusions({
@@ -170,8 +173,8 @@ function SpendingExclusions({
             </Box>
             <Typography variant="body2" sx={{ mt: 0.5 }}>
                 {id
-                    ? 'PRISMA mencatat beberapa harga dalam satu milidetik tanpa merinci jumlah kredit pada tiap harga.'
-                    : 'PRISMA reported multiple prices within one millisecond without a quantity for each price.'}
+                    ? 'PRISMA melaporkan beberapa harga dalam rentang satu milidetik, tetapi tidak merinci jumlah kredit pada tiap harga. Kredit ini tetap dihitung satu kali dalam volume, tetapi nilai transaksinya tidak dihitung.'
+                    : 'PRISMA reported multiple prices within one millisecond but not how many credits sold at each price. These credits still count once in volume, but their spending is excluded.'}
             </Typography>
             <Stack component="ul" spacing={0.75} sx={{ pl: 2, mb: 1 }}>
                 {rows.map(({ start, end, quantity: excluded, low, high }) => (
@@ -833,14 +836,26 @@ function chartPoints(
     product: string,
     dates: string[],
     trades: Trades,
+    tradeIntervals: TradeIntervals,
     metric: Metric,
 ): Point[] {
     const types = [product, `IS_${product}`];
     return dates.map((date) => ({
         date,
-        observed: types.map((type) => trades[type]?.[date] !== undefined),
+        observed: types.map(
+            (type) =>
+                trades[type]?.[date] !== undefined ||
+                !!tradeIntervals[type]?.[date]?.length,
+        ),
         noTrades: types.map((type) => trades[type]?.[date]?.volume === 0),
-        values: types.map((type) => trades[type]?.[date]?.[metric] ?? null),
+        values: types.map(
+            (type) =>
+                trades[type]?.[date]?.[metric] ??
+                (metric === 'volume'
+                    ? (tradeIntervals[type]?.[date]?.[0]?.quantity ?? null)
+                    : null),
+        ),
+        intervals: types.map((type) => tradeIntervals[type]?.[date] ?? []),
     }));
 }
 
@@ -861,17 +876,90 @@ function ProductChart({
     const id = lang === 'id';
     const volume = metric === 'volume';
     const { palette } = useTheme();
-    const dateFormat = new Intl.DateTimeFormat(id ? 'id-ID' : 'en-US', {
+    const dateOptions = {
         day: 'numeric',
         month: 'short',
         timeZone: 'UTC',
+    } as const;
+    const locale = id ? 'id-ID' : 'en-US';
+    const dateFormat = new Intl.DateTimeFormat(locale, dateOptions);
+    const fullDateFormat = new Intl.DateTimeFormat(locale, {
+        ...dateOptions,
+        year: 'numeric',
     });
     const formatDate = (date: string | number) =>
         dateFormat.format(new Date(date));
-    const visiblePoints = points;
-    const values = visiblePoints.flatMap((point) =>
-        point.values.filter((value) => value !== null),
+    const formatWindow = ({ start, end }: TradeInterval) =>
+        `${fullDateFormat.format(new Date(start.slice(0, 10)))} · ${start.slice(11)}${end === start ? '' : `–${end.slice(11)}`}`;
+    const renderTime = (timestamp: string) => (
+        <Box component="span" sx={{ whiteSpace: 'nowrap' }}>
+            {timestamp.slice(11, 19)}
+            <Box component="span" sx={{ fontSize: '0.8em' }}>
+                {timestamp.slice(19)}
+            </Box>
+        </Box>
     );
+    const formatRange = ({ low, high }: TradeInterval) =>
+        low === high
+            ? formatDisplayNumber(low, lang)
+            : `${formatDisplayNumber(low, lang)}–${formatDisplayNumber(high, lang)}`;
+    const visiblePoints = points;
+    const priceRanges = new Map<string, TradeInterval>();
+    const pricePoints = [0, 1].map((index) =>
+        points.flatMap(({ date, values, intervals }, x) => {
+            const bounds = intervals[index].flatMap(
+                (interval, intervalIndex) => {
+                    if (
+                        interval.low === interval.high &&
+                        values[index] !== null
+                    )
+                        return [];
+
+                    const id = `${date}/${index}/${intervalIndex}`;
+                    priceRanges.set(id, interval);
+                    return [...new Set([interval.low, interval.high])].map(
+                        (y) => ({
+                            x,
+                            y,
+                            id: `${id}/${y}`,
+                        }),
+                    );
+                },
+            );
+            const closingPrice = values[index];
+            return closingPrice === null ||
+                bounds.some(({ y }) => y === closingPrice)
+                ? bounds
+                : [{ x, y: closingPrice, id: date }, ...bounds];
+        }),
+    );
+    const tableRows = points
+        .slice()
+        .reverse()
+        .flatMap((point) => {
+            const windows = new Map<string, (TradeInterval | null)[]>();
+            point.intervals.forEach((intervals, index) => {
+                for (const interval of intervals) {
+                    const key = `${interval.start}/${interval.end}`;
+                    const row = windows.get(key) ?? [null, null];
+                    row[index] = interval;
+                    windows.set(key, row);
+                }
+            });
+            if (windows.size === 0) {
+                return !includeNoTradeDates && point.noTrades.every(Boolean)
+                    ? []
+                    : [{ point, window: point.date, records: [null, null] }];
+            }
+            return [...windows]
+                .sort(([a], [b]) => b.localeCompare(a))
+                .map(([window, records]) => ({ point, window, records }));
+        });
+    const values = volume
+        ? points.flatMap((point) =>
+              point.values.filter((value) => value !== null),
+          )
+        : pricePoints.flat();
     const noTrades =
         visiblePoints.length > 0 &&
         visiblePoints.every((point) => point.noTrades.every(Boolean));
@@ -981,23 +1069,24 @@ function ProductChart({
                     series={series.map((item, index) => ({
                         ...item,
                         markerSize: 5,
-                        data: visiblePoints.flatMap(({ values }, dateIndex) => {
-                            const value = values[index];
-                            return value === null
-                                ? []
-                                : [
-                                      {
-                                          x: dateIndex,
-                                          y: value,
-                                          id: visiblePoints[dateIndex].date,
-                                      },
-                                  ];
-                        }),
+                        data: pricePoints[index],
                         valueFormatter: (
-                            value: { x: number; y: number } | null,
+                            value: {
+                                x: number;
+                                y: number;
+                                id?: string | number;
+                            } | null,
                         ) => {
                             if (value === null) {
                                 return null;
+                            }
+
+                            const pointId = String(value.id ?? '');
+                            const range = priceRanges.get(
+                                pointId.slice(0, pointId.lastIndexOf('/')),
+                            );
+                            if (range) {
+                                return `${formatWindow(range)} · ${formatRange(range)} USD`;
                             }
 
                             const point = visiblePoints[value.x];
@@ -1065,13 +1154,7 @@ function ProductChart({
                             <thead>
                                 <tr>
                                     <th scope="col">
-                                        {volume
-                                            ? id
-                                                ? 'Tanggal'
-                                                : 'Date'
-                                            : id
-                                              ? 'Tanggal'
-                                              : 'Date'}
+                                        {id ? 'Waktu (UTC)' : 'Time (UTC)'}
                                     </th>
                                     {labels.map((label, index) => (
                                         <Box
@@ -1086,165 +1169,209 @@ function ProductChart({
                                 </tr>
                             </thead>
                             <tbody>
-                                {(includeNoTradeDates
-                                    ? visiblePoints
-                                    : visiblePoints.filter(
-                                          ({ noTrades }) =>
-                                              !noTrades.every(Boolean),
-                                      )
-                                )
-                                    .slice()
-                                    .reverse()
-                                    .map(
-                                        ({
-                                            date,
-                                            values,
-                                            observed,
-                                            noTrades,
-                                        }) => (
-                                            <tr key={date}>
-                                                <th scope="row">
-                                                    {formatDate(date)}
-                                                </th>
-                                                {values.map((value, index) => {
-                                                    const creditType =
-                                                        index === 0
-                                                            ? product
-                                                            : `IS_${product}`;
-                                                    const isInProgress =
-                                                        excludedDates.inProgress.some(
-                                                            ({
-                                                                date: excludedDate,
-                                                                creditTypes,
-                                                            }) =>
-                                                                excludedDate ===
-                                                                    date &&
-                                                                creditTypes.includes(
-                                                                    creditType,
-                                                                ),
-                                                        );
-                                                    const isAwaiting =
-                                                        excludedDates.awaiting.some(
-                                                            (entry) =>
-                                                                entry.date ===
-                                                                    date &&
-                                                                entry.creditTypes.includes(
-                                                                    creditType,
-                                                                ),
-                                                        );
-                                                    const notChecked =
-                                                        excludedDates.notChecked.some(
-                                                            (entry) =>
-                                                                entry.date ===
-                                                                    date &&
-                                                                entry.creditTypes.includes(
-                                                                    creditType,
-                                                                ),
-                                                        );
-                                                    const couldNotVerify =
-                                                        excludedDates.couldNotVerify.some(
-                                                            ({
-                                                                date: excludedDate,
-                                                                creditTypes,
-                                                            }) =>
-                                                                excludedDate ===
-                                                                    date &&
-                                                                creditTypes.includes(
-                                                                    creditType,
-                                                                ),
-                                                        );
-                                                    const statusLabel =
-                                                        noTrades[index]
-                                                            ? id
-                                                                ? 'Tidak ada transaksi'
-                                                                : 'No trades'
-                                                            : isInProgress
-                                                              ? id
-                                                                  ? 'Pengecekan PRISMA tertunda atau sedang berlangsung'
-                                                                  : 'PRISMA check pending or in progress'
-                                                              : isAwaiting
-                                                                ? id
-                                                                    ? 'Menunggu jadwal pengecekan'
-                                                                    : 'Waiting for scheduled check'
-                                                                : notChecked
-                                                                  ? id
-                                                                      ? 'Belum ada catatan pengecekan'
-                                                                      : 'No check recorded yet'
-                                                                  : couldNotVerify
-                                                                    ? id
-                                                                        ? 'Belum dapat dipastikan'
-                                                                        : 'Could not verify'
-                                                                    : observed[
-                                                                            index
-                                                                        ]
-                                                                      ? id
-                                                                          ? 'Data belum lengkap'
-                                                                          : 'Incomplete data'
-                                                                      : id
-                                                                        ? 'Data belum tersedia'
-                                                                        : 'No data yet';
-
-                                                    return (
-                                                        <Box
-                                                            component="td"
-                                                            key={labels[index]}
-                                                            sx={{
-                                                                color:
-                                                                    noTrades[
-                                                                        index
-                                                                    ] ||
-                                                                    isInProgress ||
-                                                                    isAwaiting ||
-                                                                    notChecked ||
-                                                                    couldNotVerify ||
-                                                                    (volume &&
-                                                                        value ===
-                                                                            0)
-                                                                        ? 'text.disabled'
-                                                                        : undefined,
-                                                            }}
-                                                        >
-                                                            {value !== null ? (
-                                                                formatDisplayNumber(
-                                                                    value,
-                                                                    lang,
-                                                                )
-                                                            ) : isInProgress ||
-                                                              isAwaiting ? (
+                                {tableRows.map(({ point, window, records }) => {
+                                    const { date, observed, noTrades } = point;
+                                    const interval = records.find(
+                                        (row) => row !== null,
+                                    );
+                                    return (
+                                        <tr key={window}>
+                                            <Box
+                                                component="th"
+                                                scope="row"
+                                                sx={{ textAlign: 'start' }}
+                                            >
+                                                <Typography
+                                                    component="span"
+                                                    variant="body2"
+                                                    sx={{
+                                                        display: 'block',
+                                                        fontWeight: 600,
+                                                    }}
+                                                >
+                                                    {fullDateFormat.format(
+                                                        new Date(date),
+                                                    )}
+                                                </Typography>
+                                                {interval && (
+                                                    <Typography
+                                                        component="span"
+                                                        variant="body2"
+                                                        color="text.secondary"
+                                                        sx={{
+                                                            display: 'block',
+                                                            fontWeight: 400,
+                                                            fontVariantNumeric:
+                                                                'tabular-nums',
+                                                        }}
+                                                    >
+                                                        {renderTime(
+                                                            interval.start,
+                                                        )}
+                                                        {interval.end !==
+                                                            interval.start && (
+                                                            <>
                                                                 <Box
                                                                     component="span"
                                                                     sx={{
-                                                                        display:
-                                                                            'inline-flex',
-                                                                        alignItems:
-                                                                            'center',
-                                                                        justifyContent:
-                                                                            'flex-end',
-                                                                        gap: 0.5,
-                                                                        whiteSpace:
-                                                                            'nowrap',
+                                                                        color: 'text.disabled',
                                                                     }}
                                                                 >
-                                                                    <ScheduleOutlined
-                                                                        aria-hidden="true"
-                                                                        sx={{
-                                                                            fontSize:
-                                                                                '1rem',
-                                                                        }}
-                                                                    />
-                                                                    {
-                                                                        statusLabel
-                                                                    }
+                                                                    –
                                                                 </Box>
-                                                            ) : (
-                                                                statusLabel
-                                                            )}
-                                                        </Box>
+                                                                {renderTime(
+                                                                    interval.end,
+                                                                )}
+                                                            </>
+                                                        )}
+                                                    </Typography>
+                                                )}
+                                            </Box>
+                                            {records.map((record, index) => {
+                                                const value = record
+                                                    ? volume
+                                                        ? formatDisplayNumber(
+                                                              record.quantity,
+                                                              lang,
+                                                          )
+                                                        : formatRange(record)
+                                                    : null;
+                                                const creditType =
+                                                    index === 0
+                                                        ? product
+                                                        : `IS_${product}`;
+                                                const isInProgress =
+                                                    excludedDates.inProgress.some(
+                                                        ({
+                                                            date: excludedDate,
+                                                            creditTypes,
+                                                        }) =>
+                                                            excludedDate ===
+                                                                date &&
+                                                            creditTypes.includes(
+                                                                creditType,
+                                                            ),
                                                     );
-                                                })}
-                                            </tr>
-                                        ),
-                                    )}
+                                                const isAwaiting =
+                                                    excludedDates.awaiting.some(
+                                                        (entry) =>
+                                                            entry.date ===
+                                                                date &&
+                                                            entry.creditTypes.includes(
+                                                                creditType,
+                                                            ),
+                                                    );
+                                                const notChecked =
+                                                    excludedDates.notChecked.some(
+                                                        (entry) =>
+                                                            entry.date ===
+                                                                date &&
+                                                            entry.creditTypes.includes(
+                                                                creditType,
+                                                            ),
+                                                    );
+                                                const couldNotVerify =
+                                                    excludedDates.couldNotVerify.some(
+                                                        ({
+                                                            date: excludedDate,
+                                                            creditTypes,
+                                                        }) =>
+                                                            excludedDate ===
+                                                                date &&
+                                                            creditTypes.includes(
+                                                                creditType,
+                                                            ),
+                                                    );
+                                                const statusLabel = noTrades[
+                                                    index
+                                                ]
+                                                    ? id
+                                                        ? 'Tidak ada transaksi'
+                                                        : 'No trades'
+                                                    : isInProgress
+                                                      ? id
+                                                          ? 'Pengecekan PRISMA tertunda atau sedang berlangsung'
+                                                          : 'PRISMA check pending or in progress'
+                                                      : isAwaiting
+                                                        ? id
+                                                            ? 'Menunggu jadwal pengecekan'
+                                                            : 'Waiting for scheduled check'
+                                                        : notChecked
+                                                          ? id
+                                                              ? 'Belum ada catatan pengecekan'
+                                                              : 'No check recorded yet'
+                                                          : couldNotVerify
+                                                            ? id
+                                                                ? 'Belum dapat dipastikan'
+                                                                : 'Could not verify'
+                                                            : observed[index]
+                                                              ? id
+                                                                  ? 'Data belum lengkap'
+                                                                  : 'Incomplete data'
+                                                              : id
+                                                                ? 'Data belum tersedia'
+                                                                : 'No data yet';
+
+                                                return (
+                                                    <Box
+                                                        component="td"
+                                                        key={labels[index]}
+                                                        sx={{
+                                                            color:
+                                                                noTrades[
+                                                                    index
+                                                                ] ||
+                                                                isInProgress ||
+                                                                isAwaiting ||
+                                                                notChecked ||
+                                                                couldNotVerify ||
+                                                                (volume &&
+                                                                    record?.quantity ===
+                                                                        0)
+                                                                    ? 'text.disabled'
+                                                                    : undefined,
+                                                        }}
+                                                    >
+                                                        {value !== null ? (
+                                                            value
+                                                        ) : interval &&
+                                                          observed[index] &&
+                                                          !noTrades[index] ? (
+                                                            '—'
+                                                        ) : isInProgress ||
+                                                          isAwaiting ? (
+                                                            <Box
+                                                                component="span"
+                                                                sx={{
+                                                                    display:
+                                                                        'inline-flex',
+                                                                    alignItems:
+                                                                        'center',
+                                                                    justifyContent:
+                                                                        'flex-end',
+                                                                    gap: 0.5,
+                                                                    whiteSpace:
+                                                                        'nowrap',
+                                                                }}
+                                                            >
+                                                                <ScheduleOutlined
+                                                                    aria-hidden="true"
+                                                                    sx={{
+                                                                        fontSize:
+                                                                            '1rem',
+                                                                    }}
+                                                                />
+                                                                {statusLabel}
+                                                            </Box>
+                                                        ) : (
+                                                            statusLabel
+                                                        )}
+                                                    </Box>
+                                                );
+                                            })}
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </Box>
                     </Box>
@@ -1265,6 +1392,7 @@ export default function Trends({
     scheduledCheckPending,
     excludedDates,
     partialSpending,
+    tradeIntervals,
     trades,
 }: {
     lang: Language;
@@ -1277,6 +1405,7 @@ export default function Trends({
     scheduledCheckPending: boolean;
     excludedDates: ExcludedDates;
     partialSpending: PartialSpending[];
+    tradeIntervals: TradeIntervals;
     trades: Trades;
 }) {
     const [tab, setTab] = useState<'summary' | Metric>('summary');
@@ -1666,11 +1795,11 @@ export default function Trends({
                                                 >
                                                     {metric === 'price'
                                                         ? id
-                                                            ? 'Harga transaksi terakhir per hari (UTC). Hari tanpa transaksi atau dengan data belum lengkap dibiarkan kosong.'
-                                                            : 'Last traded price by UTC day. Days with no trade or incomplete data are blank.'
+                                                            ? 'Harga transaksi terakhir per hari (UTC). Jika satu interval memuat beberapa harga, titik menunjukkan harga terendah dan tertinggi.'
+                                                            : 'Last traded price by UTC day. Mixed-price intervals show their lowest and highest prices.'
                                                         : id
-                                                          ? 'Jumlah kredit terjual per hari (UTC) dalam rentang pilihan. Hari dengan data yang belum lengkap dibiarkan kosong.'
-                                                          : 'Credits sold per UTC day within the selected dates. Days with incomplete data are blank.'}
+                                                          ? 'Jumlah kredit terjual per hari (UTC) sesuai laporan PRISMA, termasuk kredit dengan beberapa harga.'
+                                                          : 'Credits sold per UTC day as reported by PRISMA, including credits sold at mixed prices.'}
                                                 </Typography>
                                             </Box>
                                         </Stack>
@@ -1683,6 +1812,7 @@ export default function Trends({
                                                 product,
                                                 dates,
                                                 trades,
+                                                tradeIntervals,
                                                 metric,
                                             )}
                                             metric={metric}
