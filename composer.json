@@ -65,12 +65,16 @@
             "Composer\\Config::disableProcessTimeout",
             "@php artisan dev"
         ],
+        "fix-check": [
+            "@lint:fix",
+            "@types"
+        ],
         "lint:fix": [
             "pint --parallel",
             "rector",
             "bunx vp check --fix"
         ],
-        "lint:check": [
+        "lint": [
             "rector --dry-run",
             "pint --parallel --test",
             "bunx vp check"
@@ -81,13 +85,14 @@
             "@php artisan checkpoint:scan",
             "@test"
         ],
-        "types:check": [
-            "phpstan analyse"
+        "types": [
+            "phpstan analyse",
+            "bun check"
         ],
         "test": [
             "@php artisan config:clear --ansi",
-            "@lint:check",
-            "@types:check",
+            "@lint",
+            "@types",
             "@php artisan test"
         ],
         "post-autoload-dump": [
