@@ -44,7 +44,7 @@ const englishPages: Record<ContentSlug, ContentPage> = {
             ],
             [
                 'Are the credit prices up to date?',
-                'We check PRISMA daily for the latest selling price of each credit type. The price stays the same until a newer sale is recorded. The date shown uses your local time. It tells you when we checked the data, not when the sale took place.',
+                'We check PRISMA daily for the latest traded price of each credit type. The price stays the same until PRISMA records another trade. The date shown uses your local time. It tells you when we checked the data, not when the trade took place.',
             ],
             [
                 'Are the exchange rates up to date?',
@@ -52,7 +52,7 @@ const englishPages: Record<ContentSlug, ContentPage> = {
             ],
             [
                 'Why does Trends list some credits separately?',
-                'The figures below each price chart title show the lowest and highest prices reported for each credit type during the selected dates. Sometimes PRISMA reports several prices at the same time but gives only the combined quantity. The chart counts those credits once and shows that timestamp’s price range. The Trading Summary leaves them out because we cannot tell how many sold at each price, so their sales value cannot be calculated.',
+                'The figures below each price chart title show the lowest and highest prices reported for each credit type during the selected dates. Sometimes PRISMA reports several prices at the same time but gives only the combined quantity. The chart counts those credits once and shows that timestamp’s price range. The Trading Summary leaves them out because we cannot tell how many credits traded at each price, so their trade value cannot be calculated.',
             ],
             [
                 'Why are RSPO’s CSPKO and CSPKE extraction rates different?',
@@ -148,7 +148,7 @@ const indonesianPages: Record<ContentSlug, ContentPage> = {
             ],
             [
                 'Apakah harga kreditnya terbaru?',
-                'Kami memeriksa PRISMA setiap hari untuk melihat harga jual terakhir setiap jenis kredit. Harga tetap sama sampai ada penjualan yang lebih baru. Tanggal yang tertera mengikuti waktu di perangkat Anda. Tanggal itu menunjukkan kapan kami memeriksa data, bukan kapan penjualan terjadi.',
+                'Kami memeriksa PRISMA setiap hari untuk melihat harga transaksi terakhir setiap jenis kredit. Harga tetap sama sampai PRISMA mencatat transaksi baru. Tanggal yang tertera mengikuti waktu di perangkat Anda. Tanggal itu menunjukkan kapan kami memeriksa data, bukan kapan transaksi terjadi.',
             ],
             [
                 'Apakah kursnya terbaru?',
@@ -156,7 +156,7 @@ const indonesianPages: Record<ContentSlug, ContentPage> = {
             ],
             [
                 'Mengapa sebagian kredit ditampilkan terpisah di halaman Tren?',
-                'Angka di bawah judul grafik harga menunjukkan harga terendah dan tertinggi yang dilaporkan untuk setiap jenis kredit selama rentang tanggal yang dipilih. Kadang PRISMA melaporkan beberapa harga pada waktu yang sama, tetapi hanya memberikan jumlah seluruh kredit yang terjual. Grafik menghitung kredit tersebut satu kali dan menampilkan rentang harga pada waktu itu. Ringkasan Perdagangan tidak memasukkan nilai transaksinya karena jumlah kredit yang terjual pada tiap harga tidak diketahui.',
+                'Angka di bawah judul grafik harga menunjukkan harga terendah dan tertinggi yang dilaporkan untuk setiap jenis kredit selama rentang tanggal yang dipilih. Kadang PRISMA melaporkan beberapa harga pada waktu yang sama, tetapi hanya memberikan jumlah totalnya. Grafik menghitung kredit tersebut satu kali dan menampilkan rentang harga pada waktu itu. Ringkasan Perdagangan tidak dapat menghitung nilai transaksinya karena jumlah kredit yang diperdagangkan pada tiap harga tidak diketahui.',
             ],
             [
                 'Bagaimana rendemen CSPKO dan CSPKE dihitung?',

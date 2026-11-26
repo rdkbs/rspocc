@@ -83,7 +83,7 @@ export const homePageCopy = {
             ],
             [
                 'Are the credit prices up to date?',
-                'We check PRISMA daily for the latest selling price of each credit type. The price stays the same until a newer sale is recorded. The date shown tells you when we checked the data, not when the sale took place.',
+                'We check PRISMA daily for the latest traded price of each credit type. The price stays the same until PRISMA records another trade. The date shown tells you when we checked the data, not when the trade took place.',
             ],
             [
                 'Are the exchange rates up to date?',
@@ -114,7 +114,7 @@ export const homePageCopy = {
             ],
             [
                 'Apakah harga kreditnya terbaru?',
-                'Kami memeriksa PRISMA setiap hari untuk melihat harga jual terakhir setiap jenis kredit. Harga tetap sama sampai ada penjualan yang lebih baru. Tanggal yang tertera menunjukkan kapan kami memeriksa data, bukan kapan penjualan terjadi.',
+                'Kami memeriksa PRISMA setiap hari untuk melihat harga transaksi terakhir setiap jenis kredit. Harga tetap sama sampai PRISMA mencatat transaksi baru. Tanggal yang tertera menunjukkan kapan kami memeriksa data, bukan kapan transaksi terjadi.',
             ],
             [
                 'Apakah kursnya terbaru?',

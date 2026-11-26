@@ -69,6 +69,7 @@ it('compares credit types and switches metrics, language and theme', function ()
         ->assertSee('Download daily data (CSV)')
         ->assertScript('document.querySelector("a[download]").download', 'rspo-credit-trends-'.$firstDay->toDateString().'-'.$firstDay->addDays(6)->toDateString().'.csv')
         ->assertScript('decodeURIComponent(document.querySelector("a[download]").href.split(",")[1]).trim().split("\r\n").length', 43)
+        ->assertScript('decodeURIComponent(document.querySelector("a[download]").href.split(",")[1]).trim().split("\r\n")[0]', 'date_utc,credit_type,credits_sold,last_traded_price_usd,trade_value_usd,status')
         ->assertScript('decodeURIComponent(document.querySelector("a[download]").href.split(",")[1]).trim().split("\r\n").filter(row => row.startsWith('.json_encode($firstDay->toDateString().',', JSON_THROW_ON_ERROR).'))', [
             $firstDay->toDateString().',CSPO,0,,0,no_trades',
             $firstDay->toDateString().',IS_CSPO,10,2,20,traded',
@@ -77,7 +78,7 @@ it('compares credit types and switches metrics, language and theme', function ()
             $firstDay->toDateString().',CSPKE,0.1,0.2,0.02,traded',
             $firstDay->toDateString().',IS_CSPKE,,,,in_progress',
         ])
-        ->assertSee('credits sold for USD 140')
+        ->assertSee('credits traded for USD 140')
         ->assertScript('Array.from(document.querySelectorAll("#trends-summary-panel tfoot tr > *")).map(cell => cell.querySelector("p")?.textContent ?? cell.textContent)', ['Total traded', 'USD 40.02', 'USD 180', 'USD 220.02'])
         ->assertSeeIn('#trends-summary-panel tfoot td:last-of-type', 'Non-IS RSPO Credits 18%')
         ->assertSeeIn('#trends-summary-panel tfoot td:last-of-type', 'IS RSPO Credits 82%')
@@ -102,7 +103,7 @@ it('compares credit types and switches metrics, language and theme', function ()
         ->assertScript('Array.from(document.querySelectorAll("#trends-summary-panel tbody tr")).some(row => row.cells[0].textContent === "CSPO" && row.textContent.includes("Non-IS RSPO Credits 0%"))', true)
         ->assertScript('Array.from(document.querySelectorAll("#trends-summary-panel tbody tr")).some(row => row.cells[0].textContent === "CSPKO" && row.cells[3].textContent.includes("Non-IS RSPO Credits") && row.cells[3].textContent.includes("IS RSPO Credits") && (row.cells[3].textContent.match(/50%/g) ?? []).length === 2 && row.cells[3].querySelectorAll("sup").length === 1 && row.cells[3].querySelector("svg[role=img]") === null)', true)
         ->click('Volume')
-        ->assertSee('Credits sold per UTC day')
+        ->assertSee('Credits traded per UTC day')
         ->assertScript('Array.from(document.querySelectorAll("#trends-volume-panel section")).filter((section) => section.querySelector("h2")?.textContent === "CSPO").flatMap((card) => Array.from(card.querySelectorAll("dd"), (value) => value.textContent.trim()))', [
             '0',
             '70',
@@ -144,7 +145,7 @@ it('compares credit types and switches metrics, language and theme', function ()
         ->click('Apply dates')
         ->assertScript('new URLSearchParams(location.search).has("from")', true)
         ->click('Summary')
-        ->assertSee('credits sold for USD 140')
+        ->assertSee('credits traded for USD 140')
         ->click('Dark mode')
         ->assertSee('Light mode')
         ->click('header [role=combobox]')
@@ -187,7 +188,7 @@ it('keeps the trends page usable on mobile without trading data', function (): v
         ->click('Harga')
         ->assertSee('Belum ada data untuk periode ini.')
         ->click('Volume')
-        ->assertSee('Jumlah kredit terjual per hari')
+        ->assertSee('Jumlah kredit yang diperdagangkan per hari')
         ->assertScript('document.documentElement.scrollWidth === window.innerWidth', true)
         ->assertNoJavaScriptErrors();
 });
@@ -324,7 +325,7 @@ it('shows every credit category timestamp under the hovered price date', functio
         })()', true)
         ->assertScript('Array.from(document.querySelectorAll("[data-testid=price-date-tooltip] li"))
             .filter(row => row.textContent.includes("10 credits")).length', 3)
-        ->assertSeeIn('[data-testid="trade-day-summary"]', '30 credits sold')
+        ->assertSeeIn('[data-testid="trade-day-summary"]', '30 credits traded')
         ->assertSeeIn('[data-testid="trade-day-summary"]', 'USD 3–5 / credit')
         ->resize(320, 400)
         ->hover('section:has(h2:text-is("CSPO")) svg.MuiChartsSvgLayer-root')
@@ -344,7 +345,7 @@ it('shows every credit category timestamp under the hovered price date', functio
         ->hover('section:has(h2:text-is("CSPO")) svg.MuiChartsSvgLayer-root')
         ->assertScript('Array.from(document.querySelectorAll("[data-testid=volume-date-tooltip] li"))
             .filter(row => row.textContent.includes("10 credits")).length', 3)
-        ->assertSeeIn('[data-testid="trade-day-summary"]', '30 credits sold')
+        ->assertSeeIn('[data-testid="trade-day-summary"]', '30 credits traded')
         ->assertScript('Array.from(document.querySelectorAll("[data-testid=volume-date-tooltip] li"))
             .filter(row => row.textContent.includes("USD 3 / credit")).length', 2)
         ->assertNoJavaScriptErrors();
@@ -392,6 +393,6 @@ it('sums every trade interval when the daily volume is unavailable', function ()
             'Volume unavailable',
         ])
         ->hover('section:has(h2:text-is("CSPO")) svg.MuiChartsSvgLayer-root')
-        ->assertSeeIn('[data-testid="volume-date-tooltip"]', '20 credits sold')
+        ->assertSeeIn('[data-testid="volume-date-tooltip"]', '20 credits traded')
         ->assertNoJavaScriptErrors();
 });
