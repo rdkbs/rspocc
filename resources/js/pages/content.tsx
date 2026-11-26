@@ -55,6 +55,10 @@ const englishPages: Record<ContentSlug, ContentPage> = {
                 'The figures below each price chart title show the lowest and highest prices reported for each credit type during the selected dates. Sometimes PRISMA reports several prices at the same time but gives only the combined quantity. The chart counts those credits once and shows that timestamp’s price range. The Trading Summary leaves them out because we cannot tell how many credits traded at each price, so their trade value cannot be calculated.',
             ],
             [
+                'What does each row in the Trends CSV show?',
+                'Each row represents a PRISMA query interval in UTC, not an individual trade. It shows the reported credit quantity and price range. Trade value is left blank when it cannot be verified.',
+            ],
+            [
                 'Why are RSPO’s CSPKO and CSPKE extraction rates different?',
                 conversionExplanation('en'),
                 true,
@@ -157,6 +161,10 @@ const indonesianPages: Record<ContentSlug, ContentPage> = {
             [
                 'Mengapa sebagian kredit ditampilkan terpisah di halaman Tren?',
                 'Angka di bawah judul grafik harga menunjukkan harga terendah dan tertinggi yang dilaporkan untuk setiap jenis kredit selama rentang tanggal yang dipilih. Kadang PRISMA melaporkan beberapa harga pada waktu yang sama, tetapi hanya memberikan jumlah totalnya. Grafik menghitung kredit tersebut satu kali dan menampilkan rentang harga pada waktu itu. Ringkasan Perdagangan tidak dapat menghitung nilai transaksinya karena jumlah kredit yang diperdagangkan pada tiap harga tidak diketahui.',
+            ],
+            [
+                'Apa arti setiap baris dalam file CSV Tren?',
+                'Setiap baris menunjukkan rentang waktu permintaan data PRISMA dalam UTC, bukan satu transaksi. Jumlah kredit dan rentang harga mengikuti data yang dilaporkan PRISMA. Nilai perdagangan dikosongkan jika belum dapat dipastikan.',
             ],
             [
                 'Bagaimana rendemen CSPKO dan CSPKE dihitung?',

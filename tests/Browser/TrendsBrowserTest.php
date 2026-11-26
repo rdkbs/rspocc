@@ -66,17 +66,17 @@ it('compares credit types and switches metrics, language and theme', function ()
         ->click('#trends-period')
         ->click('[role=menuitemradio]:text-is("Last 7 days")')
         ->assertSee('Trading summary')
-        ->assertSee('Download daily data (CSV)')
+        ->assertSee('Download data with UTC times (CSV)')
         ->assertScript('document.querySelector("a[download]").download', 'rspo-credit-trends-'.$firstDay->toDateString().'-'.$firstDay->addDays(6)->toDateString().'.csv')
         ->assertScript('decodeURIComponent(document.querySelector("a[download]").href.split(",")[1]).trim().split("\r\n").length', 43)
-        ->assertScript('decodeURIComponent(document.querySelector("a[download]").href.split(",")[1]).trim().split("\r\n")[0]', 'date_utc,credit_type,credits_sold,last_traded_price_usd,trade_value_usd,status')
-        ->assertScript('decodeURIComponent(document.querySelector("a[download]").href.split(",")[1]).trim().split("\r\n").filter(row => row.startsWith('.json_encode($firstDay->toDateString().',', JSON_THROW_ON_ERROR).'))', [
-            $firstDay->toDateString().',CSPO,0,,0,no_trades',
-            $firstDay->toDateString().',IS_CSPO,10,2,20,traded',
-            $firstDay->toDateString().',CSPKO,10,2,20,traded',
-            $firstDay->toDateString().',IS_CSPKO,10,2,20,traded',
-            $firstDay->toDateString().',CSPKE,0.1,0.2,0.02,traded',
-            $firstDay->toDateString().',IS_CSPKE,,,,in_progress',
+        ->assertScript('decodeURIComponent(document.querySelector("a[download]").href.split(",")[1]).trim().split("\r\n")[0]', 'period_start_utc,period_end_utc,credit_type,credits_sold,min_price_usd,max_price_usd,trade_value_usd,status')
+        ->assertScript('decodeURIComponent(document.querySelector("a[download]").href.split(",")[1]).trim().split("\r\n").filter(row => row.startsWith('.json_encode($firstDay->toDateString().'T', JSON_THROW_ON_ERROR).')).map(row => row.split(",").slice(2).join(","))', [
+            'CSPO,0,,,0,no_trades',
+            'IS_CSPO,10,2,2,20,traded',
+            'CSPKO,10,2,2,20,traded',
+            'IS_CSPKO,10,2,2,20,traded',
+            'CSPKE,0.1,0.2,0.2,0.02,traded',
+            'IS_CSPKE,,,,,in_progress',
         ])
         ->assertSee('credits traded for USD 140')
         ->assertScript('Array.from(document.querySelectorAll("#trends-summary-panel tfoot tr > *")).map(cell => cell.querySelector("p")?.textContent ?? cell.textContent)', ['Total traded', 'USD 40.02', 'USD 180', 'USD 220.02'])
@@ -300,6 +300,29 @@ it('shows every credit category timestamp under the hovered price date', functio
         'from' => $day->toDateString(),
         'to' => $day->toDateString(),
     ]))
+        ->assertScript('(() => {
+            const csv = decodeURIComponent(document.querySelector("a[download]").href.split(",")[1]).trim();
+            const rows = csv.split("\r\n").slice(1).map(row => row.split(","));
+            return {
+                allTimestampsAreUtc: rows.every(row => row[0].endsWith("Z") && row[1].endsWith("Z")),
+                intervals: rows.filter(row => ["CSPO", "IS_CSPO"].includes(row[2])).map(row => row.slice(0, 2)),
+                values: rows.filter(row => ["CSPO", "IS_CSPO"].includes(row[2])).map(row => row.slice(2).join(",")),
+            };
+        })()', [
+            'allTimestampsAreUtc' => true,
+            'intervals' => [
+                [$day->format('Y-m-d').'T00:00:00.000Z', $day->format('Y-m-d').'T23:59:59.999Z'],
+                [$day->format('Y-m-d').'T08:00:00.000Z', $day->format('Y-m-d').'T12:00:00.000Z'],
+                [$day->format('Y-m-d').'T12:00:00.000Z', $day->format('Y-m-d').'T16:00:00.000Z'],
+                [$day->format('Y-m-d').'T16:00:00.000Z', $day->format('Y-m-d').'T23:59:59.999Z'],
+            ],
+            'values' => [
+                'CSPO,40,2,2,80,traded',
+                'IS_CSPO,10,3,3,30,traded',
+                'IS_CSPO,10,5,5,50,traded',
+                'IS_CSPO,10,3,3,30,traded',
+            ],
+        ])
         ->click('Price')
         ->resize(320, 800)
         ->hover('section:has(h2:text-is("CSPO")) svg.MuiChartsSvgLayer-root')
@@ -394,5 +417,49 @@ it('sums every trade interval when the daily volume is unavailable', function ()
         ])
         ->hover('section:has(h2:text-is("CSPO")) svg.MuiChartsSvgLayer-root')
         ->assertSeeIn('[data-testid="volume-date-tooltip"]', '20 credits traded')
+        ->assertNoJavaScriptErrors();
+});
+
+it('marks equal-priced mixed intervals as partial in the timestamp export', function (): void {
+    $this->travelTo(CarbonImmutable::today('UTC')->addMinutes(10));
+    $day = CarbonImmutable::yesterday('UTC');
+    $root = CreditPriceRetrieval::factory()->create([
+        'credit_type' => 'CSPO',
+        'period_start_at' => $day,
+        'period_end_at' => $day->addDay()->subMillisecond(),
+        'status' => CreditPriceRetrievalStatus::UNRESOLVED,
+        'quantity_sold' => 20,
+        'low_price' => 3,
+        'high_price' => 3,
+        'last_traded_price' => 3,
+    ]);
+
+    foreach ([
+        [$day, $day->addHours(12)],
+        [$day->addHours(12), $day->addDay()->subMillisecond()],
+    ] as [$start, $end]) {
+        CreditPriceRetrieval::factory()->for($root, 'parent')->create([
+            'credit_type' => 'CSPO',
+            'period_start_at' => $start,
+            'period_end_at' => $end,
+            'status' => CreditPriceRetrievalStatus::UNRESOLVED,
+            'quantity_sold' => 10,
+            'low_price' => 3,
+            'high_price' => 3,
+            'error_message' => CreditPriceRetrieval::MIXED_MILLISECOND_MESSAGE,
+        ]);
+    }
+
+    visit('/en/trends?'.http_build_query([
+        'from' => $day->toDateString(),
+        'to' => $day->toDateString(),
+    ]))
+        ->assertScript('(() => {
+            const csv = decodeURIComponent(document.querySelector("a[download]").href.split(",")[1]).trim();
+            return csv.split("\r\n").filter(row => row.split(",")[2] === "CSPO").map(row => row.split(",").slice(2).join(","));
+        })()', [
+            'CSPO,10,3,3,,partial_trade_value',
+            'CSPO,10,3,3,,partial_trade_value',
+        ])
         ->assertNoJavaScriptErrors();
 });
