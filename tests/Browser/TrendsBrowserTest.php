@@ -103,6 +103,19 @@ it('compares credit types and switches metrics, language and theme', function ()
         ->assertScript('Array.from(document.querySelectorAll("#trends-summary-panel tbody tr")).some(row => row.cells[0].textContent === "CSPKO" && row.cells[3].textContent.includes("Non-IS RSPO Credits") && row.cells[3].textContent.includes("IS RSPO Credits") && (row.cells[3].textContent.match(/50%/g) ?? []).length === 2 && row.cells[3].querySelectorAll("sup").length === 1 && row.cells[3].querySelector("svg[role=img]") === null)', true)
         ->click('Volume')
         ->assertSee('Credits sold per UTC day')
+        ->assertScript('Array.from(document.querySelectorAll("#trends-volume-panel section")).filter((section) => section.querySelector("h2")?.textContent === "CSPO").flatMap((card) => Array.from(card.querySelectorAll("dd"), (value) => value.textContent.trim()))', [
+            '0',
+            '70',
+        ])
+        ->assertScript('Array.from(document.querySelectorAll("#trends-volume-panel section")).filter((section) => section.querySelector("h2")?.textContent === "CSPKO").flatMap((card) => Array.from(card.querySelectorAll("dd"), (value) => value.textContent.trim()))', [
+            '20*',
+            '20*',
+        ])
+        ->assertScript('Array.from(document.querySelectorAll("#trends-volume-panel section")).filter((section) => section.querySelector("h2")?.textContent === "CSPKE").flatMap((card) => Array.from(card.querySelectorAll("dd"), (value) => value.textContent.trim()))', [
+            '0.1*',
+            'Volume unavailable',
+        ])
+        ->assertSee('* Totals marked * exclude dates without available volume.')
         ->click('View data table')
         ->assertSee('Time (UTC)')
         ->assertScript('document.querySelector("main details[open] tbody th > span").textContent', $firstDay->addDays(6)->format('M j, Y'))
@@ -223,5 +236,43 @@ it('shows the observed price range for each credit category', function (): void 
         ])
         ->assertSee('Observed price in selected date range · USD / credit')
         ->assertSee('No verified prices')
+        ->assertNoJavaScriptErrors();
+});
+
+it('sums every trade interval when the daily volume is unavailable', function (): void {
+    $this->travelTo(CarbonImmutable::today('UTC')->addMinutes(10));
+    $day = CarbonImmutable::yesterday('UTC');
+    $root = CreditPriceRetrieval::factory()->create([
+        'credit_type' => 'CSPO',
+        'period_start_at' => $day,
+        'period_end_at' => $day->addDay()->subMillisecond(),
+        'quantity_sold' => null,
+        'last_traded_price' => null,
+    ]);
+
+    foreach ([
+        [$day, $day->addHours(12)->subMillisecond(), 12],
+        [$day->addHours(12), $day->addDay()->subMillisecond(), 8],
+    ] as [$start, $end, $quantity]) {
+        CreditPriceRetrieval::factory()->for($root, 'parent')->create([
+            'credit_type' => 'CSPO',
+            'period_start_at' => $start,
+            'period_end_at' => $end,
+            'quantity_sold' => $quantity,
+            'last_traded_price' => 2,
+            'low_price' => 2,
+            'high_price' => 2,
+        ]);
+    }
+
+    visit('/en/trends?'.http_build_query([
+        'from' => $day->toDateString(),
+        'to' => $day->toDateString(),
+    ]))
+        ->click('Volume')
+        ->assertScript('Array.from(document.querySelectorAll("#trends-volume-panel section")).filter((section) => section.querySelector("h2")?.textContent === "CSPO").flatMap((card) => Array.from(card.querySelectorAll("dd"), (value) => value.textContent.trim()))', [
+            '20',
+            'Volume unavailable',
+        ])
         ->assertNoJavaScriptErrors();
 });
