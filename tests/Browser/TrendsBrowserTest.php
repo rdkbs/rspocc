@@ -165,7 +165,10 @@ it('compares credit types and switches metrics, language and theme', function ()
             ?.querySelector(".MuiChartsAxis-directionX .MuiChartsAxis-tickLabel")?.textContent', $noTradeDay->format('M j'))
         ->hover('section:has(h2:text-is("CSPKO")) svg.MuiChartsSvgLayer-root')
         ->assertVisible('[data-testid="price-date-tooltip"]')
-        ->assertSeeIn('[data-testid="price-date-tooltip"]', 'No trades')
+        ->assertSeeIn('[data-testid="price-date-tooltip"]', 'Daily summary')
+        ->assertScript('Array.from(document.querySelectorAll("[data-testid=trade-day-summary] > div > div"))
+            .map(category => category.textContent)
+            .filter(text => text.includes("No trades")).length', 2)
         ->assertScript('getComputedStyle(document.querySelector("[data-testid=price-tooltip-empty]")).color !== getComputedStyle(document.querySelector("[data-testid=price-tooltip-date]")).color', true)
         ->assertNoJavaScriptErrors();
 });
@@ -252,9 +255,11 @@ it('shows every credit category timestamp under the hovered price date', functio
     $day = CarbonImmutable::yesterday('UTC');
 
     foreach ([
-        'CSPO' => [2, 2],
-        'IS_CSPO' => [3, 5],
-    ] as $creditType => [$firstPrice, $secondPrice]) {
+        'CSPO' => [2],
+        'IS_CSPO' => [3, 5, 3],
+    ] as $creditType => $prices) {
+        $lowPrice = min($prices);
+        $highPrice = max($prices);
         $root = CreditPriceRetrieval::factory()->create([
             'credit_type' => $creditType,
             'period_start_at' => $day,
@@ -263,10 +268,10 @@ it('shows every credit category timestamp under the hovered price date', functio
                 ? CreditPriceRetrievalStatus::RESOLVED
                 : CreditPriceRetrievalStatus::MIXED,
             'child_quantity_matches' => true,
-            'quantity_sold' => 30,
-            'last_traded_price' => $secondPrice,
-            'low_price' => $firstPrice,
-            'high_price' => $secondPrice,
+            'quantity_sold' => $creditType === 'CSPO' ? 40 : 30,
+            'last_traded_price' => $prices[array_key_last($prices)],
+            'low_price' => $lowPrice,
+            'high_price' => $highPrice,
         ]);
 
         if ($creditType === 'CSPO') {
@@ -274,8 +279,9 @@ it('shows every credit category timestamp under the hovered price date', functio
         }
 
         foreach ([
-            [$day->setTime(8, 0), $day->setTime(12, 0), 10, $firstPrice],
-            [$day->setTime(12, 0), $day->addDay()->subMillisecond(), 20, $secondPrice],
+            [$day->setTime(8, 0), $day->setTime(12, 0), 10, $prices[0]],
+            [$day->setTime(12, 0), $day->setTime(16, 0), 10, $prices[1]],
+            [$day->setTime(16, 0), $day->addDay()->subMillisecond(), 10, $prices[2]],
         ] as [$start, $end, $quantity, $price]) {
             CreditPriceRetrieval::factory()->for($root, 'parent')->create([
                 'credit_type' => $creditType,
@@ -298,20 +304,56 @@ it('shows every credit category timestamp under the hovered price date', functio
         ->hover('section:has(h2:text-is("CSPO")) svg.MuiChartsSvgLayer-root')
         ->assertVisible('[data-testid="price-date-tooltip"]')
         ->assertSeeIn('[data-testid="price-date-tooltip"]', $day->format('M j, Y'))
-        ->assertScript('Array.from(document.querySelectorAll("#trends-price-panel section")).find(section => section.querySelector("h2")?.textContent === "CSPO")?.querySelectorAll("g[data-series] circle").length', 3)
+        ->assertScript('(() => {
+            const card = Array.from(document.querySelectorAll("#trends-price-panel section")).find(section => section.querySelector("h2")?.textContent === "CSPO");
+            const markers = Array.from(card.querySelectorAll("g[data-series] circle"));
+            return markers.length === 4 && new Set(markers.map(marker => marker.getAttribute("transform"))).size === 4;
+        })()', true)
         ->assertScript('(() => {
             const { left, right } = document.querySelector("[data-testid=price-date-tooltip]").getBoundingClientRect();
             return left >= 0 && right <= window.innerWidth;
         })()', true)
         ->assertScript('(() => {
             const rows = Array.from(document.querySelectorAll("[data-testid=price-date-tooltip] li"), row => row.textContent);
-            return rows.length === 3
+            return rows.length === 4
                 && rows.filter(row => row.trim().startsWith("Non-IS RSPO Credits")).length === 1
-                && rows.filter(row => row.trim().startsWith("IS RSPO Credits")).length === 2
+                && rows.filter(row => row.trim().startsWith("IS RSPO Credits")).length === 3
                 && rows.some(row => row.includes("08:00:00.000–12:00:00.000") && row.includes("USD 3"))
-                && rows.some(row => row.includes("12:00:00.000–23:59:59.999") && row.includes("USD 5"));
+                && rows.some(row => row.includes("12:00:00.000–16:00:00.000") && row.includes("USD 5"))
+                && rows.some(row => row.includes("16:00:00.000–23:59:59.999") && row.includes("USD 3"));
         })()', true)
+        ->assertScript('Array.from(document.querySelectorAll("[data-testid=price-date-tooltip] li"))
+            .filter(row => row.textContent.includes("10 credits")).length', 3)
+        ->assertSeeIn('[data-testid="trade-day-summary"]', '30 credits sold')
+        ->assertSeeIn('[data-testid="trade-day-summary"]', 'USD 3–5 / credit')
+        ->resize(320, 400)
+        ->hover('section:has(h2:text-is("CSPO")) svg.MuiChartsSvgLayer-root')
+        ->assertScript('(async () => {
+            const tooltip = document.querySelector("[data-testid=price-date-tooltip]");
+            const chart = tooltip.closest("section").querySelector("svg.MuiChartsSvgLayer-root");
+            const wheel = new WheelEvent("wheel", { bubbles: true, cancelable: true, deltaY: 80 });
+            chart.dispatchEvent(wheel);
+            await new Promise(requestAnimationFrame);
+            const scrolled = wheel.defaultPrevented && tooltip.scrollTop > 0;
+            tooltip.scrollTop = tooltip.scrollHeight;
+            const atBottom = new WheelEvent("wheel", { bubbles: true, cancelable: true, deltaY: 80 });
+            chart.dispatchEvent(atBottom);
+            return scrolled && atBottom.defaultPrevented;
+        })()', true)
+        ->click('Volume')
+        ->hover('section:has(h2:text-is("CSPO")) svg.MuiChartsSvgLayer-root')
+        ->assertScript('Array.from(document.querySelectorAll("[data-testid=volume-date-tooltip] li"))
+            .filter(row => row.textContent.includes("10 credits")).length', 3)
+        ->assertSeeIn('[data-testid="trade-day-summary"]', '30 credits sold')
+        ->assertScript('Array.from(document.querySelectorAll("[data-testid=volume-date-tooltip] li"))
+            .filter(row => row.textContent.includes("USD 3 / credit")).length', 2)
         ->assertNoJavaScriptErrors();
+
+    visit('/en/trends?period=last-365-days')
+        ->click('Price')
+        ->resize(320, 800)
+        ->hover('section:has(h2:text-is("CSPO")) g[data-series] circle:nth-of-type(3)')
+        ->assertSeeIn('[data-testid="price-date-tooltip"]', $day->format('M j, Y'));
 });
 
 it('sums every trade interval when the daily volume is unavailable', function (): void {
@@ -349,5 +391,7 @@ it('sums every trade interval when the daily volume is unavailable', function ()
             '20',
             'Volume unavailable',
         ])
+        ->hover('section:has(h2:text-is("CSPO")) svg.MuiChartsSvgLayer-root')
+        ->assertSeeIn('[data-testid="volume-date-tooltip"]', '20 credits sold')
         ->assertNoJavaScriptErrors();
 });

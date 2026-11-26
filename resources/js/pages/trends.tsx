@@ -18,6 +18,7 @@ import Typography from '@mui/material/Typography';
 import { BarChart } from '@mui/x-charts/BarChart';
 import {
     ChartsTooltipContainer,
+    useAxesTooltip,
     useItemTooltip,
 } from '@mui/x-charts/ChartsTooltip';
 import {
@@ -25,8 +26,12 @@ import {
     useDrawingArea,
     useXScale,
 } from '@mui/x-charts/hooks';
-import { ScatterChart } from '@mui/x-charts/ScatterChart';
-import { useEffect, useState } from 'react';
+import {
+    ScatterChart,
+    ScatterMarker,
+    type ScatterMarkerProps,
+} from '@mui/x-charts/ScatterChart';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { formatDisplayNumber } from '@/calculator-assumptions';
 import Layout from '@/components/layout';
 import DateRangeFields from '@/components/date-range-fields';
@@ -35,6 +40,9 @@ import { index as trendsIndex } from '@/routes/trends';
 const products = ['CSPO', 'CSPKO', 'CSPKE'] as const;
 const seriesColors = ['primary.dark', 'secondary.main'] as const;
 const dayMs = 86_400_000;
+const priceMarkerOffsetsContext = createContext<
+    Map<string, { dateIndex: number; offset: number }>
+>(new Map());
 
 type Language = 'id' | 'en';
 type Metric = 'price' | 'volume';
@@ -146,6 +154,7 @@ type Point = {
     values: (number | null)[];
     observed: boolean[];
     noTrades: boolean[];
+    dailyVolumes: (number | null)[];
     intervals: TradeInterval[][];
 };
 
@@ -864,6 +873,20 @@ function chartPoints(
                 trades[type]?.[date] !== undefined ||
                 !!tradeIntervals[type]?.[date]?.length,
         ),
+        dailyVolumes: types.map((type) => {
+            const dailyVolume = trades[type]?.[date]?.volume;
+            if (dailyVolume !== null && dailyVolume !== undefined) {
+                return dailyVolume;
+            }
+
+            const intervals = tradeIntervals[type]?.[date] ?? [];
+            return intervals.length > 0
+                ? intervals.reduce(
+                      (total, interval) => total + interval.quantity,
+                      0,
+                  )
+                : null;
+        }),
         noTrades: types.map((type) => trades[type]?.[date]?.volume === 0),
         values: types.map((type) => {
             const dailyValue = trades[type]?.[date]?.[metric];
@@ -957,6 +980,145 @@ function PriceDateHoverListener({
     return null;
 }
 
+function scrollHoveredChartTooltip(section: HTMLElement | null) {
+    if (!section) return;
+
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let scrollingTooltip: HTMLElement | null = null;
+    let scrollTarget = 0;
+    let frame = 0;
+
+    const scrollFrame = () => {
+        if (!scrollingTooltip?.isConnected) {
+            frame = 0;
+            return;
+        }
+
+        const distance = scrollTarget - scrollingTooltip.scrollTop;
+        if (Math.abs(distance) <= 2) {
+            scrollingTooltip.scrollTop = scrollTarget;
+            frame = 0;
+            return;
+        }
+
+        scrollingTooltip.scrollTop += distance * 0.35;
+        frame = requestAnimationFrame(scrollFrame);
+    };
+
+    const handleWheel = (event: WheelEvent) => {
+        if (
+            event.ctrlKey ||
+            event.deltaY === 0 ||
+            Math.abs(event.deltaX) > Math.abs(event.deltaY)
+        ) {
+            return;
+        }
+
+        const tooltip = section.querySelector<HTMLElement>(
+            '[data-chart-tooltip]',
+        );
+        if (!tooltip || !event.cancelable) return;
+
+        event.preventDefault();
+
+        const deltaY =
+            event.deltaY *
+            (event.deltaMode === WheelEvent.DOM_DELTA_PAGE
+                ? tooltip.clientHeight
+                : event.deltaMode === WheelEvent.DOM_DELTA_LINE
+                  ? 16
+                  : 1);
+        if (reducedMotion.matches) {
+            cancelAnimationFrame(frame);
+            frame = 0;
+            tooltip.scrollTop += deltaY;
+            return;
+        }
+
+        if (!frame || scrollingTooltip !== tooltip) {
+            cancelAnimationFrame(frame);
+            scrollingTooltip = tooltip;
+            scrollTarget = tooltip.scrollTop;
+            frame = requestAnimationFrame(scrollFrame);
+        }
+
+        scrollTarget = Math.round(
+            Math.max(
+                0,
+                Math.min(
+                    scrollTarget + deltaY,
+                    tooltip.scrollHeight - tooltip.clientHeight,
+                ),
+            ),
+        );
+    };
+
+    section.addEventListener('wheel', handleWheel, { passive: false });
+    return () => {
+        cancelAnimationFrame(frame);
+        section.removeEventListener('wheel', handleWheel);
+    };
+}
+
+const NoChartTooltip = () => null;
+
+function TradeChartTooltip({
+    points,
+    volume,
+    hoveredDateIndex,
+    renderDetails,
+}: {
+    points: Point[];
+    volume: boolean;
+    hoveredDateIndex: number | null;
+    renderDetails: (point: Point) => React.ReactNode;
+}) {
+    const item = useItemTooltip<'scatter'>();
+    const axis = useAxesTooltip<'bar'>({ directions: ['x'] })?.[0];
+    const dateIndex = volume
+        ? axis?.dataIndex
+        : (hoveredDateIndex ?? item?.value?.x);
+    const point = dateIndex == null ? undefined : points[dateIndex];
+    const axisTooltip = volume || hoveredDateIndex !== null;
+
+    return point ? (
+        <ChartsTooltipContainer
+            trigger={axisTooltip ? 'axis' : 'item'}
+            anchor={axisTooltip ? 'chart' : 'node'}
+        >
+            {renderDetails(point)}
+        </ChartsTooltipContainer>
+    ) : null;
+}
+
+function OffsetPriceMarker(props: ScatterMarkerProps) {
+    const markerOffsets = useContext(priceMarkerOffsetsContext);
+    const xScale = useXScale<'point'>();
+    const marker = markerOffsets.get(`${props.seriesId}/${props.dataIndex}`);
+    const currentPosition = marker ? xScale(marker.dateIndex) : undefined;
+    const adjacentPositions =
+        marker && currentPosition !== undefined
+            ? [xScale(marker.dateIndex - 1), xScale(marker.dateIndex + 1)]
+                  .filter(
+                      (position): position is number => position !== undefined,
+                  )
+                  .map((position) => Math.abs(position - currentPosition))
+            : [];
+    const dateSpacing = adjacentPositions.length
+        ? Math.min(...adjacentPositions)
+        : 24;
+
+    return (
+        <ScatterMarker
+            {...props}
+            x={
+                props.x +
+                (marker?.offset ?? 0) * Math.min(12, dateSpacing * 0.4)
+            }
+        />
+    );
+}
+
 function ProductChart({
     product,
     points,
@@ -1000,7 +1162,7 @@ function ProductChart({
             </Box>
         </Box>
     );
-    const formatRange = ({ low, high }: TradeInterval) =>
+    const formatRange = ({ low, high }: Pick<TradeInterval, 'low' | 'high'>) =>
         low === high
             ? formatDisplayNumber(low, lang)
             : `${formatDisplayNumber(low, lang)}–${formatDisplayNumber(high, lang)}`;
@@ -1026,6 +1188,39 @@ function ProductChart({
                 : [{ x, y: closingPrice, id: date }, ...intervalPoints];
         }),
     );
+    const markerGroups = new Map<
+        string,
+        { seriesId: string; dataIndex: number; dateIndex: number }[]
+    >();
+    pricePoints.forEach((seriesPoints, seriesIndex) => {
+        seriesPoints.forEach(({ x, y }, dataIndex) => {
+            const position = `${x}/${y}`;
+            const markers = markerGroups.get(position) ?? [];
+            markers.push({
+                seriesId: `${product}-${seriesIndex}`,
+                dataIndex,
+                dateIndex: x,
+            });
+            markerGroups.set(position, markers);
+        });
+    });
+    const priceMarkerOffsets = new Map<
+        string,
+        { dateIndex: number; offset: number }
+    >();
+    for (const markers of markerGroups.values()) {
+        if (markers.length < 2) {
+            continue;
+        }
+
+        const spread = Math.min(2, markers.length - 1);
+        markers.forEach(({ seriesId, dataIndex, dateIndex }, index) => {
+            priceMarkerOffsets.set(`${seriesId}/${dataIndex}`, {
+                dateIndex,
+                offset: ((index / (markers.length - 1)) * 2 - 1) * (spread / 2),
+            });
+        });
+    }
     const tableRows = points
         .slice()
         .reverse()
@@ -1144,22 +1339,20 @@ function ProductChart({
         return `USD ${low}${low === high ? '' : `–${high}`}`;
     };
     const series = labels.map((label, index) => ({
+        id: `${product}-${index}`,
         label,
         color: index === 0 ? palette.primary.dark : palette.secondary.main,
     }));
-    const PriceTooltip = () => {
-        const tooltip = useItemTooltip<'scatter'>();
-        const point =
-            hoveredDateIndex === null
-                ? tooltip?.value
-                    ? visiblePoints[tooltip.value.x]
-                    : undefined
-                : visiblePoints[hoveredDateIndex];
+    const renderTooltipPrice = (range: Pick<TradeInterval, 'low' | 'high'>) => (
+        <>
+            <Box component="span" sx={{ fontSize: '0.8em', mr: '0.2em' }}>
+                USD
+            </Box>{' '}
+            {formatRange(range)} / {id ? 'kredit' : 'credit'}
+        </>
+    );
 
-        if (!point) {
-            return null;
-        }
-
+    const renderTradeTooltip = (point: Point) => {
         const intervals = point.intervals
             .flatMap((records, categoryIndex) =>
                 records.map((interval) => ({ interval, categoryIndex })),
@@ -1171,114 +1364,214 @@ function ProductChart({
             );
 
         return (
-            <ChartsTooltipContainer
-                trigger={hoveredDateIndex === null ? 'item' : 'axis'}
-                anchor="pointer"
+            <Box
+                data-chart-tooltip
+                data-testid={
+                    volume ? 'volume-date-tooltip' : 'price-date-tooltip'
+                }
+                sx={{
+                    minWidth: 240,
+                    maxWidth: 360,
+                    maxHeight: 'min(50vh, 320px)',
+                    overflowY: 'auto',
+                    p: 1.5,
+                    border: 1,
+                    borderColor: 'divider',
+                    borderRadius: 1,
+                    bgcolor: 'background.paper',
+                    boxShadow: 3,
+                }}
             >
-                <Box
-                    data-testid="price-date-tooltip"
-                    sx={{
-                        minWidth: 240,
-                        maxWidth: 360,
-                        maxHeight: 'min(50vh, 320px)',
-                        overflowY: 'auto',
-                        p: 1.5,
-                        border: 1,
-                        borderColor: 'divider',
-                        borderRadius: 1,
-                        bgcolor: 'background.paper',
-                        boxShadow: 3,
-                    }}
+                <Typography
+                    component="p"
+                    variant="subtitle2"
+                    data-testid="price-tooltip-date"
+                    sx={{ fontWeight: 700 }}
                 >
-                    <Typography
-                        component="p"
-                        variant="subtitle2"
-                        data-testid="price-tooltip-date"
-                        sx={{ fontWeight: 700 }}
-                    >
-                        {fullDateFormat.format(new Date(point.date))}
+                    {fullDateFormat.format(new Date(point.date))}
+                </Typography>
+                <Divider sx={{ my: 1 }} />
+                <Stack spacing={0.75} data-testid="trade-day-summary">
+                    <Typography variant="caption" color="text.secondary">
+                        {id ? 'Ringkasan harian' : 'Daily summary'}
                     </Typography>
-                    <Divider sx={{ my: 1 }} />
-                    {intervals.length === 0 && point.noTrades.every(Boolean) ? (
-                        <Typography
-                            data-testid="price-tooltip-empty"
-                            variant="body2"
-                            sx={{ color: 'text.disabled' }}
-                        >
-                            {id ? 'Tidak ada transaksi' : 'No trades'}
-                        </Typography>
-                    ) : (
-                        <Stack
-                            component="ul"
-                            spacing={1}
-                            sx={{ listStyle: 'none', m: 0, p: 0 }}
-                        >
-                            {intervals.map(({ interval, categoryIndex }) => (
-                                <Box
-                                    component="li"
-                                    key={`${categoryIndex}/${interval.start}/${interval.end}`}
-                                    sx={{
-                                        display: 'grid',
-                                        gridTemplateColumns:
-                                            'minmax(0, 1fr) auto',
-                                        alignItems: 'center',
-                                        columnGap: 1.5,
-                                    }}
-                                >
-                                    <Box sx={{ minWidth: 0 }}>
-                                        <Typography
-                                            variant="caption"
-                                            color="text.secondary"
-                                            sx={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: 0.75,
-                                            }}
-                                        >
-                                            <Box
-                                                component="span"
-                                                aria-hidden="true"
-                                                sx={{
-                                                    bgcolor:
-                                                        series[categoryIndex]
-                                                            .color,
-                                                    flex: '0 0 auto',
-                                                    width: 7,
-                                                    height: 7,
-                                                }}
-                                            />
-                                            {labels[categoryIndex]}
-                                        </Typography>
-                                        <Typography
-                                            variant="body2"
-                                            sx={{
-                                                fontVariantNumeric:
-                                                    'tabular-nums',
-                                            }}
-                                        >
-                                            {renderTime(interval.start)}
-                                            {interval.end !==
-                                                interval.start && (
-                                                <>–{renderTime(interval.end)}</>
-                                            )}
-                                        </Typography>
-                                    </Box>
+                    <Box
+                        sx={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                            gap: 1.5,
+                            overflowWrap: 'anywhere',
+                        }}
+                    >
+                        {labels.map((label, index) => {
+                            const quantity = point.dailyVolumes[index];
+                            const prices = point.intervals[index].flatMap(
+                                ({ low, high }) => [low, high],
+                            );
+                            const closingPrice = point.values[index];
+                            if (!volume && closingPrice !== null) {
+                                prices.push(closingPrice);
+                            }
+
+                            return (
+                                <Box key={label} sx={{ minWidth: 0 }}>
                                     <Typography
                                         variant="body2"
                                         sx={{
-                                            whiteSpace: 'nowrap',
-                                            fontWeight: 600,
+                                            fontWeight: 700,
+                                            color: series[index].color,
+                                        }}
+                                    >
+                                        {index === 0 ? 'Non-IS' : 'IS'}
+                                    </Typography>
+                                    {!volume && quantity !== 0 && (
+                                        <Typography
+                                            variant="body2"
+                                            sx={{
+                                                fontWeight:
+                                                    prices.length > 0
+                                                        ? 700
+                                                        : 400,
+                                            }}
+                                        >
+                                            {prices.length === 0
+                                                ? id
+                                                    ? 'Harga tidak tersedia'
+                                                    : 'Price unavailable'
+                                                : renderTooltipPrice({
+                                                      low: Math.min(...prices),
+                                                      high: Math.max(...prices),
+                                                  })}
+                                        </Typography>
+                                    )}
+                                    <Typography
+                                        variant={volume ? 'body2' : 'caption'}
+                                        data-testid={
+                                            quantity === 0
+                                                ? 'price-tooltip-empty'
+                                                : undefined
+                                        }
+                                        sx={{
+                                            color:
+                                                quantity === 0
+                                                    ? 'text.disabled'
+                                                    : volume
+                                                      ? 'text.primary'
+                                                      : 'text.secondary',
+                                            fontWeight:
+                                                volume && quantity
+                                                    ? 700
+                                                    : undefined,
+                                        }}
+                                    >
+                                        {quantity === 0
+                                            ? id
+                                                ? 'Tidak ada transaksi'
+                                                : 'No trades'
+                                            : quantity === null
+                                              ? id
+                                                  ? 'Volume tidak tersedia'
+                                                  : 'Volume unavailable'
+                                              : `${formatDisplayNumber(quantity, lang)} ${id ? 'kredit terjual' : 'credits sold'}`}
+                                    </Typography>
+                                </Box>
+                            );
+                        })}
+                    </Box>
+                </Stack>
+                {intervals.length > 0 && (
+                    <>
+                        <Divider sx={{ my: 1 }} />
+                        <Typography variant="caption" color="text.secondary">
+                            {id
+                                ? 'Rincian per waktu (UTC)'
+                                : 'Interval details (UTC)'}
+                        </Typography>
+                    </>
+                )}
+                {intervals.length > 0 ? (
+                    <Stack
+                        component="ul"
+                        spacing={1}
+                        sx={{ listStyle: 'none', m: 0, p: 0 }}
+                    >
+                        {intervals.map(({ interval, categoryIndex }) => (
+                            <Box
+                                component="li"
+                                key={`${categoryIndex}/${interval.start}/${interval.end}`}
+                                sx={{
+                                    display: 'grid',
+                                    gridTemplateColumns: 'minmax(0, 1fr) auto',
+                                    alignItems: 'center',
+                                    columnGap: 1.5,
+                                }}
+                            >
+                                <Box sx={{ minWidth: 0 }}>
+                                    <Typography
+                                        variant="caption"
+                                        color="text.secondary"
+                                        sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 0.75,
+                                        }}
+                                    >
+                                        <Box
+                                            component="span"
+                                            aria-hidden="true"
+                                            sx={{
+                                                bgcolor:
+                                                    series[categoryIndex].color,
+                                                borderRadius: volume
+                                                    ? 0
+                                                    : '50%',
+                                                flex: '0 0 auto',
+                                                width: 7,
+                                                height: 7,
+                                            }}
+                                        />
+                                        {labels[categoryIndex]}
+                                    </Typography>
+                                    <Typography
+                                        variant="body2"
+                                        sx={{
                                             fontVariantNumeric: 'tabular-nums',
                                         }}
                                     >
-                                        USD {formatRange(interval)}
+                                        {renderTime(interval.start)}
+                                        {interval.end !== interval.start && (
+                                            <>–{renderTime(interval.end)}</>
+                                        )}
                                     </Typography>
                                 </Box>
-                            ))}
-                        </Stack>
-                    )}
-                </Box>
-            </ChartsTooltipContainer>
+                                <Stack
+                                    sx={{
+                                        textAlign: 'right',
+                                        fontVariantNumeric: 'tabular-nums',
+                                    }}
+                                >
+                                    <Typography
+                                        variant="body2"
+                                        sx={{ fontWeight: 600 }}
+                                    >
+                                        {volume
+                                            ? `${formatDisplayNumber(interval.quantity, lang)} ${id ? 'kredit' : 'credits'}`
+                                            : renderTooltipPrice(interval)}
+                                    </Typography>
+                                    <Typography
+                                        variant="caption"
+                                        color="text.secondary"
+                                    >
+                                        {volume
+                                            ? renderTooltipPrice(interval)
+                                            : `${formatDisplayNumber(interval.quantity, lang)} ${id ? 'kredit' : 'credits'}`}
+                                    </Typography>
+                                </Stack>
+                            </Box>
+                        ))}
+                    </Stack>
+                ) : null}
+            </Box>
         );
     };
     const unit = volume
@@ -1289,6 +1582,7 @@ function ProductChart({
 
     return (
         <Paper
+            ref={scrollHoveredChartTooltip}
             component="section"
             variant="outlined"
             sx={{ p: { xs: 2, sm: 3 }, minWidth: 0 }}
@@ -1499,6 +1793,7 @@ function ProductChart({
                     skipAnimation
                     hideLegend
                     title={`${product} · ${unit}`}
+                    slots={{ tooltip: NoChartTooltip }}
                     xAxis={[
                         {
                             scaleType: 'band',
@@ -1514,87 +1809,108 @@ function ProductChart({
                                 ? null
                                 : formatDisplayNumber(value, lang),
                     }))}
-                />
-            ) : (
-                <ScatterChart
-                    height={240}
-                    skipAnimation
-                    hideLegend
-                    disableHitArea
-                    title={`${product} · USD`}
-                    axisHighlight={{ x: 'line' }}
-                    sx={{
-                        '& .MuiChartsAxisHighlight-root': {
-                            stroke: 'primary.main',
-                            strokeDasharray: '2 3',
-                            opacity: 0.65,
-                        },
-                    }}
-                    slots={{
-                        tooltip: PriceTooltip,
-                        ...(showEmptyPriceTimeline && {
-                            noDataOverlay: () => null,
-                        }),
-                    }}
-                    tooltipAxis={
-                        hoveredDateIndex === null
-                            ? []
-                            : [{ axisId: 'date', dataIndex: hoveredDateIndex }]
-                    }
-                    {...(showEmptyPriceTimeline && {
-                        yAxis: [{ position: 'none', min: 0, max: 1 }],
-                    })}
-                    xAxis={[
-                        {
-                            id: 'date',
-                            scaleType: 'point',
-                            data: visiblePoints.map((_, index) => index),
-                            tickNumber: visiblePoints.length,
-                            valueFormatter: (value: number) =>
-                                formatDate(
-                                    visiblePoints[Math.round(value)]?.date ??
-                                        visiblePoints[0].date,
-                                ),
-                        },
-                    ]}
-                    series={series.map((item, index) => ({
-                        ...item,
-                        markerSize: 5,
-                        data: pricePoints[index],
-                        valueFormatter: (
-                            value: {
-                                x: number;
-                                y: number;
-                                id?: string | number;
-                            } | null,
-                        ) => {
-                            if (value === null) {
-                                return null;
-                            }
-
-                            const pointId = String(value.id ?? '');
-                            const range = priceRanges.get(
-                                pointId.slice(0, pointId.lastIndexOf('/')),
-                            );
-                            if (range) {
-                                return `${formatWindow(range)} · ${formatRange(range)} USD`;
-                            }
-
-                            const point = visiblePoints[value.x];
-                            const price = `${formatDate(point.date)} · ${formatDisplayNumber(value.y, lang)} USD`;
-                            const otherIndex = index === 0 ? 1 : 0;
-
-                            return point.values[otherIndex] === value.y
-                                ? `${price} (${labels.join(' + ')})`
-                                : price;
-                        },
-                    }))}
                 >
-                    <PriceDateHoverListener
-                        count={visiblePoints.length}
-                        onDateHover={setHoveredDateIndex}
+                    <TradeChartTooltip
+                        points={visiblePoints}
+                        volume={volume}
+                        hoveredDateIndex={hoveredDateIndex}
+                        renderDetails={renderTradeTooltip}
                     />
-                </ScatterChart>
+                </BarChart>
+            ) : (
+                <priceMarkerOffsetsContext.Provider value={priceMarkerOffsets}>
+                    <ScatterChart
+                        height={240}
+                        skipAnimation
+                        hideLegend
+                        disableHitArea
+                        title={`${product} · USD`}
+                        axisHighlight={{ x: 'line' }}
+                        sx={{
+                            '& .MuiChartsAxisHighlight-root': {
+                                stroke: 'primary.main',
+                                strokeDasharray: '2 3',
+                                opacity: 0.65,
+                            },
+                        }}
+                        slots={{
+                            tooltip: NoChartTooltip,
+                            marker: OffsetPriceMarker,
+                            ...(showEmptyPriceTimeline && {
+                                noDataOverlay: () => null,
+                            }),
+                        }}
+                        tooltipAxis={
+                            hoveredDateIndex === null
+                                ? []
+                                : [
+                                      {
+                                          axisId: 'date',
+                                          dataIndex: hoveredDateIndex,
+                                      },
+                                  ]
+                        }
+                        {...(showEmptyPriceTimeline && {
+                            yAxis: [{ position: 'none', min: 0, max: 1 }],
+                        })}
+                        xAxis={[
+                            {
+                                id: 'date',
+                                scaleType: 'point',
+                                data: visiblePoints.map((_, index) => index),
+                                tickNumber: visiblePoints.length,
+                                valueFormatter: (value: number) =>
+                                    formatDate(
+                                        visiblePoints[Math.round(value)]
+                                            ?.date ?? visiblePoints[0].date,
+                                    ),
+                            },
+                        ]}
+                        series={series.map((item, index) => ({
+                            ...item,
+                            markerSize: 5,
+                            data: pricePoints[index],
+                            valueFormatter: (
+                                value: {
+                                    x: number;
+                                    y: number;
+                                    id?: string | number;
+                                } | null,
+                            ) => {
+                                if (value === null) {
+                                    return null;
+                                }
+
+                                const pointId = String(value.id ?? '');
+                                const range = priceRanges.get(
+                                    pointId.slice(0, pointId.lastIndexOf('/')),
+                                );
+                                if (range) {
+                                    return `${formatWindow(range)} · ${formatRange(range)} USD`;
+                                }
+
+                                const point = visiblePoints[value.x];
+                                const price = `${formatDate(point.date)} · ${formatDisplayNumber(value.y, lang)} USD`;
+                                const otherIndex = index === 0 ? 1 : 0;
+
+                                return point.values[otherIndex] === value.y
+                                    ? `${price} (${labels.join(' + ')})`
+                                    : price;
+                            },
+                        }))}
+                    >
+                        <PriceDateHoverListener
+                            count={visiblePoints.length}
+                            onDateHover={setHoveredDateIndex}
+                        />
+                        <TradeChartTooltip
+                            points={visiblePoints}
+                            volume={volume}
+                            hoveredDateIndex={hoveredDateIndex}
+                            renderDetails={renderTradeTooltip}
+                        />
+                    </ScatterChart>
+                </priceMarkerOffsetsContext.Provider>
             )}
             {showEmptyPriceTimeline && (
                 <Typography color="text.secondary">
