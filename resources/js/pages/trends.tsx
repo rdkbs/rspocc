@@ -1,5 +1,6 @@
 import { Form, router } from '@inertiajs/react';
 import ArrowDropDown from '@mui/icons-material/ArrowDropDown';
+import DownloadOutlined from '@mui/icons-material/DownloadOutlined';
 import ScheduleOutlined from '@mui/icons-material/ScheduleOutlined';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -2358,41 +2359,76 @@ export default function Trends({
                         variant="outlined"
                         sx={{ p: { xs: 1.5, sm: 2 }, bgcolor: 'action.hover' }}
                     >
-                        <Stack spacing={2}>
-                            <Button
-                                id="trends-period"
-                                variant="outlined"
-                                endIcon={<ArrowDropDown />}
-                                aria-haspopup="menu"
-                                aria-expanded={rangeAnchor !== null}
-                                aria-controls={
-                                    rangeAnchor
-                                        ? 'trends-period-menu'
-                                        : undefined
-                                }
-                                onClick={(event) =>
-                                    setRangeAnchor(event.currentTarget)
-                                }
+                        <Stack spacing={1.5}>
+                            <Stack
+                                direction={{ xs: 'column', sm: 'row' }}
+                                spacing={1.5}
                                 sx={{
-                                    width: { xs: '100%', sm: 240 },
-                                    minHeight: 44,
+                                    alignItems: { sm: 'center' },
                                     justifyContent: 'space-between',
                                 }}
                             >
-                                <Box
-                                    component="span"
-                                    sx={{ textAlign: 'left' }}
+                                <Button
+                                    id="trends-period"
+                                    variant="outlined"
+                                    endIcon={<ArrowDropDown />}
+                                    aria-haspopup="menu"
+                                    aria-expanded={rangeAnchor !== null}
+                                    aria-controls={
+                                        rangeAnchor
+                                            ? 'trends-period-menu'
+                                            : undefined
+                                    }
+                                    onClick={(event) =>
+                                        setRangeAnchor(event.currentTarget)
+                                    }
+                                    sx={{
+                                        width: { xs: '100%', sm: 240 },
+                                        minHeight: 48,
+                                        justifyContent: 'space-between',
+                                    }}
                                 >
-                                    <Typography
+                                    <Box
                                         component="span"
-                                        variant="caption"
-                                        sx={{ display: 'block' }}
+                                        sx={{ textAlign: 'left' }}
                                     >
-                                        {id ? 'Rentang tanggal' : 'Date range'}
-                                    </Typography>
-                                    {rangeOptions[selectedRange]}
-                                </Box>
-                            </Button>
+                                        <Typography
+                                            component="span"
+                                            variant="caption"
+                                            sx={{ display: 'block' }}
+                                        >
+                                            {id
+                                                ? 'Rentang tanggal'
+                                                : 'Date range'}
+                                        </Typography>
+                                        {rangeOptions[selectedRange]}
+                                    </Box>
+                                </Button>
+                                <Button
+                                    component="a"
+                                    variant="text"
+                                    color="inherit"
+                                    startIcon={<DownloadOutlined />}
+                                    href={`data:text/csv;charset=utf-8,${encodeURIComponent(timestampCsv(dates, trades, tradeIntervals, collectionDates))}`}
+                                    download={`rspo-credit-trends-${startDate}-${endDate}.csv`}
+                                    sx={{
+                                        alignSelf: {
+                                            xs: 'stretch',
+                                            sm: 'center',
+                                        },
+                                        minHeight: 48,
+                                        justifyContent: {
+                                            xs: 'flex-start',
+                                            sm: 'center',
+                                        },
+                                        px: 1.5,
+                                    }}
+                                >
+                                    {id
+                                        ? 'Unduh CSV (UTC)'
+                                        : 'Download CSV (UTC)'}
+                                </Button>
+                            </Stack>
                             <Menu
                                 anchorEl={rangeAnchor}
                                 open={rangeAnchor !== null}
@@ -2441,91 +2477,115 @@ export default function Trends({
                                 )}
                             </Menu>
                             {(editingCustomRange || period === 'custom') && (
-                                <Form
-                                    key={`${lang}-${startDate}-${endDate}`}
-                                    action={trendsIndex.url({ language: lang })}
-                                    method="get"
-                                    onSuccess={() =>
-                                        setEditingCustomRange(false)
-                                    }
-                                    options={{
-                                        preserveState: true,
-                                        preserveScroll: true,
-                                    }}
-                                >
-                                    {({ errors, processing }) => (
-                                        <Stack
-                                            direction="row"
-                                            spacing={2}
-                                            sx={{ alignItems: 'flex-start' }}
+                                <>
+                                    <Divider />
+                                    <Box>
+                                        <Typography
+                                            id="trends-custom-range-heading"
+                                            component="h2"
+                                            variant="subtitle2"
+                                            sx={{ mb: 1.5 }}
                                         >
-                                            <input
-                                                type="hidden"
-                                                name="period"
-                                                value="custom"
-                                            />
-                                            <DateRangeFields
-                                                start={{
-                                                    id: 'trends-from',
-                                                    name: 'from',
-                                                    label: id
-                                                        ? 'Dari tanggal'
-                                                        : 'From date',
-                                                    value:
-                                                        endDate < firstDate
-                                                            ? latestDate
-                                                            : startDate <
-                                                                firstDate
-                                                              ? firstDate
-                                                              : startDate,
-                                                    error: errors.from,
-                                                }}
-                                                end={{
-                                                    id: 'trends-to',
-                                                    name: 'to',
-                                                    label: id
-                                                        ? 'Sampai tanggal'
-                                                        : 'To date',
-                                                    value:
-                                                        endDate < firstDate
-                                                            ? latestDate
-                                                            : endDate,
-                                                    error: errors.to,
-                                                }}
-                                                min={firstDate}
-                                                max={latestDate}
-                                            />
-                                            <Button
-                                                type="submit"
-                                                variant="outlined"
-                                                disabled={processing}
-                                                sx={{ minHeight: 44 }}
-                                            >
-                                                {id
-                                                    ? 'Terapkan'
-                                                    : 'Apply dates'}
-                                            </Button>
-                                        </Stack>
-                                    )}
-                                </Form>
+                                            {id
+                                                ? 'Rentang tanggal khusus'
+                                                : 'Custom date range'}
+                                        </Typography>
+                                        <Form
+                                            key={`${lang}-${startDate}-${endDate}`}
+                                            action={trendsIndex.url({
+                                                language: lang,
+                                            })}
+                                            method="get"
+                                            aria-labelledby="trends-custom-range-heading"
+                                            onSuccess={() =>
+                                                setEditingCustomRange(false)
+                                            }
+                                            options={{
+                                                preserveState: true,
+                                                preserveScroll: true,
+                                            }}
+                                        >
+                                            {({ errors, processing }) => (
+                                                <Stack
+                                                    direction={{
+                                                        xs: 'column',
+                                                        md: 'row',
+                                                    }}
+                                                    spacing={2}
+                                                    sx={{
+                                                        alignItems: {
+                                                            md: 'flex-end',
+                                                        },
+                                                    }}
+                                                >
+                                                    <input
+                                                        type="hidden"
+                                                        name="period"
+                                                        value="custom"
+                                                    />
+                                                    <Box
+                                                        sx={{
+                                                            flex: 1,
+                                                            minWidth: 0,
+                                                            width: '100%',
+                                                        }}
+                                                    >
+                                                        <DateRangeFields
+                                                            start={{
+                                                                id: 'trends-from',
+                                                                name: 'from',
+                                                                label: id
+                                                                    ? 'Dari tanggal'
+                                                                    : 'From date',
+                                                                value:
+                                                                    endDate <
+                                                                    firstDate
+                                                                        ? latestDate
+                                                                        : startDate <
+                                                                            firstDate
+                                                                          ? firstDate
+                                                                          : startDate,
+                                                                error: errors.from,
+                                                            }}
+                                                            end={{
+                                                                id: 'trends-to',
+                                                                name: 'to',
+                                                                label: id
+                                                                    ? 'Sampai tanggal'
+                                                                    : 'To date',
+                                                                value:
+                                                                    endDate <
+                                                                    firstDate
+                                                                        ? latestDate
+                                                                        : endDate,
+                                                                error: errors.to,
+                                                            }}
+                                                            min={firstDate}
+                                                            max={latestDate}
+                                                        />
+                                                    </Box>
+                                                    <Button
+                                                        type="submit"
+                                                        variant="contained"
+                                                        disabled={processing}
+                                                        sx={{
+                                                            minHeight: 48,
+                                                            alignSelf: {
+                                                                xs: 'stretch',
+                                                                md: 'auto',
+                                                            },
+                                                        }}
+                                                    >
+                                                        {id
+                                                            ? 'Terapkan'
+                                                            : 'Apply dates'}
+                                                    </Button>
+                                                </Stack>
+                                            )}
+                                        </Form>
+                                    </Box>
+                                </>
                             )}
-                            <Button
-                                component="a"
-                                variant="outlined"
-                                href={`data:text/csv;charset=utf-8,${encodeURIComponent(timestampCsv(dates, trades, tradeIntervals, collectionDates))}`}
-                                download={`rspo-credit-trends-${startDate}-${endDate}.csv`}
-                                sx={{
-                                    alignSelf: {
-                                        xs: 'stretch',
-                                        sm: 'flex-start',
-                                    },
-                                    minHeight: 44,
-                                }}
-                            >
-                                {id
-                                    ? 'Unduh data dengan waktu UTC (CSV)'
-                                    : 'Download data with UTC times (CSV)'}
-                            </Button>
                         </Stack>
                     </Paper>
                     <Tabs
