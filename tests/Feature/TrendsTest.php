@@ -7,6 +7,34 @@ use App\Models\CreditPriceRetrieval;
 use Carbon\CarbonImmutable;
 use Inertia\Testing\AssertableInertia;
 
+it('renders a localized Trends social preview image', function (string $language, string $title, string $description): void {
+    $imageUrl = route('trends.preview-image', ['language' => $language]);
+
+    $this->get('/'.$language.'/trends')->assertOk()
+        ->assertSeeHtml('<meta property="og:title" content="'.$title.'">')
+        ->assertSeeHtml('<meta property="og:description" content="'.$description.'">')
+        ->assertSeeHtml('<meta property="og:image" content="'.$imageUrl.'">')
+        ->assertSeeHtml('<meta property="og:image:width" content="1200">')
+        ->assertSeeHtml('<meta property="og:image:height" content="630">')
+        ->assertSeeHtml('<meta name="twitter:card" content="summary_large_image">');
+
+    $response = $this->get('/'.$language.'/trends-share-preview.png');
+    $response->assertOk()->assertHeader('Content-Type', 'image/png');
+    $image = $response->getContent();
+    if (! is_string($image)) {
+        $this->fail('The preview image response must contain image bytes.');
+    }
+
+    $size = getimagesizefromstring($image);
+    expect($size)->not->toBeFalse();
+    if ($size !== false) {
+        expect($size)->toMatchArray([0 => 1200, 1 => 630]);
+    }
+})->with([
+    ['en', 'RSPO Credit Trends', 'Compare PRISMA price ranges and trading volumes for Non-IS and IS RSPO credits.'],
+    ['id', 'Tren Kredit RSPO', 'Bandingkan rentang harga dan volume perdagangan kredit RSPO non-IS dan petani swadaya (IS) di PRISMA.'],
+]);
+
 it('counts a matching shared-boundary quantity once while keeping verified sales', function (): void {
     $day = CarbonImmutable::parse('2026-10-27', 'UTC');
     $this->travelTo($day->addDay());

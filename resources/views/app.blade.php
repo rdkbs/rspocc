@@ -6,7 +6,7 @@
         : $page['component'];
     $fallbackPages = [
         'en' => [
-            'trends' => ['title' => 'RSPO Credit Trends', 'description' => 'Compare PRISMA prices and trading volumes for Standard and Independent Smallholder credits.'],
+            'trends' => ['title' => 'RSPO Credit Trends', 'description' => 'Compare PRISMA price ranges and trading volumes for Non-IS and IS RSPO credits.'],
             'index' => [
                 'title' => 'Estimate RSPO credit revenue',
                 'description' => 'Enter FFB volume and credit prices to estimate premium revenue and added value per kilogram.',
@@ -18,7 +18,7 @@
             'privacy' => ['title' => 'Privacy Policy', 'description' => 'Learn how the calculator handles your inputs and shared links.'],
         ],
         'id' => [
-            'trends' => ['title' => 'Tren Kredit RSPO', 'description' => 'Bandingkan harga dan volume perdagangan kredit standar dan petani swadaya di PRISMA.'],
+            'trends' => ['title' => 'Tren Kredit RSPO', 'description' => 'Bandingkan rentang harga dan volume perdagangan kredit RSPO non-IS dan petani swadaya (IS) di PRISMA.'],
             'index' => [
                 'title' => 'Perkirakan pendapatan kredit RSPO',
                 'description' => 'Masukkan volume TBS dan harga kredit untuk memperkirakan pendapatan serta nilai tambah per kilogram.',

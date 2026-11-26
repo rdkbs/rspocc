@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\CalculatorController;
 use App\Http\Controllers\CalculatorPreviewImageController;
 use App\Http\Controllers\TrendsController;
+use App\Http\Controllers\TrendsPreviewImageController;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
@@ -28,6 +29,11 @@ Route::permanentRedirect('/trends', '/id/trends');
 Route::get('/{language}/trends', TrendsController::class)
     ->whereIn('language', ['id', 'en'])
     ->name('trends.index');
+
+Route::get('/{language}/trends-share-preview.png', TrendsPreviewImageController::class)
+    ->whereIn('language', ['id', 'en'])
+    ->middleware('throttle:60,1')
+    ->name('trends.preview-image');
 
 Route::get('/{language}/share-preview.png', CalculatorPreviewImageController::class)
     ->whereIn('language', ['id', 'en'])

@@ -2260,8 +2260,8 @@ export default function Trends({
     const id = lang === 'id';
     const title = id ? 'Tren Kredit RSPO' : 'RSPO Credit Trends';
     const description = id
-        ? 'Bandingkan harga dan volume perdagangan kredit RSPO non-IS dan kredit RSPO petani swadaya di PRISMA.'
-        : 'Compare PRISMA prices and trading volumes for Non-IS RSPO Credits and IS RSPO Credits.';
+        ? 'Bandingkan rentang harga dan volume perdagangan kredit RSPO non-IS dan petani swadaya (IS) di PRISMA.'
+        : 'Compare PRISMA price ranges and trading volumes for Non-IS and IS RSPO credits.';
     const start = Date.parse(startDate);
     const dates = Array.from(
         { length: (Date.parse(endDate) - start) / dayMs + 1 },

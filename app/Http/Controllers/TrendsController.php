@@ -216,6 +216,9 @@ final class TrendsController extends Controller
         usort($partialSpending, static fn (array $a, array $b): int => [$b['start'], $a['creditType']] <=> [$a['start'], $b['creditType']]);
 
         return Inertia::render('trends', [
+            'previewImageUrl' => function_exists('imagecreatetruecolor') && function_exists('imagettftext')
+                ? route('trends.preview-image', ['language' => app()->getLocale()])
+                : null,
             'startDate' => $start->toDateString(),
             'period' => $period,
             'endDate' => $end->toDateString(),
