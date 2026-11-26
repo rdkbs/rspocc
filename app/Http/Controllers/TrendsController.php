@@ -123,7 +123,15 @@ final class TrendsController extends Controller
                                 'high' => (float) $interval['high'],
                             ];
                             $partialSpending[] = $observation;
-                            $tradeIntervals[$day->credit_type][$date][] = $observation;
+                            $tradeIntervals[$day->credit_type][$date][] = [
+                                ...$observation,
+                                'csvValues' => [
+                                    $this->csvDecimal($interval['quantity']),
+                                    $this->csvDecimal($interval['low']),
+                                    $this->csvDecimal($interval['high']),
+                                    null,
+                                ],
+                            ];
                         }
                     }
                 }
@@ -151,6 +159,12 @@ final class TrendsController extends Controller
                         'quantity' => (float) $day->quantity_sold,
                         'low' => (float) $day->low_price,
                         'high' => (float) $day->high_price,
+                        'csvValues' => [
+                            $this->csvDecimal($day->quantity_sold),
+                            $this->csvDecimal($day->low_price),
+                            $this->csvDecimal($day->high_price),
+                            null,
+                        ],
                     ];
                 }
 
@@ -172,6 +186,12 @@ final class TrendsController extends Controller
                         'quantity' => (float) $quantity,
                         'low' => (float) $price,
                         'high' => (float) $price,
+                        'csvValues' => [
+                            $this->csvDecimal($quantity),
+                            $this->csvDecimal($price),
+                            $this->csvDecimal($price),
+                            (string) $value->strippedOfTrailingZeros(),
+                        ],
                     ];
                 }
             }

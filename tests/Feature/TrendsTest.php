@@ -86,6 +86,7 @@ it('counts a matching shared-boundary quantity once while keeping verified sales
                 'quantity' => 573,
                 'low' => 100,
                 'high' => 130,
+                'csvValues' => ['573', '100', '130', null],
             ]])
             ->has('trades', 0));
 });

@@ -77,8 +77,11 @@ type TradeInterval = {
     quantity: number;
     low: number;
     high: number;
+    csvValues: [string | null, string | null, string | null, string | null];
 };
-type PartialSpending = TradeInterval & { creditType: string };
+type PartialSpending = Omit<TradeInterval, 'csvValues'> & {
+    creditType: string;
+};
 type TradeIntervals = Record<string, Record<string, TradeInterval[]>>;
 
 type ExcludedDates = {
@@ -91,9 +94,10 @@ type CollectionDates = ExcludedDates & {
     notChecked: ExcludedDate[];
 };
 
-function dailyCsv(
+function timestampCsv(
     dates: string[],
     trades: Trades,
+    tradeIntervals: TradeIntervals,
     excludedDates: CollectionDates,
 ) {
     const excluded = new Map<string, string>();
@@ -111,14 +115,39 @@ function dailyCsv(
     }
 
     const rows = [
-        'date_utc,credit_type,credits_sold,last_traded_price_usd,trade_value_usd,status',
+        'period_start_utc,period_end_utc,credit_type,credits_sold,min_price_usd,max_price_usd,trade_value_usd,status',
     ];
     for (const date of dates) {
         for (const product of products) {
             for (const creditType of [product, `IS_${product}`]) {
                 const trade = trades[creditType]?.[date];
-                let status =
-                    excluded.get(`${date}/${creditType}`) ?? 'no_data_yet';
+                const exclusionStatus = excluded.get(`${date}/${creditType}`);
+                const intervals = tradeIntervals[creditType]?.[date] ?? [];
+                if (intervals.length > 0) {
+                    for (const interval of intervals
+                        .slice()
+                        .sort((a, b) => a.start.localeCompare(b.start))) {
+                        const status =
+                            exclusionStatus ??
+                            (interval.csvValues[3] !== null
+                                ? 'traded'
+                                : 'partial_trade_value');
+
+                        rows.push(
+                            [
+                                `${interval.start.replace(' ', 'T')}Z`,
+                                `${interval.end.replace(' ', 'T')}Z`,
+                                creditType,
+                                ...interval.csvValues,
+                                status,
+                            ].join(','),
+                        );
+                    }
+
+                    continue;
+                }
+
+                let status = exclusionStatus ?? 'no_data_yet';
                 if (trade) {
                     if (trade.volume === 0) {
                         status = 'no_trades';
@@ -136,9 +165,13 @@ function dailyCsv(
 
                 rows.push(
                     [
-                        date,
+                        `${date}T00:00:00.000Z`,
+                        `${date}T23:59:59.999Z`,
                         creditType,
-                        ...(trade?.csvValues ?? [null, null, null]),
+                        trade?.csvValues[0] ?? null,
+                        trade?.csvValues[1] ?? null,
+                        trade?.csvValues[1] ?? null,
+                        trade?.csvValues[2] ?? null,
                         status,
                     ].join(','),
                 );
@@ -2479,7 +2512,7 @@ export default function Trends({
                             <Button
                                 component="a"
                                 variant="outlined"
-                                href={`data:text/csv;charset=utf-8,${encodeURIComponent(dailyCsv(dates, trades, collectionDates))}`}
+                                href={`data:text/csv;charset=utf-8,${encodeURIComponent(timestampCsv(dates, trades, tradeIntervals, collectionDates))}`}
                                 download={`rspo-credit-trends-${startDate}-${endDate}.csv`}
                                 sx={{
                                     alignSelf: {
@@ -2490,8 +2523,8 @@ export default function Trends({
                                 }}
                             >
                                 {id
-                                    ? 'Unduh data harian (CSV)'
-                                    : 'Download daily data (CSV)'}
+                                    ? 'Unduh data dengan waktu UTC (CSV)'
+                                    : 'Download data with UTC times (CSV)'}
                             </Button>
                         </Stack>
                     </Paper>
