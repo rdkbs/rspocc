@@ -855,13 +855,20 @@ function chartPoints(
                 !!tradeIntervals[type]?.[date]?.length,
         ),
         noTrades: types.map((type) => trades[type]?.[date]?.volume === 0),
-        values: types.map(
-            (type) =>
-                trades[type]?.[date]?.[metric] ??
-                (metric === 'volume'
-                    ? (tradeIntervals[type]?.[date]?.[0]?.quantity ?? null)
-                    : null),
-        ),
+        values: types.map((type) => {
+            const dailyValue = trades[type]?.[date]?.[metric];
+            if (dailyValue !== null && dailyValue !== undefined) {
+                return dailyValue;
+            }
+
+            const intervals = tradeIntervals[type]?.[date] ?? [];
+            return metric === 'volume' && intervals.length > 0
+                ? intervals.reduce(
+                      (total, interval) => total + interval.quantity,
+                      0,
+                  )
+                : null;
+        }),
         intervals: types.map((type) => tradeIntervals[type]?.[date] ?? []),
     }));
 }
@@ -1016,6 +1023,28 @@ function ProductChart({
         (index) =>
             points.length > 0 && points.every((point) => point.noTrades[index]),
     );
+    const volumeTotals = [0, 1].map((index) => {
+        let total = 0;
+        let hasVolume = false;
+        let hasMissingDates = false;
+
+        for (const point of points) {
+            const volume = point.values[index];
+            if (volume === null) {
+                hasMissingDates = true;
+                continue;
+            }
+
+            total += volume;
+            hasVolume = true;
+        }
+
+        return {
+            total: hasVolume ? total : null,
+            partial: hasVolume && hasMissingDates,
+        };
+    });
+    const hasPartialVolume = volumeTotals.some(({ partial }) => partial);
     const formatObservedPriceRange = (
         range: (typeof observedPriceRanges)[number],
         index: number,
@@ -1055,7 +1084,114 @@ function ProductChart({
                 {product}
             </Typography>
             {volume ? (
-                <Typography color="text.secondary">{unit}</Typography>
+                <>
+                    <Typography color="text.secondary" variant="caption">
+                        {id
+                            ? 'Total kredit terjual pada rentang tanggal yang dipilih'
+                            : 'Total credits sold in selected date range'}
+                    </Typography>
+                    <Box
+                        component="dl"
+                        sx={{
+                            display: 'grid',
+                            gap: 0.5,
+                            m: 0,
+                            mt: 0.5,
+                            mb: hasPartialVolume ? 0.5 : 1,
+                        }}
+                    >
+                        {labels.map((label, index) => {
+                            const { total, partial } = volumeTotals[index];
+
+                            return (
+                                <Box
+                                    component="div"
+                                    key={label}
+                                    sx={{
+                                        display: 'grid',
+                                        gridTemplateColumns:
+                                            'minmax(0, 1fr) auto',
+                                        alignItems: 'start',
+                                        columnGap: 1,
+                                    }}
+                                >
+                                    <Typography
+                                        component="dt"
+                                        variant="body2"
+                                        color="text.secondary"
+                                        sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 1,
+                                            minWidth: 0,
+                                        }}
+                                    >
+                                        <Box
+                                            component="span"
+                                            aria-hidden="true"
+                                            sx={{
+                                                bgcolor: series[index].color,
+                                                flex: '0 0 auto',
+                                                width: 8,
+                                                height: 8,
+                                            }}
+                                        />
+                                        {label}
+                                    </Typography>
+                                    <Typography
+                                        component="dd"
+                                        sx={{
+                                            m: 0,
+                                            textAlign: 'right',
+                                            fontSize:
+                                                'clamp(1rem, 0.94rem + 0.35vw, 1.25rem)',
+                                            fontWeight: 700,
+                                            fontVariantNumeric: 'tabular-nums',
+                                            whiteSpace: 'nowrap',
+                                        }}
+                                    >
+                                        {total === null ? (
+                                            id ? (
+                                                'Volume belum tersedia'
+                                            ) : (
+                                                'Volume unavailable'
+                                            )
+                                        ) : (
+                                            <>
+                                                {formatDisplayNumber(
+                                                    total,
+                                                    lang,
+                                                )}
+                                                {partial && (
+                                                    <Box
+                                                        component="sup"
+                                                        sx={{
+                                                            color: 'text.disabled',
+                                                        }}
+                                                    >
+                                                        *
+                                                    </Box>
+                                                )}
+                                            </>
+                                        )}
+                                    </Typography>
+                                </Box>
+                            );
+                        })}
+                    </Box>
+                    {hasPartialVolume && (
+                        <Typography
+                            component="p"
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ mb: 1 }}
+                        >
+                            {id
+                                ? '* Total bertanda * tidak mencakup tanggal yang volumenya belum tersedia.'
+                                : '* Totals marked * exclude dates without available volume.'}
+                        </Typography>
+                    )}
+                </>
             ) : (
                 <>
                     <Typography color="text.secondary" variant="caption">
