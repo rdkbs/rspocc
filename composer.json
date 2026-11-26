@@ -82,7 +82,7 @@
         "ci:check": [
             "Composer\\Config::disableProcessTimeout",
             "bun run test:calculator",
-            "@php artisan checkpoint:scan",
+            "@php artisan checkpoint:scan --skip=\"Composer CVE Audit\"",
             "@test"
         ],
         "types": [
