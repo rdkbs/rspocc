@@ -756,6 +756,24 @@ export default function Layout({
                         color="text.secondary"
                         variant="caption"
                     >
+                        <Box
+                            component="a"
+                            href="mailto:contact@rspocc.belayansejahtera.org"
+                            sx={{
+                                color: 'primary.main',
+                                textUnderlineOffset: 3,
+                            }}
+                        >
+                            {language === 'id'
+                                ? 'Hubungi pengelola kalkulator'
+                                : 'Contact the calculator team'}
+                        </Box>
+                    </Typography>
+                    <Typography
+                        component="p"
+                        color="text.secondary"
+                        variant="caption"
+                    >
                         {`© ${new Date().getFullYear()} `}
                         <Box
                             component="a"
