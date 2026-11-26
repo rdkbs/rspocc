@@ -130,7 +130,11 @@ it('compares credit types and switches metrics, language and theme', function ()
         ])
         ->assertScript('Array.from(document.querySelectorAll("#trends-price-panel section")).some(section => section.querySelector("h2")?.textContent === "CSPKO" && Array.from(section.querySelectorAll(".MuiChartsAxis-directionX .MuiChartsAxis-tickLabel")).some(label => label.textContent === '.json_encode($firstDay->addDay()->format('M j'), JSON_THROW_ON_ERROR).'))', true)
         ->hover('section:has(h2:text-is("CSPKO")) g[data-series] circle >> nth=-1')
-        ->assertSee($firstDay->addDays(2)->format('M j').' · 2 USD (Non-IS RSPO Credits + IS RSPO Credits)')
+        ->assertVisible('[data-testid="price-date-tooltip"]')
+        ->assertSeeIn('[data-testid="price-date-tooltip"]', $firstDay->addDays(2)->format('M j, Y'))
+        ->assertScript('document.querySelector("[data-testid=price-date-tooltip] hr") !== null', true)
+        ->assertScript('document.querySelector(".MuiChartsAxisHighlight-root") !== null', true)
+        ->assertScript('Array.from(document.querySelectorAll("[data-testid=price-date-tooltip] li"), row => row.textContent).every(row => row.includes("USD 2"))', true)
         ->click('View data table')
         ->assertSee('No trades')
         ->click('#trends-period')
@@ -159,6 +163,10 @@ it('compares credit types and switches metrics, language and theme', function ()
         ->assertScript('Array.from(document.querySelectorAll("#trends-price-panel section"))
             .find(section => section.querySelector("h2")?.textContent === "CSPKO")
             ?.querySelector(".MuiChartsAxis-directionX .MuiChartsAxis-tickLabel")?.textContent', $noTradeDay->format('M j'))
+        ->hover('section:has(h2:text-is("CSPKO")) svg.MuiChartsSvgLayer-root')
+        ->assertVisible('[data-testid="price-date-tooltip"]')
+        ->assertSeeIn('[data-testid="price-date-tooltip"]', 'No trades')
+        ->assertScript('getComputedStyle(document.querySelector("[data-testid=price-tooltip-empty]")).color !== getComputedStyle(document.querySelector("[data-testid=price-tooltip-date]")).color', true)
         ->assertNoJavaScriptErrors();
 });
 
@@ -236,6 +244,73 @@ it('shows the observed price range for each credit category', function (): void 
         ])
         ->assertSee('Observed price in selected date range · USD / credit')
         ->assertSee('No verified prices')
+        ->assertNoJavaScriptErrors();
+});
+
+it('shows every credit category timestamp under the hovered price date', function (): void {
+    $this->travelTo(CarbonImmutable::today('UTC')->addMinutes(10));
+    $day = CarbonImmutable::yesterday('UTC');
+
+    foreach ([
+        'CSPO' => [2, 2],
+        'IS_CSPO' => [3, 5],
+    ] as $creditType => [$firstPrice, $secondPrice]) {
+        $root = CreditPriceRetrieval::factory()->create([
+            'credit_type' => $creditType,
+            'period_start_at' => $day,
+            'period_end_at' => $day->endOfDay(),
+            'status' => $creditType === 'CSPO'
+                ? CreditPriceRetrievalStatus::RESOLVED
+                : CreditPriceRetrievalStatus::MIXED,
+            'child_quantity_matches' => true,
+            'quantity_sold' => 30,
+            'last_traded_price' => $secondPrice,
+            'low_price' => $firstPrice,
+            'high_price' => $secondPrice,
+        ]);
+
+        if ($creditType === 'CSPO') {
+            continue;
+        }
+
+        foreach ([
+            [$day->setTime(8, 0), $day->setTime(12, 0), 10, $firstPrice],
+            [$day->setTime(12, 0), $day->addDay()->subMillisecond(), 20, $secondPrice],
+        ] as [$start, $end, $quantity, $price]) {
+            CreditPriceRetrieval::factory()->for($root, 'parent')->create([
+                'credit_type' => $creditType,
+                'period_start_at' => $start,
+                'period_end_at' => $end,
+                'quantity_sold' => $quantity,
+                'last_traded_price' => $price,
+                'low_price' => $price,
+                'high_price' => $price,
+            ]);
+        }
+    }
+
+    visit('/en/trends?'.http_build_query([
+        'from' => $day->toDateString(),
+        'to' => $day->toDateString(),
+    ]))
+        ->click('Price')
+        ->resize(320, 800)
+        ->hover('section:has(h2:text-is("CSPO")) svg.MuiChartsSvgLayer-root')
+        ->assertVisible('[data-testid="price-date-tooltip"]')
+        ->assertSeeIn('[data-testid="price-date-tooltip"]', $day->format('M j, Y'))
+        ->assertScript('Array.from(document.querySelectorAll("#trends-price-panel section")).find(section => section.querySelector("h2")?.textContent === "CSPO")?.querySelectorAll("g[data-series] circle").length', 3)
+        ->assertScript('(() => {
+            const { left, right } = document.querySelector("[data-testid=price-date-tooltip]").getBoundingClientRect();
+            return left >= 0 && right <= window.innerWidth;
+        })()', true)
+        ->assertScript('(() => {
+            const rows = Array.from(document.querySelectorAll("[data-testid=price-date-tooltip] li"), row => row.textContent);
+            return rows.length === 3
+                && rows.filter(row => row.trim().startsWith("Non-IS RSPO Credits")).length === 1
+                && rows.filter(row => row.trim().startsWith("IS RSPO Credits")).length === 2
+                && rows.some(row => row.includes("08:00:00.000–12:00:00.000") && row.includes("USD 3"))
+                && rows.some(row => row.includes("12:00:00.000–23:59:59.999") && row.includes("USD 5"));
+        })()', true)
         ->assertNoJavaScriptErrors();
 });
 

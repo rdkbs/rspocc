@@ -5,6 +5,7 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Checkbox from '@mui/material/Checkbox';
 import Container from '@mui/material/Container';
+import Divider from '@mui/material/Divider';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
@@ -15,6 +16,15 @@ import Tabs from '@mui/material/Tabs';
 import { alpha, useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import { BarChart } from '@mui/x-charts/BarChart';
+import {
+    ChartsTooltipContainer,
+    useItemTooltip,
+} from '@mui/x-charts/ChartsTooltip';
+import {
+    useChartsLayerContainerRef,
+    useDrawingArea,
+    useXScale,
+} from '@mui/x-charts/hooks';
 import { ScatterChart } from '@mui/x-charts/ScatterChart';
 import { useEffect, useState } from 'react';
 import { formatDisplayNumber } from '@/calculator-assumptions';
@@ -873,6 +883,80 @@ function chartPoints(
     }));
 }
 
+function PriceDateHoverListener({
+    count,
+    onDateHover,
+}: {
+    count: number;
+    onDateHover: (index: number | null) => void;
+}) {
+    const drawingArea = useDrawingArea();
+    const xScale = useXScale<'point'>();
+    const chartContainerRef = useChartsLayerContainerRef();
+
+    useEffect(() => {
+        const container = chartContainerRef.current;
+        const svg = container?.querySelector('svg');
+
+        if (!container || !svg) {
+            return;
+        }
+
+        const handlePointerMove = (event: PointerEvent) => {
+            const matrix = svg?.getScreenCTM();
+
+            if (!matrix || count === 0) {
+                return;
+            }
+
+            const pointer = svg.createSVGPoint();
+            pointer.x = event.clientX;
+            pointer.y = event.clientY;
+            const { x, y } = pointer.matrixTransform(matrix.inverse());
+            const svgHeight =
+                svg.viewBox.baseVal.height ||
+                Number(svg.getAttribute('height'));
+
+            if (
+                x < drawingArea.left ||
+                x > drawingArea.left + drawingArea.width ||
+                y < drawingArea.top ||
+                y > svgHeight
+            ) {
+                onDateHover(null);
+                return;
+            }
+
+            const index = Array.from(
+                { length: count },
+                (_, item) => item,
+            ).reduce((nearest, item) => {
+                const position = xScale(item);
+                const nearestPosition = xScale(nearest);
+
+                return position !== undefined &&
+                    nearestPosition !== undefined &&
+                    Math.abs(x - position) < Math.abs(x - nearestPosition)
+                    ? item
+                    : nearest;
+            }, 0);
+
+            onDateHover(index);
+        };
+
+        const handlePointerLeave = () => onDateHover(null);
+        container.addEventListener('pointermove', handlePointerMove);
+        container.addEventListener('pointerleave', handlePointerLeave);
+
+        return () => {
+            container.removeEventListener('pointermove', handlePointerMove);
+            container.removeEventListener('pointerleave', handlePointerLeave);
+        };
+    }, [chartContainerRef, count, drawingArea, onDateHover, xScale]);
+
+    return null;
+}
+
 function ProductChart({
     product,
     points,
@@ -887,6 +971,9 @@ function ProductChart({
     excludedDates: CollectionDates;
 }) {
     const [includeNoTradeDates, setIncludeNoTradeDates] = useState(false);
+    const [hoveredDateIndex, setHoveredDateIndex] = useState<number | null>(
+        null,
+    );
     const id = lang === 'id';
     const volume = metric === 'volume';
     const { palette } = useTheme();
@@ -921,30 +1008,22 @@ function ProductChart({
     const priceRanges = new Map<string, TradeInterval>();
     const pricePoints = [0, 1].map((index) =>
         points.flatMap(({ date, values, intervals }, x) => {
-            const bounds = intervals[index].flatMap(
+            const intervalPoints = intervals[index].flatMap(
                 (interval, intervalIndex) => {
-                    if (
-                        interval.low === interval.high &&
-                        values[index] !== null
-                    )
-                        return [];
-
                     const id = `${date}/${index}/${intervalIndex}`;
                     priceRanges.set(id, interval);
+
                     return [...new Set([interval.low, interval.high])].map(
-                        (y) => ({
-                            x,
-                            y,
-                            id: `${id}/${y}`,
-                        }),
+                        (y) => ({ x, y, id: `${id}/${y}` }),
                     );
                 },
             );
             const closingPrice = values[index];
+
             return closingPrice === null ||
-                bounds.some(({ y }) => y === closingPrice)
-                ? bounds
-                : [{ x, y: closingPrice, id: date }, ...bounds];
+                intervalPoints.some(({ y }) => y === closingPrice)
+                ? intervalPoints
+                : [{ x, y: closingPrice, id: date }, ...intervalPoints];
         }),
     );
     const tableRows = points
@@ -1068,6 +1147,140 @@ function ProductChart({
         label,
         color: index === 0 ? palette.primary.dark : palette.secondary.main,
     }));
+    const PriceTooltip = () => {
+        const tooltip = useItemTooltip<'scatter'>();
+        const point =
+            hoveredDateIndex === null
+                ? tooltip?.value
+                    ? visiblePoints[tooltip.value.x]
+                    : undefined
+                : visiblePoints[hoveredDateIndex];
+
+        if (!point) {
+            return null;
+        }
+
+        const intervals = point.intervals
+            .flatMap((records, categoryIndex) =>
+                records.map((interval) => ({ interval, categoryIndex })),
+            )
+            .sort(
+                (a, b) =>
+                    a.interval.start.localeCompare(b.interval.start) ||
+                    a.categoryIndex - b.categoryIndex,
+            );
+
+        return (
+            <ChartsTooltipContainer
+                trigger={hoveredDateIndex === null ? 'item' : 'axis'}
+                anchor="pointer"
+            >
+                <Box
+                    data-testid="price-date-tooltip"
+                    sx={{
+                        minWidth: 240,
+                        maxWidth: 360,
+                        maxHeight: 'min(50vh, 320px)',
+                        overflowY: 'auto',
+                        p: 1.5,
+                        border: 1,
+                        borderColor: 'divider',
+                        borderRadius: 1,
+                        bgcolor: 'background.paper',
+                        boxShadow: 3,
+                    }}
+                >
+                    <Typography
+                        component="p"
+                        variant="subtitle2"
+                        data-testid="price-tooltip-date"
+                        sx={{ fontWeight: 700 }}
+                    >
+                        {fullDateFormat.format(new Date(point.date))}
+                    </Typography>
+                    <Divider sx={{ my: 1 }} />
+                    {intervals.length === 0 && point.noTrades.every(Boolean) ? (
+                        <Typography
+                            data-testid="price-tooltip-empty"
+                            variant="body2"
+                            sx={{ color: 'text.disabled' }}
+                        >
+                            {id ? 'Tidak ada transaksi' : 'No trades'}
+                        </Typography>
+                    ) : (
+                        <Stack
+                            component="ul"
+                            spacing={1}
+                            sx={{ listStyle: 'none', m: 0, p: 0 }}
+                        >
+                            {intervals.map(({ interval, categoryIndex }) => (
+                                <Box
+                                    component="li"
+                                    key={`${categoryIndex}/${interval.start}/${interval.end}`}
+                                    sx={{
+                                        display: 'grid',
+                                        gridTemplateColumns:
+                                            'minmax(0, 1fr) auto',
+                                        alignItems: 'center',
+                                        columnGap: 1.5,
+                                    }}
+                                >
+                                    <Box sx={{ minWidth: 0 }}>
+                                        <Typography
+                                            variant="caption"
+                                            color="text.secondary"
+                                            sx={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 0.75,
+                                            }}
+                                        >
+                                            <Box
+                                                component="span"
+                                                aria-hidden="true"
+                                                sx={{
+                                                    bgcolor:
+                                                        series[categoryIndex]
+                                                            .color,
+                                                    flex: '0 0 auto',
+                                                    width: 7,
+                                                    height: 7,
+                                                }}
+                                            />
+                                            {labels[categoryIndex]}
+                                        </Typography>
+                                        <Typography
+                                            variant="body2"
+                                            sx={{
+                                                fontVariantNumeric:
+                                                    'tabular-nums',
+                                            }}
+                                        >
+                                            {renderTime(interval.start)}
+                                            {interval.end !==
+                                                interval.start && (
+                                                <>–{renderTime(interval.end)}</>
+                                            )}
+                                        </Typography>
+                                    </Box>
+                                    <Typography
+                                        variant="body2"
+                                        sx={{
+                                            whiteSpace: 'nowrap',
+                                            fontWeight: 600,
+                                            fontVariantNumeric: 'tabular-nums',
+                                        }}
+                                    >
+                                        USD {formatRange(interval)}
+                                    </Typography>
+                                </Box>
+                            ))}
+                        </Stack>
+                    )}
+                </Box>
+            </ChartsTooltipContainer>
+        );
+    };
     const unit = volume
         ? id
             ? 'Kredit terjual'
@@ -1309,12 +1522,31 @@ function ProductChart({
                     hideLegend
                     disableHitArea
                     title={`${product} · USD`}
+                    axisHighlight={{ x: 'line' }}
+                    sx={{
+                        '& .MuiChartsAxisHighlight-root': {
+                            stroke: 'primary.main',
+                            strokeDasharray: '2 3',
+                            opacity: 0.65,
+                        },
+                    }}
+                    slots={{
+                        tooltip: PriceTooltip,
+                        ...(showEmptyPriceTimeline && {
+                            noDataOverlay: () => null,
+                        }),
+                    }}
+                    tooltipAxis={
+                        hoveredDateIndex === null
+                            ? []
+                            : [{ axisId: 'date', dataIndex: hoveredDateIndex }]
+                    }
                     {...(showEmptyPriceTimeline && {
                         yAxis: [{ position: 'none', min: 0, max: 1 }],
-                        slots: { noDataOverlay: () => null },
                     })}
                     xAxis={[
                         {
+                            id: 'date',
                             scaleType: 'point',
                             data: visiblePoints.map((_, index) => index),
                             tickNumber: visiblePoints.length,
@@ -1357,7 +1589,12 @@ function ProductChart({
                                 : price;
                         },
                     }))}
-                />
+                >
+                    <PriceDateHoverListener
+                        count={visiblePoints.length}
+                        onDateHover={setHoveredDateIndex}
+                    />
+                </ScatterChart>
             )}
             {showEmptyPriceTimeline && (
                 <Typography color="text.secondary">
