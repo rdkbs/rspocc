@@ -103,6 +103,9 @@ it('keeps canonical URLs language-specific and explains the tool in the FAQ', fu
         ->assertScript('document.querySelector("header [role=combobox]") !== null', true)
         ->assertScript('document.querySelector("footer [role=combobox]") === null', true)
         ->assertScript('[...document.querySelectorAll("footer button")].some((button) => button.innerText.includes("Dark mode"))', true)
+        ->assertScript('Array.from(document.querySelectorAll("footer a")).filter((link) => link.protocol === "mailto:").map((link) => [link.href, link.textContent.trim()])', [
+            ['mailto:contact@rspocc.belayansejahtera.org', 'Contact the calculator team'],
+        ])
         ->assertScript('document.body.innerText.includes("before costs and taxes")', false)
         ->assertScript('document.querySelector("link[rel=icon]").href.endsWith("/logo.svg")', true)
         ->assertNoJavaScriptErrors();
@@ -114,7 +117,10 @@ it('keeps canonical URLs language-specific and explains the tool in the FAQ', fu
         ->click('header [role=combobox]')
         ->click('Indonesia')
         ->assertPathIs('/id')
-        ->assertScript('document.documentElement.lang', 'id');
+        ->assertScript('document.documentElement.lang', 'id')
+        ->assertScript('Array.from(document.querySelectorAll("footer a")).filter((link) => link.protocol === "mailto:").map((link) => [link.href, link.textContent.trim()])', [
+            ['mailto:contact@rspocc.belayansejahtera.org', 'Hubungi pengelola kalkulator'],
+        ]);
 });
 
 it('persists the selected color scheme across page loads', function (): void {
