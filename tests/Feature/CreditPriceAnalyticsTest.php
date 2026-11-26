@@ -83,13 +83,13 @@ it('seeds missing historical tasks between existing days', function (): void {
         ->and($days)->toBe(['2026-01-02']);
 });
 
-it('queues unfinished days on the analytics queue with staggered delays', function (): void {
+it('queues the newest unfinished days first from the configured start date', function (): void {
     $this->travelTo('2025-01-03 00:00:00 UTC');
     Queue::fake([BackfillCreditPriceAnalytics::class]);
 
     expect(Artisan::call('credits:collect-analytics'))->toBe(0);
 
-    Queue::assertPushed(BackfillCreditPriceAnalytics::class, 2);
+    Queue::assertPushed(BackfillCreditPriceAnalytics::class, 96);
     Queue::assertPushed(
         BackfillCreditPriceAnalytics::class,
         static fn (BackfillCreditPriceAnalytics $job): bool => $job->day === '2025-01-02'
@@ -104,6 +104,11 @@ it('queues unfinished days on the analytics queue with staggered delays', functi
             && $job->delay instanceof DateTimeInterface
             && $job->delay->getTimestamp() === CarbonImmutable::parse('2025-01-03 00:01:00', 'UTC')->getTimestamp(),
     );
+    Queue::assertNotPushed(
+        BackfillCreditPriceAnalytics::class,
+        static fn (BackfillCreditPriceAnalytics $job): bool => $job->day === '2023-01-01',
+    );
+    expect(CreditPriceRetrieval::query()->whereDate('period_start_at', '2023-01-01')->count())->toBe(6);
 });
 
 it('queues the missing child of a saved split without duplicating the other child', function (): void {
@@ -392,14 +397,14 @@ it('resets unresolved trees before queuing their days', function (): void {
 });
 
 it('queues an optional summary and waits for delayed analytics jobs before sending it', function (): void {
-    $this->travelTo('2025-01-02 00:00:00 UTC');
+    $this->travelTo('2023-01-02 00:00:00 UTC');
     Queue::fake();
 
     config(['mail.default' => 'smtp']);
     expect(Artisan::call('credits:collect-analytics', ['--email' => 'ops@example.test']))->toBe(0);
     Queue::assertPushedOn('credit-analytics', SendCreditAnalyticsSummary::class,
         static fn (SendCreditAnalyticsSummary $job): bool => $job->email === 'ops@example.test'
-            && $job->days === ['2025-01-01']
+            && $job->days === ['2023-01-01']
             && $job->mailer === 'smtp');
     Queue::assertPushed(BackfillCreditPriceAnalytics::class, 1);
 
@@ -414,8 +419,8 @@ it('queues an optional summary and waits for delayed analytics jobs before sendi
         'created_at' => now()->timestamp,
     ]);
 
-    $queueBackfill(new BackfillCreditPriceAnalytics('2025-01-02'));
-    $queued = $queueBackfill(new BackfillCreditPriceAnalytics('2025-01-01', 123));
+    $queueBackfill(new BackfillCreditPriceAnalytics('2023-01-02'));
+    $queued = $queueBackfill(new BackfillCreditPriceAnalytics('2023-01-01', 123));
     CreditPriceRetrieval::query()->where('credit_type', 'CSPO')->update([
         'status' => CreditPriceRetrievalStatus::MIXED->value,
         'child_quantity_matches' => true,
@@ -428,7 +433,7 @@ it('queues an optional summary and waits for delayed analytics jobs before sendi
     $mailer = Mockery::mock(Mailer::class);
     Mail::shouldReceive('mailer')->once()->with('smtp')->andReturn($mailer);
     $mailer->shouldReceive('raw')->once()->with("UTC dates selected: 1\npending: 4\nunfinished_split: 1\nverified_split: 1", Mockery::type(Closure::class));
-    $summary = new SendCreditAnalyticsSummary('ops@example.test', ['2025-01-01'], 'smtp');
+    $summary = new SendCreditAnalyticsSummary('ops@example.test', ['2023-01-01'], 'smtp');
     $summary->withFakeQueueInteractions()->handle();
     $summary->assertReleased(180);
 
