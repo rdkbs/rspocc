@@ -187,13 +187,13 @@ function SpendingExclusions({
         >
             <Box component="summary" sx={{ cursor: 'pointer' }}>
                 {id
-                    ? `${quantity} kredit lainnya terjual, tetapi total nilai transaksinya belum dapat dipastikan.`
-                    : `${quantity} more credits sold, with no verified total value.`}
+                    ? `${quantity} kredit lainnya diperdagangkan, tetapi nilai transaksinya belum dapat dipastikan.`
+                    : `${quantity} more credits were traded, but we could not verify their trade value.`}
             </Box>
             <Typography variant="body2" sx={{ mt: 0.5 }}>
                 {id
                     ? 'PRISMA melaporkan beberapa harga dalam rentang satu milidetik, tetapi tidak merinci jumlah kredit pada tiap harga. Kredit ini tetap dihitung satu kali dalam volume, tetapi nilai transaksinya tidak dihitung.'
-                    : 'PRISMA reported multiple prices within one millisecond but not how many credits sold at each price. These credits still count once in volume, but their spending is excluded.'}
+                    : 'PRISMA reported multiple prices within one millisecond but not how many credits traded at each price. These credits still count once in volume, but their trade value is excluded.'}
             </Typography>
             <Stack component="ul" spacing={0.75} sx={{ pl: 2, mb: 1 }}>
                 {rows.map(({ start, end, quantity: excluded, low, high }) => (
@@ -451,8 +451,8 @@ function TradingSummary({
                 sx={{ mt: 1, mb: 2 }}
             >
                 {id
-                    ? 'Ringkasan hanya menghitung kredit dengan harga jual yang dapat dipastikan. Total menggabungkan penjualan kredit RSPO non-IS dan IS untuk tiap jenis kredit.'
-                    : 'This summary counts only credits sold at verified prices. Each product total combines Non-IS RSPO Credits and IS RSPO Credits.'}
+                    ? 'Ringkasan hanya menghitung kredit dengan harga transaksi yang dapat dipastikan. Total menggabungkan kredit RSPO non-IS dan IS untuk tiap jenis kredit.'
+                    : 'This summary counts only credits traded at prices we could verify. Each product total combines Non-IS RSPO Credits and IS RSPO Credits.'}
             </Typography>
             <Box
                 role="region"
@@ -597,8 +597,8 @@ function TradingSummary({
                                                                         >
                                                                             {hasTradeValue
                                                                                 ? id
-                                                                                    ? 'kredit terjual senilai'
-                                                                                    : 'credits sold for'
+                                                                                    ? 'kredit dengan nilai transaksi'
+                                                                                    : 'credits traded for'
                                                                                 : id
                                                                                   ? 'kredit dihitung'
                                                                                   : 'credits counted'}
@@ -1472,7 +1472,7 @@ function ProductChart({
                                               ? id
                                                   ? 'Volume tidak tersedia'
                                                   : 'Volume unavailable'
-                                              : `${formatDisplayNumber(quantity, lang)} ${id ? 'kredit terjual' : 'credits sold'}`}
+                                              : `${formatDisplayNumber(quantity, lang)} ${id ? 'kredit diperdagangkan' : 'credits traded'}`}
                                     </Typography>
                                 </Box>
                             );
@@ -1576,8 +1576,8 @@ function ProductChart({
     };
     const unit = volume
         ? id
-            ? 'Kredit terjual'
-            : 'Credits sold'
+            ? 'Kredit diperdagangkan'
+            : 'Credits traded'
         : 'USD / credit';
 
     return (
@@ -1594,8 +1594,8 @@ function ProductChart({
                 <>
                     <Typography color="text.secondary" variant="caption">
                         {id
-                            ? 'Total kredit terjual pada rentang tanggal yang dipilih'
-                            : 'Total credits sold in selected date range'}
+                            ? 'Total kredit yang diperdagangkan pada rentang tanggal yang dipilih'
+                            : 'Total credits traded in selected date range'}
                     </Typography>
                     <Box
                         component="dl"
@@ -2610,8 +2610,8 @@ export default function Trends({
                                                             ? 'Harga transaksi terakhir per hari (UTC). Jika satu interval memuat beberapa harga, titik menunjukkan harga terendah dan tertinggi.'
                                                             : 'Last traded price by UTC day. Mixed-price intervals show their lowest and highest prices.'
                                                         : id
-                                                          ? 'Jumlah kredit terjual per hari (UTC) sesuai laporan PRISMA, termasuk kredit dengan beberapa harga.'
-                                                          : 'Credits sold per UTC day as reported by PRISMA, including credits sold at mixed prices.'}
+                                                          ? 'Jumlah kredit yang diperdagangkan per hari (UTC) sesuai laporan PRISMA, termasuk kredit dengan beberapa harga.'
+                                                          : 'Credits traded per UTC day as reported by PRISMA, including credits traded at mixed prices.'}
                                                 </Typography>
                                             </Box>
                                         </Stack>
