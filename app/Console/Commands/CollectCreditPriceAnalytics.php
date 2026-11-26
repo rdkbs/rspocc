@@ -17,10 +17,12 @@ use Throwable;
 #[Signature('credits:collect-analytics
     {--clear-unresolved : Discard old results and reset all unresolved daily retrievals}
     {--email= : Send a summary to this address after jobs for the selected dates finish}')]
-#[Description('Queue unfinished PRISMA analytics days from January 1, 2025 through yesterday in UTC')]
+#[Description('Queue unfinished PRISMA analytics days from January 1, 2023 through yesterday in UTC')]
 final class CollectCreditPriceAnalytics extends Command
 {
     public const string SCHEDULE_TIME_UTC = '00:15';
+
+    public const string FIRST_DAY_UTC = '2023-01-01';
 
     public function handle(PrismaCreditAnalyticsCollector $collector): int
     {
@@ -44,7 +46,7 @@ final class CollectCreditPriceAnalytics extends Command
         }
 
         $yesterday = CarbonImmutable::yesterday('UTC');
-        $firstDay = CarbonImmutable::parse('2025-01-01', 'UTC');
+        $firstDay = CarbonImmutable::parse(self::FIRST_DAY_UTC, 'UTC');
         if ($this->option('clear-unresolved')) {
             $job = new BackfillCreditPriceAnalytics($yesterday->toDateString());
             $key = BackfillCreditPriceAnalytics::overlapGuard()->getLockKey($job);

@@ -163,6 +163,16 @@ it('shows complete trading days and distinguishes zero trades from missing data'
             ->where('endDate', '2026-01-01')
             ->has('trades.IS_CSPO', 1));
 
+    $this->get('/en/trends?from=2023-01-01&to=2023-01-01')
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->where('firstDate', '2023-01-01')
+            ->where('startDate', '2023-01-01')
+            ->where('endDate', '2023-01-01'));
+
+    $this->getJson('/en/trends?from=2022-12-31&to=2022-12-31')
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('from');
+
     $this->getJson('/en/trends?period=custom&from=&to=')
         ->assertUnprocessable()
         ->assertJsonValidationErrors(['from', 'to']);

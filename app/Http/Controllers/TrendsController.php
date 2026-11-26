@@ -26,7 +26,7 @@ final class TrendsController extends Controller
         $today = $now->startOfDay();
         $scheduledCheck = $today->setTimeFromTimeString(CollectCreditPriceAnalytics::SCHEDULE_TIME_UTC);
         $latest = $today->subDay();
-        $firstDate = '2025-01-01';
+        $firstDate = CollectCreditPriceAnalytics::FIRST_DAY_UTC;
         $request->validate([
             'period' => ['sometimes', 'required', 'in:week,month,three-months,90-days,six-months,180-days,last-7-days,last-30-days,last-365-days,year,custom'],
             'from' => ['required_if:period,custom', 'required_with:to', 'date_format:Y-m-d', 'after_or_equal:'.$firstDate],
