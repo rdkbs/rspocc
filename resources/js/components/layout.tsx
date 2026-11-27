@@ -345,7 +345,8 @@ export default function Layout({
         sharePreview?: {
             title: string;
             description: string;
-            imageUrl: string | null;
+            imageUrl?: string | null;
+            url?: string;
         } | null;
         payload?: string | null;
         previewImageUrl?: string | null;
@@ -353,9 +354,10 @@ export default function Layout({
     const socialTitle = sharePreview?.title ?? title;
     const socialDescription = sharePreview?.description ?? description;
     const socialUrl =
-        sharePreview && payload
+        sharePreview?.url ??
+        (sharePreview && payload
             ? `${pageUrl}?${new URLSearchParams({ payload })}`
-            : pageUrl;
+            : pageUrl);
     return (
         <ThemeProvider theme={theme}>
             <CssBaseline />
