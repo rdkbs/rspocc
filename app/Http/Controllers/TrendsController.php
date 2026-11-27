@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Console\Commands\CollectCreditPriceAnalytics;
 use App\Enums\CreditPriceRetrievalStatus;
 use App\Models\CreditPriceRetrieval;
+use App\Services\CalculatorPreview;
 use Brick\Math\BigDecimal;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
@@ -14,13 +15,14 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
 final class TrendsController extends Controller
 {
-    public function __invoke(Request $request): Response
+    public function __invoke(Request $request, CalculatorPreview $calculatorPreview): Response
     {
         $now = CarbonImmutable::now('UTC');
         $today = $now->startOfDay();
@@ -215,10 +217,84 @@ final class TrendsController extends Controller
 
         usort($partialSpending, static fn (array $a, array $b): int => [$b['start'], $a['creditType']] <=> [$a['start'], $b['creditType']]);
 
+        $tradeValueTotals = ['nonIs' => BigDecimal::zero(), 'is' => BigDecimal::zero()];
+        $hasTradeValue = ['nonIs' => false, 'is' => false];
+        $coveredCreditDays = [];
+        $partialData = $partialSpending !== [];
+        foreach ($trades as $creditType => $dailyTrades) {
+            foreach ($dailyTrades as $date => $trade) {
+                $coveredCreditDays[$date][$creditType] = true;
+                $value = $trade['csvValues'][2] ?? null;
+                if (! is_string($value)) {
+                    $partialData = true;
+
+                    continue;
+                }
+
+                $key = str_starts_with($creditType, 'IS_') ? 'is' : 'nonIs';
+                $hasTradeValue[$key] = true;
+                $tradeValueTotals[$key] = $tradeValueTotals[$key]->plus($value);
+            }
+        }
+
+        foreach ($excludedDates as $excludedGroups) {
+            foreach ($excludedGroups as $excludedDate) {
+                foreach ($excludedDate['creditTypes'] as $creditType) {
+                    $coveredCreditDays[$excludedDate['date']][$creditType] = true;
+                }
+            }
+        }
+
+        $partialData = $partialData || $excludedDates['inProgress'] !== [] || $excludedDates['couldNotVerify'] !== [];
+        $coveredCount = array_sum(array_map('count', $coveredCreditDays));
+        $partialData = $partialData || $coveredCount < $start->diffInDays($end) * 6 + 6;
+
+        $language = app()->getLocale();
+        $months = $language === 'id'
+            ? [1 => 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+            : [1 => 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        $formatDate = static fn (CarbonImmutable $date, bool $includeYear): string => $language === 'id'
+            ? $date->format('j').' '.$months[(int) $date->format('n')].($includeYear ? ' '.$date->format('Y') : '')
+            : $date->format('M j'.($includeYear ? ', Y' : ''));
+        $rangeLabel = $start->isSameDay($end)
+            ? $formatDate($end, true)
+            : $formatDate($start, $start->year !== $end->year).'–'.$formatDate($end, true);
+
+        $nonIsValue = (string) $tradeValueTotals['nonIs']->strippedOfTrailingZeros();
+        $isValue = (string) $tradeValueTotals['is']->strippedOfTrailingZeros();
+        $unavailable = $language === 'id' ? 'belum tersedia' : 'unavailable';
+        $nonIsDisplay = $hasTradeValue['nonIs']
+            ? 'USD '.$calculatorPreview->formatNumber((float) $nonIsValue, $language)
+            : $unavailable;
+        $isDisplay = $hasTradeValue['is']
+            ? 'USD '.$calculatorPreview->formatNumber((float) $isValue, $language)
+            : $unavailable;
+        $title = $language === 'id' ? 'Tren Kredit RSPO · '.$rangeLabel : 'RSPO Credit Trends · '.$rangeLabel;
+        $description = $language === 'id'
+            ? ($partialData ? 'Nilai tercatat' : 'Nilai perdagangan PRISMA').': Non-IS '.$nonIsDisplay.'; IS '.$isDisplay.'.'.($partialData ? ' Nilai yang belum terverifikasi tidak masuk ke total.' : '')
+            : ($partialData ? 'Recorded trade value' : 'PRISMA trade value').': Non-IS '.$nonIsDisplay.'; IS '.$isDisplay.'.'.($partialData ? ' Unverified values are not included in these totals.' : '');
+        $shareUrl = rtrim(config()->string('app.url'), '/').route('trends.index', [
+            'language' => $language,
+            'period' => 'custom',
+            'from' => $start->toDateString(),
+            'to' => $end->toDateString(),
+        ], absolute: false);
+        $previewImageUrl = null;
+        if (function_exists('imagecreatetruecolor') && function_exists('imagettftext')) {
+            $previewImagePath = URL::signedRoute('trends.preview-image', [
+                'language' => $language,
+                'from' => $start->toDateString(),
+                'to' => $end->toDateString(),
+                'nonIs' => $hasTradeValue['nonIs'] ? $nonIsValue : null,
+                'is' => $hasTradeValue['is'] ? $isValue : null,
+                'partial' => $partialData ? '1' : '0',
+            ], absolute: false);
+            $previewImageUrl = rtrim(config()->string('app.url'), '/').$previewImagePath;
+        }
+
         return Inertia::render('trends', [
-            'previewImageUrl' => function_exists('imagecreatetruecolor') && function_exists('imagettftext')
-                ? route('trends.preview-image', ['language' => app()->getLocale()])
-                : null,
+            'sharePreview' => ['title' => $title, 'description' => $description, 'url' => $shareUrl],
+            'previewImageUrl' => $previewImageUrl,
             'startDate' => $start->toDateString(),
             'period' => $period,
             'endDate' => $end->toDateString(),

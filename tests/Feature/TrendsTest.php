@@ -8,17 +8,21 @@ use Carbon\CarbonImmutable;
 use Inertia\Testing\AssertableInertia;
 
 it('renders a localized Trends social preview image', function (string $language, string $title, string $description): void {
-    $imageUrl = route('trends.preview-image', ['language' => $language]);
+    $this->travelTo('2026-11-27 00:00:00 UTC');
 
-    $this->get('/'.$language.'/trends')->assertOk()
+    $page = $this->get('/'.$language.'/trends')->assertOk()
         ->assertSeeHtml('<meta property="og:title" content="'.$title.'">')
         ->assertSeeHtml('<meta property="og:description" content="'.$description.'">')
-        ->assertSeeHtml('<meta property="og:image" content="'.$imageUrl.'">')
         ->assertSeeHtml('<meta property="og:image:width" content="1200">')
         ->assertSeeHtml('<meta property="og:image:height" content="630">')
         ->assertSeeHtml('<meta name="twitter:card" content="summary_large_image">');
 
-    $response = $this->get('/'.$language.'/trends-share-preview.png');
+    $content = $page->getContent();
+    if (! is_string($content) || preg_match('/<meta property="og:image" content="([^"]+)"/', $content, $matches) !== 1) {
+        $this->fail('The Trends page must provide its social preview image URL.');
+    }
+
+    $response = $this->get(html_entity_decode($matches[1], ENT_QUOTES));
     $response->assertOk()->assertHeader('Content-Type', 'image/png');
     $image = $response->getContent();
     if (! is_string($image)) {
@@ -31,9 +35,110 @@ it('renders a localized Trends social preview image', function (string $language
         expect($size)->toMatchArray([0 => 1200, 1 => 630]);
     }
 })->with([
-    ['en', 'RSPO Credit Trends', 'Compare PRISMA price ranges and trading volumes for Non-IS and IS RSPO credits.'],
-    ['id', 'Tren Kredit RSPO', 'Bandingkan rentang harga dan volume perdagangan kredit RSPO non-IS dan petani swadaya (IS) di PRISMA.'],
+    ['en', 'RSPO Credit Trends · Oct 28–Nov 26, 2026', 'Recorded trade value: Non-IS unavailable; IS unavailable. Unverified values are not included in these totals.'],
+    ['id', 'Tren Kredit RSPO · 28 Okt–26 Nov 2026', 'Nilai tercatat: Non-IS belum tersedia; IS belum tersedia. Nilai yang belum terverifikasi tidak masuk ke total.'],
 ]);
+
+it('shows zero trade value only when PRISMA confirms no trades', function (): void {
+    $this->travelTo('2026-01-02 00:00:00 UTC');
+    $date = CarbonImmutable::parse('2026-01-01 00:00:00', 'UTC');
+
+    foreach (['CSPO', 'IS_CSPO'] as $creditType) {
+        CreditPriceRetrieval::factory()->create([
+            'credit_type' => $creditType,
+            'period_start_at' => $date,
+            'period_end_at' => $date->addDay()->subMillisecond(),
+            'status' => CreditPriceRetrievalStatus::NO_TRADES,
+            'quantity_sold' => 0,
+            'low_price' => null,
+            'high_price' => null,
+            'last_traded_price' => null,
+        ]);
+    }
+
+    $page = $this->get('/en/trends?from=2026-01-01&to=2026-01-01')
+        ->assertOk()
+        ->assertSeeHtml('<meta property="og:description" content="Recorded trade value: Non-IS USD 0; IS USD 0. Unverified values are not included in these totals.">');
+
+    $content = $page->getContent();
+    if (! is_string($content) || preg_match('/<meta property="og:image" content="([^"]+)"/', $content, $matches) !== 1) {
+        $this->fail('The Trends page must provide its signed social preview image URL.');
+    }
+
+    $this->get(html_entity_decode($matches[1], ENT_QUOTES))->assertOk();
+});
+
+it('builds a range-specific Trends preview from the verified values', function (): void {
+    $this->travelTo('2026-01-01 00:00:00 UTC');
+    $date = CarbonImmutable::parse('2025-01-01 00:00:00', 'UTC');
+
+    foreach ([['CSPO', 1000, 3.2], ['IS_CSPO', 2500, 4.5]] as [$creditType, $quantity, $price]) {
+        CreditPriceRetrieval::factory()->create([
+            'credit_type' => $creditType,
+            'period_start_at' => $date,
+            'period_end_at' => $date->addDay()->subMillisecond(),
+            'status' => CreditPriceRetrievalStatus::RESOLVED,
+            'quantity_sold' => $quantity,
+            'low_price' => $price,
+            'high_price' => $price,
+            'last_traded_price' => $price,
+        ]);
+    }
+
+    $shareUrl = config()->string('app.url').'/id/trends?period=custom&from=2025-01-01&to=2025-12-31';
+    $page = $this->get('/id/trends?from=2025-01-01&period=custom&to=2025-12-31')
+        ->assertOk()
+        ->assertSeeHtml('<meta property="og:title" content="Tren Kredit RSPO · 1 Jan–31 Des 2025">')
+        ->assertSeeHtml('<meta property="og:description" content="Nilai tercatat: Non-IS USD 3.200; IS USD 11.250. Nilai yang belum terverifikasi tidak masuk ke total.">')
+        ->assertSeeHtml('<meta property="og:url" content="'.str_replace('&', '&amp;', $shareUrl).'">');
+
+    $content = $page->getContent();
+    if (! is_string($content) || preg_match('/<meta property="og:image" content="([^"]+)"/', $content, $matches) !== 1) {
+        $this->fail('The Trends page must provide its signed social preview image URL.');
+    }
+
+    $imageUrl = html_entity_decode($matches[1], ENT_QUOTES);
+    $imageResponse = $this->get($imageUrl)->assertOk()->assertHeader('Content-Type', 'image/png');
+    $image = $imageResponse->getContent();
+    $genericImage = $this->get('/id/trends-share-preview.png')->assertOk()->getContent();
+    expect($image)->toBeString()->not->toBe($genericImage);
+
+    $imagePath = parse_url($imageUrl, PHP_URL_PATH);
+    $imageQuery = parse_url($imageUrl, PHP_URL_QUERY);
+    parse_str(is_string($imageQuery) ? $imageQuery : '', $query);
+    $query['nonIs'] = '1';
+    $this->get((is_string($imagePath) ? $imagePath : '').'?'.http_build_query($query))
+        ->assertForbidden();
+});
+
+it('accepts full decimal precision in range-specific preview values', function (): void {
+    $this->travelTo('2026-01-02 00:00:00 UTC');
+    $date = CarbonImmutable::parse('2026-01-01 00:00:00', 'UTC');
+
+    CreditPriceRetrieval::factory()->create([
+        'credit_type' => 'CSPO',
+        'period_start_at' => $date,
+        'period_end_at' => $date->addDay()->subMillisecond(),
+        'status' => CreditPriceRetrievalStatus::RESOLVED,
+        'quantity_sold' => '0.12345678',
+        'low_price' => '0.23456789',
+        'high_price' => '0.23456789',
+        'last_traded_price' => '0.23456789',
+    ]);
+
+    $page = $this->get('/en/trends?from=2026-01-01&to=2026-01-01')->assertOk();
+    $content = $page->getContent();
+    if (! is_string($content) || preg_match('/<meta property="og:image" content="([^"]+)"/', $content, $matches) !== 1) {
+        $this->fail('The Trends page must provide its signed social preview image URL.');
+    }
+
+    $imageUrl = html_entity_decode($matches[1], ENT_QUOTES);
+    $imageQuery = parse_url($imageUrl, PHP_URL_QUERY);
+    parse_str(is_string($imageQuery) ? $imageQuery : '', $query);
+
+    expect($query['nonIs'] ?? null)->toBe('0.0289589963907942');
+    $this->get($imageUrl)->assertOk()->assertHeader('Content-Type', 'image/png');
+});
 
 it('counts a matching shared-boundary quantity once while keeping verified sales', function (): void {
     $day = CarbonImmutable::parse('2026-10-27', 'UTC');

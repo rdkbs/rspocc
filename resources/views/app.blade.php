@@ -42,8 +42,8 @@
         default => route('localizedContent', ['language' => $language, 'page' => $slug], absolute: false),
     };
     $canonicalUrl = rtrim(config('app.url'), '/').$canonicalPath;
-    $shareUrl = $canonicalUrl;
-    if ($sharePreview !== null) {
+    $shareUrl = $sharePreview['url'] ?? $canonicalUrl;
+    if ($sharePreview !== null && ! isset($sharePreview['url']) && isset($page['props']['payload'])) {
         $shareUrl .= '?'.http_build_query(['payload' => $page['props']['payload']], '', '&', PHP_QUERY_RFC3986);
     }
 @endphp
